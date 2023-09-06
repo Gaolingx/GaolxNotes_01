@@ -141,8 +141,10 @@ Assets/Creator Kit - FPS/Art/Models/Characters，选中 GermSpike ，拖入 scen
 
 最后，把我们制作的游戏对象转换成预制件，直接把我们的预制件从层级窗口拖进Asset/Prefabs文件夹，然后点击Original Prefab，通常出现在预制体之上再新建预制体会看到这个对话框，创建原始预制件即可。
   
-## 3. 设计关卡
+## 3. 使用Level Layout组件设计关卡
 
+前言：在上期教程中，我们学会了如何添加其他目标对象并创建自定义预制件，以及如何设置刚体与碰撞体来检测子弹碰撞，今天我们接着前面内容来尝试着自己设计一个关卡。
+提示：Level Layout组件类似于一个地图编辑器，我们可以使用它来设计我们的关卡。点击 Editing Layout 后会显示Add和Remove 两个按钮，分别是添加和删除，Group下是不同的场景组件预设
 1. 关闭音频辅助图标：  
    在 Hierarchy 窗口中，选择 LevelLayout 游戏对象。  
    在 Scene 视图的右上角，单击 Gizmos 按钮旁的向下箭头。
@@ -151,14 +153,16 @@ Assets/Creator Kit - FPS/Art/Models/Characters，选中 GermSpike ，拖入 scen
    在 Hierarchy 中，确认 LevelLayout 游戏对象仍然为选中状态；  
    在 Inspector 窗口中，找到 Level Layout 组件。单击 Editing Layout。这样会默认启用添加模式。然后，单击 CorridorGroup 以添加走廊，或者单击 RoomGroup 以添加房间。  
    你可以按键盘上的 R 键来旋转房间并更改这个房间尝试贴靠到的门。对位置感到满意后，请单击鼠标按钮来放置房间。
+   如果要退出关卡编辑模式，点击 Editing Layout 然后保存即可。
 
    ![](../../imgs/unity_fpsmap.png)
-
+s
    如果操作失误或者要删除房间，请单击组件中的 Remove 按钮。完成此操作后，将光标移到 Scene 视图中的房间和走廊上方就会突出显示这些房间和走廊。单击一个房间即可将这个房间删除。
 
    完成关卡设计的编辑工作后，再次单击 Inspector 窗口中的 Editing Layout 按钮以禁用关卡编辑器工具。
 
 3. 添加门：  
+为了增加游戏的乐趣，解谜通常是必不可少的元素。我们可以通过添加门和钥匙来实现。
    选择 Assets/Creator Kit - FPS/Prefabs/Door and Key/FatBlob，拖拽到 scene 中，选择合适的位置，堵住路口，充当门
 
 4. 添加钥匙并匹配门：  
@@ -166,11 +170,16 @@ Assets/Creator Kit - FPS/Art/Models/Characters，选中 GermSpike ，拖入 scen
 
    ![](../../imgs/unity_fpskey.png)
 
+通过修改这个Text组件的文本可以修改ui显示的钥匙名字
+
+补充官方关于Text组件的说明
+
    在 Hierarchy 中，选择 FatBlob 游戏对象。在 Inspector 中，找到相应的 Lock 组件。使用下拉菜单将 Key Type 值设置为所选的钥匙名称
 
    ![](../../imgs/unity_fpslock.png)
 
    现在，玩家只要收集到钥匙，就可以开启对应的门
+   进入游戏，通过拾取钥匙我们可以打开这扇门进入其他的房间，至此我们就完成了关卡的设计，大家可以自行发挥想象，设计更多有趣的玩法。
 
 ## 4. 修改武器
 
