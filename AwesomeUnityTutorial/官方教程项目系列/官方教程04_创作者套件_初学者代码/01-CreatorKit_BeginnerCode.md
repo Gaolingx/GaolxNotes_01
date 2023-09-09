@@ -25,7 +25,7 @@
     步骤3 ：project 窗口 -> Assets/Create kit - Beginner Code /Scenes/ExampleScene 双击，运行，测试游戏
 
 提示：1、该项目使用了URP（Universal Rendering Pipeline）作为项目的渲染管线，所以在新建项目时应该在unity hub创建“3D (URP)”的模板，否则shader会不兼容，材质球会出现粉色。
-由于新建的项目默认不会安装cinemachine组件，导致依赖缺失而编译错误，导入package之后可能会提示诸如“error CS0246: The type or namespace name 'CinemachineVirtualCamera' could not be found (are you missing a using directive or an assembly reference?)”等报错信息而无法运行和构建游戏，这需要我们手动在Package Manager安装Cinemachine的包。
+2、由于新建的项目默认不会安装cinemachine组件，导致依赖缺失而编译错误，导入package之后可能会提示诸如“error CS0246: The type or namespace name 'CinemachineVirtualCamera' could not be found (are you missing a using directive or an assembly reference?)”等报错信息而无法运行和构建游戏，这需要我们手动在Package Manager安装Cinemachine的包。
 
 游戏类型： 3D ARPG (动作角色扮演游戏)  、第三人称俯视角射击（TPS）
 包含：
@@ -108,7 +108,7 @@ public class SpawnerSample : MonoBehaviour
   
 这节课能看懂多少是多少，不求甚解，后面会逐一解释这些代码。
 
-注意：学习unity的api时候一定要到英文官网查询，中文官网部分api不全。而且英文api版本更新。
+注意：学习unity的api时候一定要到英文官网查询，中文官网部分api不全。而且英文api版本内容更新。
 <br>
 <hr>
 <br>
