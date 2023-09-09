@@ -24,7 +24,10 @@
     步骤2 ：导入 Creator kit : Beginner Code ，不管是使用 package manager ,双击下载好的 unitypackage 文件，还是将文件直接拖拽如 project 窗口，都行，随你喜好
     步骤3 ：project 窗口 -> Assets/Create kit - Beginner Code /Scenes/ExampleScene 双击，运行，测试游戏
 
-游戏类型： 3D ARPG (动作角色扮演游戏)  
+提示：1、该项目使用了URP（Universal Rendering Pipeline）作为项目的渲染管线，所以在新建项目时应该在unity hub创建“3D (URP)”的模板，否则shader会不兼容，材质球会出现粉色。
+由于新建的项目默认不会安装cinemachine组件，导致依赖缺失而编译错误，导入package之后可能会提示诸如“error CS0246: The type or namespace name 'CinemachineVirtualCamera' could not be found (are you missing a using directive or an assembly reference?)”等报错信息而无法运行和构建游戏，这需要我们手动在Package Manager安装Cinemachine的包。
+
+游戏类型： 3D ARPG (动作角色扮演游戏)  、第三人称俯视角射击（TPS）
 包含：
 
 - 角色系统
@@ -38,7 +41,9 @@
 
 ## 2. 使用 visual studio 作为脚本代码编辑器
 
-菜单栏 edit - preference - External Tools -> visual studio XXXX 2019
+工欲善其事必先利其器，在编写代码之前，我们先要确保IDE（集成开发环境）是正确配置的，unity本身不负责编写代码，他只负责将用户写好的代码进行编译并完成相应的功能。我这里使用visual studio 2022进行演示，当然，你们想使用vscode，rider也是可以的
+目的：使得unity能正确链接我们的ide，在vs中能正确生成解决方案，关联系统的基本库，正确识别MonoBehaviour类和项目之间的引用关系，使用关联查找、智能提示等功能，方便断点调试
+方法：菜单栏 edit - preference - External Tools -> visual studio XXXX 2019（视你安装的ide为定），选择之后点击“Regenerate project files”，重新生成项目的.csproj文件。
 
 好处：
 
@@ -46,11 +51,12 @@
 - 基础类库识别
 - 代码导航
 - 按项目处理代码，而非单个文件
-
+  
+书写代码：
 Hierarchy -> LevelDesign -> PotionSpawner -> Inspector -> Spawner Sample -> SpawnerSample -> Project -> 双击在 vs 中打开
 
 或者，直接在 Project -> Assets/Creator Kit - Beginner Code/Scripts/Tutorial/ 下，双击在 vs 中打开
-
+  
 ```C#
 //引入命名空间 UnityEngine
 using UnityEngine;
@@ -96,7 +102,13 @@ public class SpawnerSample : MonoBehaviour
 }
 
 ```
+说明：
+1、注释：编辑器中绿色部分的文字叫做注释，通常用“//...”即可创建，如果需要批量注释可以用/*开始到*/结束。这些代码不会在游戏中实际运行，仅供开发人员参考，增强代码可读性。
+2、MonoBehavior：脚本基类
+  
+这节课能看懂多少是多少，不求甚解，后面会逐一解释这些代码。
 
+注意：学习unity的api时候一定要到英文官网查询，中文官网部分api不全。而且英文api版本更新。
 <br>
 <hr>
 <br>
