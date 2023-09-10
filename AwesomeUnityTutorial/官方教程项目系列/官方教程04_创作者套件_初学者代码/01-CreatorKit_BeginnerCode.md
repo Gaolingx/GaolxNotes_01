@@ -119,3 +119,5 @@ public class SpawnerSample : MonoBehaviour
 文章也同时同步微信公众号，喜欢使用手机观看文章的可以关注
 
 ![](../../imgs/微信公众号二维码.jpg)
+
+前言：在上期教程中，我们通过一个新的项目《CreatorKit_BeginnerCode》，配置使用 visual studio 作为脚本代码编辑器，最后我们看了一段示例代码来逐渐开始入门unity脚本编程，今天我们继续学习c#脚本编程中的重要概念——变量。
