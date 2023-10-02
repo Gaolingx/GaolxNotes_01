@@ -111,6 +111,26 @@ unity中提示错误时候必须引起足够的重视，它会影响正常开发
 
 注：事件函数：Unity 中的脚本与传统的程序概念不同。在传统程序中，代码在循环中连续运行，直到完成任务。相反，Unity 通过调用在脚本中声明的某些函数来间歇地将控制权交给脚本。函数执行完毕后，控制权将交回 Unity。这些函数由 Unity 激活以响应游戏中发生的事件，因此称为事件函数。常见的事件函数有Start方法、Update方法等。
   
+【百日挑战40】unity教程之2D游戏开发初步（五）
+  
+前言：大家好，今天是中秋国庆双节8天长假的第四天，这里小高祝大家双节快乐，在上期教程中，我们开始初步开始使用官方项目《2DGameKit》创建场景以及如何使用瓦片调色板编辑地图，搭建静态平台和移动平台，创建交互机关，今天我们继续通过项目预设好的半成品关卡来设计2D游戏关卡，学习如何加入非玩家角色（npc）以及调整各项参数增强游戏性。
+  
+3.5 设计npc
+npc可以推动剧情的发展，丰富游戏的内涵与玩法，常见的npc通常分为两类，一种是可攻击的npc（例如怪物等），一种是可对话的npc（例如剧情交互角色），这里演示下如何创建可攻击的npc。
+  
+1、定位 Assets\2DGamekit\Prefabs\Enemies 目录，其中有三个预制件，Spitter 和 Chomper 分别是远程和近战的怪物，EnemySpawner是怪物的生成器，选中其中一个Enemies的预制件，CharacterController2D组件负责玩家的输入，Damageable组件负责血量和伤害的管理，以及受到伤害触发的效果（能被攻击和消灭的npc需要这个组件），我们主要关心的是 EnemyBehaviour 组件，它主要负责npc核心的表现层控制
+  
+2、简单介绍下EnemyBehaviour 组件，speed控制移动速度，gravity控制重力，projectilePrefab控制要投射的物品（预制件），Scanning settings主要是设置怪物可见攻击范围，玩家超过这个可视范围就不会攻击，viewDirection控制视角方向，viewFov控制视角大小，viewDistance控制可视范围，timeBeforeTargetLost 控制在目标被视为从视线中消失之前，目标不在视锥中的时间（以秒为单位）。Melee Attack Data控制近战攻击相关参数，meleeRange 控制攻击范围，meleeDamager指怪物自身技能造成的伤害，contactDamager 指玩家接触到怪物造成的伤害，attackForce 控制攻击的力度，后面就是绑定不同状态下触发声音相关的组件了
+  
+3、将怪物们拖拽到Scene中以创建他们，绿色部分表示怪物可视范围，红色表示攻击范围，试着通过修改EnemyBehaviour 组件中viewDirection,viewFov,viewDistance控制视野和攻击范围。
+  
+3.6 设计npc的生成器
+我们在地图中设置一个固定刷怪点，totalEnemiesToBeSpawned 表示这个刷怪点一共能刷多少只怪，concurrentEnemiesToBeSpawned表示一次刷多少只怪，spawnArea是生成范围，spawnDelay是生成的冷却时间，removalDelay是怪物被移除后重新出现的延迟。
+  
+运行，可以看到，当我们打死上面的怪后，过了removalDelay设定的时间怪重新生成了。
+  
+从上不难看出，设置可交互的游戏对象对于gameplay有很重要的影响，可以提高游戏的可玩性，有时候，我们希望除了直接攻击怪物，我们也可以通过触发机关来攻击怪物，除了之前我们提到的压力板与门的关联，我们也可以将这样的关联设置在怪物上面。例如，我们创建一个能推动的箱子，用箱子从高处掉落砸这个怪物。下期教程我们将探索如何让玩家推箱子间接消灭怪物的玩法。
+  
 <br>
 
 <hr>
