@@ -147,6 +147,35 @@ npc可以推动剧情的发展，丰富游戏的内涵与玩法，常见的npc�
 最后运行的效果如图，可以看到敌人被箱子砸到之后被设置为不可见了
   
 至此，我们就完成了玩家与多个游戏对象直接和间接的互动，类似这样的玩法可以参考《超级马里奥》，里面就大量运用到了玩家与游戏对象之间的互动，比如玩家可以吃蘑菇升级，碰到怪会减少血量，玩家通过跳跃触发某些隐藏机关等等，可以说，现代的游戏中，玩家与游戏对象（npc，敌人，其他交互物等）的交互很大程度上丰富了游戏的核心玩法甚至成为推动游戏剧情的关键一环，希望通过两期的学习，大家可以尝试着创建更丰富的地图和更多的交互物丰富你的游戏玩法。
+  
+【百日挑战42】unity教程之2D游戏开发初步（七）  
+
+前言：大家好，今天是中秋国庆双节8天长假的第六天，这里小高祝大家双节快乐，在上期教程中，我们开始初步开始使用官方项目《2DGameKit》创建场景以及如何使用瓦片调色板编辑地图，搭建静态平台和移动平台，创建交互机关，加入非玩家角色（npc），设计让玩家推箱子间接消灭怪物的玩法,今天我们继续通过项目预设好的半成品关卡来设计2D游戏关卡，学习如何设置玩家传送点，实现在不同的场景之间来回穿梭。
+  
+在实际的游戏中，我们希望玩家触发了某个条件之后从当前的场景传送到另外一个场景或者关卡内不同位置的传送，这就涉及到unity的 SceneManager 相关内容了，我们这里先使用项目给我们提供的Prefab进行操作。
+  
+3.8.1 同一场景内的传送
+  
+1、定位到 Assets\2DGamekit\Prefabs\SceneControl 目录，这里要用到 TransitionStart 预制件，将它拖入场景中，调整到合适的位置，作为传送的起点，即当玩家与这个物体发生碰撞之后，即可传送，默认这个预制件是没有 Sprite Rendered 的，看上去比较突兀，可以自行添加一个看上去更加美观，然后再用 TransitionStart 预制件在场景中创建一个终点。
+  
+2、双击进入预制件编辑模式，查看下它的构成，其中的 Box Collider 2D 用于检测碰撞，来看看 TransitionPoint 组件，transitioningGameObject 绑定要传送的游戏对象，TransitionType 是调整传送的类型：传送是否在此场景内、不同区域或非游戏场景中，destinationTransform 是传送的终点，TransitionWhen 是什么应该触发转换开始，可选这个只需要绑定 TransitionStart 同类型的游戏对象即可。
+  
+3、启动终点都将玩家绑定到 transitioningGameObject 上，TransitionType 选择 SameScene ，然后将起点的 destinationTransform 绑定终点的 TransitionPoint 组件（包含这个组建的对象）终点的 destinationTransform 留空，终点的传送器要把碰撞体取消，或者将 TransitionWhen 改成 ExternalCall，避免意外触发传送。
+  
+4、保存运行，看看当玩家接触到这个传送点之后是否会被传送到终点位置。
+  
+3.8.2 不同场景间的传送
+  
+1、在顶部菜单栏中，选择 Kit Tools > Create new Scene 新建一个子场景，重命名为 SubScene01，回到 MainScene ，按照上面方法再建一个起点，TransitionPoint 中绑定玩家，TransitionType 选 DifferentZone，newSceneName 是传送目的地的场景名称，其中会列举项目所有的场景，这里填 SubScene01，transitionDestinationTag 是正在传送到的场景中的 SceneTransitionDestination 脚本的标签，可以设置不同的标签来设置不同的出生位置，这里选A，目的地传送点Tag也填 A 即可。
+  
+2、进入目的地场景中，定位到 Assets\2DGamekit\Prefabs\SceneControl 目录，这里要用到 TransitionDestination 预制件，注意D estinationTag 与传送起始点相同，transitioningGameObject 绑定要传送的游戏对象——玩家，CharacterStateSetter 组件用于设置出生点位晚玩家的状态，比如回血，添加物品，奖励等等
+  
+3、保存回到 MainScene，运行测试，看看当玩家到达传送点之后场景是否发生变化，场景是否发生了切换。
+  
+这样一来，我们就可以通过传送锚点让玩家在不同场景之间来回的穿梭，将多个零散的场景拼凑成完整的场景线，通过拆分场景也能避免单个场景游戏对象过多造成内存占用过高的问题
+  
+作业：试着在 SubScene01 场景中再添加一个传送点，让玩家能回到 MainScene 场景
+  
 
 <br>
 
