@@ -1,11 +1,38 @@
 # Ruby's Adventure：2D 初学者
-
+  
+【百日挑战43】unity教程之2D游戏开发初步（八）  
+前言：学完了官方项目《2DGameKit》的全部内容，复习完了前期unity的基础知识，我们开始学习一个新的教程系列《RubyAdventure2DRpg》，这是一个2D的RPG游戏，我们就开始更加深入的学习2D游戏开发中的各个细节，今天我们先只讲Sprite的导入和Sprite的移动。
 > 资源链接：
 >
 > - [中文官方教程地址](https://learn.unity.com/project/ruby-s-adventure-2d-chu-xue-zhe)
 > - [AssetStore](https://assetstore.unity.com/packages/templates/tutorials/2d-beginner-tutorial-resources-140167?_ga=2.134705203.331241089.1633678521-522971275.1624332126)
 > - [Baidu 云盘](https://pan.baidu.com/s/193a7getqsQewRm16UIzqmg) 提取码: iw1x
 > - [迅雷云盘](https://pan.xunlei.com/s/VMleChfhqqDLB9q7E3OvLfTWA1) 提取码：d3ed
+  
+## 开始之前01：导入Package
+  
+在学习我们这门课程之前当然需要先准备好资源，一般在Asset Store里面搜索《2D Beginner: Tutorial Resources》按照之前的方式添加到我的资源再到unity用Package Manager下载并导入Package所有文件到一个空项目即可。
+  
+如果网络不好的也可以先把unitypackage下载到本地再手动导入
+> 本地 unitypackage 文件使用：  
+> 新建项目 --> 打开项目 --> 将 unitypackage 文件拖入已打开 unity 的界面的 Project 窗口中 --> 选择需要导入的资源，import 导入
+  
+如果导入之后没有报错，则在Asset/Scene 路径下新建一个场景 MainScene。方法如下：  
+1.选择 File > New Scene。或者，可以使用 Ctrl + N (Windows/Linux) 或 Cmd + N (macOS) 快捷键。  
+2.如果显示一个弹窗提示你还有未保存的更改，这是因为你移动或更改了演示场景中的某个对象，所以 Unity 要确认你是否打算放弃这些更改。只需单击 Don’t Save。  
+3.现在你已创建名为“Untitled”的空场景。这意味着尚未将这个场景写入磁盘。  
+  
+接下来，使用恰当名称来保存此场景。选择 File > Save 或者使用 Ctrl/Cmd + S 快捷键。  
+  
+4.选择 Scenes 文件夹，并将场景命名为“MainScene”。  
+  
+现在你有了一个可以使用的场景。在余下的教程中，你将使用此场景。请记住要经常按 Ctrl/Cmd + S，将你的更改保存到磁盘。这样，如果你退出 Unity 后再返回，就不会丢失已进行的更改。
+  
+## 开始之前02：导入Sprite
+  
+试着将教程中的一张图片导入项目的Assets里面，可以下载之后直接拖入Assets，也可以另存为图片到我们的项目中。
+  
+可以看到，我们导入的png图片格式在unity中被重新被导入为了Sprite（精灵），下面就是资产导入的各项设置
 
 ## 1. 项目简介
 
@@ -13,10 +40,10 @@
 
 - 学习使用 2D 资源
 - 学习简单的 2D RPG 游戏制作流程
-- 只提供素材
+- 只提供素材（不同于前面的官方教程，提供完整的源码，预制件等，需要自己思考如何将这些素材通过代码组装在一起）
 - 学习创建并控制角色（使用脚本代码）
 - 学习使用瓦片地图创建世界
-- 学习设置动态精灵
+- 学习设置动态精灵（Sprite）
 - 学习一些简单特效（粒子效果）
 
 ## 2. 创建并控制角色
@@ -25,21 +52,29 @@
 
 #### 2.1.1 使用静态精灵创建角色
 
+我们希望将Ruby作为我们的游戏角色放置在Scene中，不需要具体的定位就拖拽到hierachy中，默认位置(0,0,0)
+  
 精灵 Sprite 是 Unity 中 2D 素材的默认存在形式，是 Unity 中的 2D 图形对象。
 
-在 2D 游戏中，使用 2D 素材的过程：  
+在 2D 游戏中，使用 2D 素材的转换过程：  
 PNG（JPG 等）----> Sprite ----> GameObject
+  
+观察我们从Asset中拖进来的这个sprite，里面除了Transform组件，还包括了一个Sprite Renderer 组件，负责将效果呈现在屏幕上的一个组件，没有这个组件，精美的图像将无法显示，关于该组件各选项的作用如下：
 
 ### 2.2 移动角色
 
 #### 2.2.1 移动精灵
 
-2D 游戏中，没有 Z 轴来表示深度，只有 X 轴和 Y 轴，以中心点为原点（0,0），左 x 负，右 x 正，上 y 正，下 y 负
+在讲unity基础知识的时候我们提到过笛卡尔坐标系，2D 游戏中，没有 Z 轴来表示深度，只有 X 轴和 Y 轴，以中心点为原点（0,0），左 x 负，右 x 正，上 y 正，下 y 负，要想表示远近只能用图层排序——谁遮住谁
 
 ![](../../../imgs/2d坐标.png)
 
-Unity 中，通过游戏对象的 Transform 组件，可以获取该对象在场景中的位置 Position，并通过更改 Transform 组件 Position 的值，可以更改其位置，依据的坐标轴就是上面描述的 2D 坐标轴
-
+Unity 中，通过游戏对象的 Transform 组件，可以获取该对象在场景中的位置 Position，并通过更改 Transform 组件 Position 的值(x, y)，可以更改其位置，依据的坐标轴就是上面描述的 2D 坐标轴
+  
+例如这里将x轴的位置设置为-2，可以看到Sprite向左平移了两个单位
+  
+简单的介绍下Sprite导入、Sprite Renderer和游戏对象的移动，下期我们将讲解如何用c#代码移动Sprite。
+  
 #### 2.2.2 用脚本移动精灵
 
 在 Update 方法中，更改 Ruby 角色位置
