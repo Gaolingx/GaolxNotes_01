@@ -350,6 +350,10 @@ public class RubyController : MonoBehaviour
 > 参考资料：
 >
 > - [Time.deltaTime 官方 API](https://docs.unity3d.com/ScriptReference/Time-deltaTime.html)
+  
+【百日挑战48】unity教程之2D游戏开发初步（十二）
+  
+前言：在上期教程中，我们通过官方一个新的2D的RPG游戏教程系列《RubyAdventure2DRpg》学习了关于游戏中的时间和帧率，以及使用 Time.deltaTime 方法以单位/秒来表示 Ruby 的移动速度改进之前角色控制器移动部分随帧数不同移动速度不同的弊端，且做到不浪费硬件资源。今天我们接着系统学习如何使用瓦片地图来创建我们的游戏世界。
 
 <br>
 
