@@ -134,7 +134,9 @@ public class HelloWorld : MonoBehaviour
    - UnityPlayer.dll
    - HelloWorld_Data
    - MonoBleedingEdge
-
+  
+2022.11.2开始
+  
 ### 4.4 调试程序
 
 #### 4.4.1 显示 Log
@@ -181,7 +183,9 @@ Unity 中最基本的游戏元素，默认值包含 Transform 组件（变形组
 
 - [脚本生命周期参考资料 1](https://blog.csdn.net/weixin_44302602/article/details/105905288)
 - [脚本生命周期参考资料 2](https://www.huaweicloud.com/articles/c26fc1c511e0c6a1df832a834b1196a1.html)
-
+  
+2022.11.2结束
+  
 ### 5.3 脚本的序列化
 
 #### 5.3.1 序列化 & 反序列化
