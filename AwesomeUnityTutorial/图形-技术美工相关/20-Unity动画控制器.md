@@ -1,4 +1,42 @@
 # Unity 动画控制器 Animation Controller
+  
+## 【百日挑战72】unity教程之2D游戏开发初步（三十五）
+  
+前言：在上期教程中，我们在官方一个新的2D的RPG游戏教程系列《RubyAdventure2DRpg》中，我们学习了世界交互中的设置敌人，我们为Robot添加了伤害系统，实现了来回移动的机器人一旦碰到玩家，玩家会相应减少生命值，同时玩家具有2s无敌时间（冷却时间），在此时间内Robot不应该对玩家造成伤害。并了解 Collision2D 类，今天我们将学习通过 Animator 组件控制物体移动和 Animation 窗口创建精灵动画。
+  
+背景：在先前的教程中，你创建了一个世界，其中包含大量对象、可四处走动的角色以及要避开的敌人。但是到目前为止，所有这些都是静态的。在本教程中，你将向角色添加动画。
+  
+目标：1. 为Robot添加动画系统，并通过脚本控制 2. 为Ruby添加技能动画，并通过脚本控制
+  
+一、基础知识讲解 —— 2D 精灵动画 2D Sprite Animation
+  
+二、步骤：
+  
+1. 为Robot添加 Animator 组件：  
+  1.1 进入机器人预制件的预制件模式（提醒：请双击 Project 窗口中的预制件，或双击 Hierarchy 窗口中的 Robot 右侧的箭头）。
+  1.2 在  Inspector 中，单击Add Component 按钮并搜索 Animator 组件。
+  
+  Animator 组件用于管理对象的动画状态，其最重要的设置是 Controller 设置。
+  Controller 组件负责基于你定义的规则来选择要播放的动画（例如，当角色的速度大于 0 时，使角色从站立变为奔跑动画）。你稍后将探索这些规则。
+2. 创建新的 Controller并添加组件到对象：  
+  现在，我们创建一个新的 Controller 并在 Robot Animator 上设置这个 Controller：
+  2.1 在 Project 窗口中，在 Assets\2DBeginnerTutorialResources\Art\ 找到 Animations 文件夹。此文件夹包含项目的预制动画和动画控制器，可用于加快后续的工作速度。我们试着自己创建一个Robot的动画控制器。我们在 Assets\Art\ 路径下创建一个 Animations 目录，在其中再创建一个 Robot 文件夹，存放与Robot相关的动画切片和控制器。
+
+  2.2 在 Animations/Ruby 文件夹中，右键单击并从上下文菜单中选择 Create > Animator Controller。将此 Controller 命名为 Robot。
+  2.3 现在，为了方便统一管理，在你添加到机器人预制件上的 Animator 中（如果你已退出预制件模式，请确保再次进入该模式），将你刚创建的 Controller 分配到 Controller 设置中（单击小圆圈并在随后打开的窗口中找到 Controller，或者将 Controller 从 Animation 文件夹拖放到 Controller 设置中）。
+3. 创建动画剪辑：
+   你现在已经有了 Animator Controller，接下来便需要创建供 Controller 使用的动画。动画是存储在 Project 文件夹中的资源。
+  
+   要在 Unity 编辑器中创建动画，请使用 Animation 窗口：
+   3.1 选择 Window > Animation > Animation 来打开 Animation 窗口（或按快捷键 Ctrl+6），打开Animation窗口。
+   如果在 Hierarchy 中选择 Robot，或者在机器人预制件上处于预制件模式，则 Animation 窗口将显示以下消息：“To begin animating [预制件/游戏对象名称], create an Animation Clip” 以创建动画片段。
+   3.2 单击 Create 按钮。
+   3.3 现在选择 Animations/Ruby 文件夹作为保存动画剪辑的位置，然后将该动画剪辑命名为“RobotLeft.anim”并自动保存在该文件夹。
+  
+  Animation 窗口被分为两个部分：  
+  · 左侧用于动画化属性  
+  · 右侧的时间轴显示每个属性的关键帧  
+  
 
 ## 1. Animation Controller 动画控制器
 
