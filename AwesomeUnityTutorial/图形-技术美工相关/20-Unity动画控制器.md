@@ -83,6 +83,97 @@
 
 作业：按照步骤5的方法，继续通过 Add Property 属性为Robot创建向上走和向下走的动画片段。
   
+## 【百日挑战74】unity教程之2D游戏开发初步（三十七）
+  
+前言：在上期教程中，我们在官方一个新的2D的RPG游戏教程系列《RubyAdventure2DRpg》中，我们开始学习unity的动画模块中关于 2D 精灵动画 2D Sprite Animation的动画控制器创建和动画剪辑的创建，我们为Robot建立了动画控制器，通过调整Sample控制动画播放的速度，创建了分别往四个方向走到的帧动画剪辑，通过添加 Property 对 Sprite Renderer 进行调整，今天我们将继续学习通过代码配合 Animation Controller 来控制和管理动画各个状态。
+  
+目标：最终实现我们的Robot向上下左右四个方向的移动。对于玩家，除了各个方向的动画状态，我们还需要实现在不同的走路方向播放对应的动画剪辑。
+  
+步骤：
+  
+1. 构建 Controller：  
+   Controller 定义动画之间的关系，比如如何从一段动画切换到另一段动画。
+  
+  要编辑 Controller，请执行以下操作：
+  · 打开 Animator 窗口（菜单：Windows > Animation > Animator）再选中Asset中的 Animation Controller 或者双击 Asset 中的 Animation Controller。
+
+  注意：确保在 Project 文件夹中选择了机器人预制件或 Robot Animator。
+  Animator 分为两个部分，左侧是 Layers 和 Parameters，右侧是动画状态机 (Animation State Machine)：
+
+让我们简单介绍下这个动画控制器面板中各个功能：
+
+  · 第 1 部分：Layers 和 Parameters
+
+  Layers 可用于 3D 动画，因为你可以将动画用于角色的不同部分。
+  Parameters 由我们的脚本用来向 Controller 提供信息，我们需要使用不同的参数控制动画剪辑，如状态的转换，具体的做法是**在 Parameters 设置参数，然后与脚本进行对接，在 Controller 中将参数与状态进行配置，这样一来，我能就可以通过程序来控制参数，再通过 Controller 控制具体的动画状态。状态再对应相应的动画剪辑，**这就是unity动画管理机制的大致原理。
+
+  · 第 2 部分：动画状态机
+
+  **动画状态机以图形方式显示动画的所有状态以及如何从一段动画过渡到另一段动画。**
+  
+  现在，你已经创建四段动画，第一段动画 RobotLeft 链接到 Entry（入口，其指向的State是游戏开始时最先播放的动画剪辑），这表示此动画将在游戏开始时播放。
+
+  如果我们保持这个属性直接点击Play话可以看到我们的Robot不断在反复播放向左走的动画，无论是向左移动还是向右移动，都只能播放一个向左走的动画，这并不符合我们的要求。
+
+  你可以在所有动画之间创建链接来表示诸如“玩家使机器人向右转时，将机器人的方向从左更改为右”的目的。但是这意味着每段动画都将有三条链接，即每条链接指向其他的每段动画。
+  要创建动画状态的过渡很简单，具体做法是：在一个状态中右键点击，然后选择"Make Transition"，会多出一个箭头，点击指向需要过渡到的另一个状态即可实现A状态到B状态的转换。如果需要转换回去做法也是同样的，在B状态 Make Transition 到 A状态即可，如图，你还可以配置动画过渡过程中的各种属性，实现较为麻烦，而且没有这个需求，我们不妨使用一种更加简单的思路。
+
+  我们引入一种更简单的方法是使用混合树 (Blend Tree)，这种混合树允许你根据参数来混合多段动画，根据参数值的不同播放不同的动画剪辑。
+
+  此处，你将根据机器人的移动方向来混合四段动画（说白了就是根据方向判断播放哪段动画），使 Controller 能够播放正确的动画。
+2. 使用混合树：  
+  背景：关于混合树，用更加通俗的方式讲，已知2D游戏中表示角色的的移动方向，我们需要一个具有两个参数的二维矢量（Vector2(x, y)），而这里表示方向的x,y值只有可能是1，0，-1，我们可以用Vector2表示的方向作为相应的参数挂接对应的动画剪辑，比如这张图中，向左移动，Vector2中的值应该是(-1. 0)，我们就可以用这个值对应Robot_Left对应的动画剪辑，以此类推，上，左，右也是Vector2参数挂接对应的参数值，方能通过这种不同方向赋予不同的Vector2值再去对应动画剪辑，来较好的描述角色移动的方式来选择对应的动画状态，最终实现根据移动方向选择播放对应的动画。
+
+  既然blendtree可以将动画与参数对接，让我们试着使用混合树：  
+
+  2.1 首先通过选择动画并按 Delete 或者通过右键单击动画并选择 Delete来删除所有动画。
+  2.2 然后，在图中某处右键单击，然后选择 Create State > From New Blend Tree。
+
+  现在，游戏开始时，Controller 将播放 Blend Tree。但是现在是空的，所以不会播放任何动画。
+
+  2.3 双击 Blend Tree 以将其打开，通过鼠标中键拖曳移动视图。
+
+  2.4 现在单击该“Blend Tree”节点，随即将在 Inspector 中显示相应设置：  
+
+  Blend Type 设置可定义混合树将使用多少参数来选择要播放的动画。你希望 Blend Tree 使用两个参数来控制水平和垂直方向的更改，因此请将 Blend Type 设置为 2D Simple Directional。
+
+  例如，当机器人的水平移动为 0 且垂直移动为 -1 时，Blend Tree 应选择 RobotDown 动画，而机器人的水平移动为 1 且垂直移动为 0 时，Blend Tree 应选择 RobotRight 动画。
+
+  在 Blend Type 设置下，你现在将有两个 Parameters 设置。Controller 使用这些值来选择要播放的动画。
+
+  目前，Controller 使用了自动创建的 Blend 参数，但是我们将用名为 Move X 和 Move Y（分别表示水平和垂直移动量）的 2 个参数来替换该参数。
+3. 设置参数：Move X 和 Move Y：  
+  blendtree显示 Parameters 左侧参数及其对应的值。要创建新参数，请执行以下操作：
+  3.1 直接找到 Animator 窗口左侧的 Parameters 选项卡：
+
+  你需要两个浮点型参数，因为你希望参数值的范围是 -1.0 到 1.0。
+
+  3.2 选择并单击 Blend 参数（浮点型），然后将该参数重命名为 Move X，从而完成重命名操作。
+
+  3.3 接下来，单击搜索栏旁边的 + 图标，选择 Float，并将新参数命名为 Move Y。
+
+现在，当选择 Blend Tree 时，可以在 Inspector 顶部的下拉选单中选择这两个参数，Blend Type选择 2D Freeform Directional ，从而告诉你的 Blend Tree 应当观察这两个参数来选择要播放的动画。
+4. 然后，单击 Motion 部分（用于添加参数和动画剪辑）底部的 +，然后选择 Add Motion 字段，此操作需要执行 4 次，因为你要混合四段动画。你的 Inspector 最后应如下所示：
+5. 现在将四段动画（RobotLeft...）剪辑拖放到名为 Motion 的四个字段中，并将各个 Pos X 和 Pos Y 值设置为相应的方向，让值在不同区域播放不同动画，如下所示：
+  
+  · Left：Pos X = -0.5 Pos Y = 0
+  · Right：Pos X = 0.5 Pos Y = 0
+  · Up：Pos X = 0 Pos Y = 0.5
+  · Down：Pos X = 0 Pos Y = -0.5
+
+  你的 Inspector 应如下所示：
+
+  该图像表示混合，其中每个motion对应一个区域，即蓝色菱形表示一个剪辑，红色点是由 2 个参数的值给出的位置。
+6. 现在，这个点位于中心，相当于 Move X 和 Move Y 等于 0。但是你可以看到，例如，如果将 Move Y 设置为 1，则红点将移至正方形的顶部（因为 Y 是垂直位置），然后混合树将选择顶部动画（向上奔跑），因为这是最接近的动画。
+  
+你可以在 Animator 中的 Blend Tree 节点上看到针对 Move X 和 Move Y 模拟的值：
+7. 或者，也可以直接移动红点。在 Inspector 的底部，你将看到 Controller 针对给定值选择的动画的模拟情况。按 Play 按钮可查看播放的动画效果。
+8. 恭喜！你已完成对动画混合树 (Blend Tree) 的设置！
+  
+现在，只需将数据从 EnemyController 脚本发送到 Controller，即可使动画在游戏中正常运行。
+   
+   
+  
 
 ## 1. Animation Controller 动画控制器
 
