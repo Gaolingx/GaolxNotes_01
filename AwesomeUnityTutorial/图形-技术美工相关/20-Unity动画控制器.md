@@ -171,9 +171,57 @@
 8. 恭喜！你已完成对动画混合树 (Blend Tree) 的设置！
   
 现在，只需将数据从 EnemyController 脚本发送到 Controller，即可使动画在游戏中正常运行。
-   
-   
   
+### 【百日挑战75】unity教程之2D游戏开发初步（三十八）
+  
+前言：在上期教程中，我们在官方一个新的2D的RPG游戏教程系列《RubyAdventure2DRpg》中，我们开始学习unity的动画模块中关于 2D 精灵动画 2D Sprite Animation的动画控制器创建和动画剪辑的创建，我们为Robot创建了动画控制器，介绍了动画控制器面板中各个功能，了解了混合树方案的可行性和实现原理，通过配置混合树根据参数来混合多段动画，并根据参数值的不同播放不同的动画剪辑。今天我们将继续学习通过代码配合 Animation Controller 来控制和管理动画各个状态。
+  
+目标：通过代码控制AnimationController，实现将参数从Enemy的Controller组件发送到Enemy的AnimationController，再在动画控制器的blendtree中将传来的参数与动画剪辑挂接，让Robot表现为：根据不同的方位全自动切换四个不同的动画剪辑。  
+因此，我们要结合之前计时器转换的方向对应参数传递给AnimationController根据blendtree参数对应的方向来播放对应的Animation Clip。
+  
+步骤：  
+9. 将参数发送到 Animator Controller：  
+  
+  要将参数发送到 Animator Controller，请执行以下操作：
+  
+  9.1 打开 EnemyController 脚本。
+  传参之前，先添加对 Animator Controller 的调用，我们要进行交互的组件是 Animator，就像我们先前需要与游戏对象上的组件进行交互时一样，我们将使用 GetComponent 在 Start 函数中获取这个组件并存储在类变量中。
+
+  开始之前，我们需要声明 Animator 字段，然后在Start方法中获取组件 Animator（实例化对象），就能获取到EnemyController组件被挂载的gameObject的 Animator 组件，并通过animator组件获取 EnemyController 的参数传递给 Animator Controller。
+
+  9.2 现在，我们需要将参数值发送到 Animator。我们可以通过 Animator 上的 SetFloat 函数来完成此操作，因为我们使用的是浮点型参数。
+
+  9.3 我们需要获取x轴和y轴移动方向，SetFloat 函数将参数名称作为第一个参数，并将该参数的当前值作为第二个参数（此处是给定方向上的移动量），因此在 FixedUpdate 函数中，你将添加：
+  我们希望当Robot沿纵向和横向运动时传递对应的参数给animator，因此在移动的第一部分的 MovePosition 方法的 if(vertical) 代码块内（该方法需要在FixedUpdate中使用），添加以下代码，将向Move X和Move Y两个参数的值定义好传给animator即可：
+
+  由于当Robot沿Y轴移动时x轴的值必为0，所以需要使用 animator.SetFloat("Move X", 0); ，Y轴的值为 direction（方向），跟随角色移动的方向变化。
+请注意animator.SetFloat()方法内的参数名称需要与动画控制器面板中 Parameters 完全一致（包括大小写、标点，空格）。
+
+  在此部分中，如果机器人垂直移动，则会将 0 发送到 horizontal 参数，而 direction 定义机器人是向上还是向下移动。
+
+  9.4 同理，在 else 代码块中，当机器人水平移动（沿X轴移动）时，向 Animator 发送相反值：
+
+  9.5 现在，你可以通过在 EnemyController 组件分别配置vertical的布尔值，点击 Play 并检查 Animator 在四个方向上是否为机器人选择了正确的动画！
+  
+拓展阅读：
+  
+混合树（BlendTree）
+  
+游戏动画中的一个常见任务是在两个或多个相似的动作之间混合。也许最著名的例子是根据角色的速度混合行走和奔跑动画。另一个例子是角色在跑步过程中向左或向右倾斜。
+  
+区分过渡树和混合树非常重要。虽然两者都用于创建流畅的动画，但它们用于不同类型的情况：
+  
+· 转换用于在给定的时间内从一种动画状态平滑过渡到另一种动画状态。转换被指定为动画状态机，如果转换速度很快，从一个动作过渡到完全不同的动作通常没问题。
+· 混合树用于通过不同程度地合并多个动画的各个部分来平滑地混合多个动画。每个动作对最终效果的贡献量都使用混合参数进行控制，该参数只是数字之一动画参数
+与动画师控制器。为了使混合运动有意义，混合的运动必须具有相似的性质和时间。混合树是动画中的一种特殊类型的状态状态机。
+  
+类似动作的示例可以是各种步行和跑步动画。为了使混合效果良好，剪辑中的运动必须在归一化时间的相同点进行。例如，步行和跑步动画可以对齐，以便脚与地板接触的时刻发生在归一化时间的相同点（例如，左脚在 0.0 时击球，右脚在 0.5 时击球）。由于使用了标准化时间，因此剪辑的长度是否不同并不重要。
+  
+### 【百日挑战76】unity教程之2D游戏开发初步（三十九）
+  
+前言：在上期教程中，我们在官方一个新的2D的RPG游戏教程系列《RubyAdventure2DRpg》中，我们完成学习unity的动画模块中关于 2D 精灵动画 2D Sprite Animation的制作Robot动画部分，我们实现了通过获取x轴和y轴移动方向，然后将参数发送到 Animator Controller并在blendtree根据参数值的不同播放不同的动画剪辑，最后简单的了解了混合树的作用及应用场景。今天我们将继续学习通过代码配合 Animation Controller 来实现玩家角色的动画
+  
+让我们来继续制作玩家移动的动画
 
 ## 1. Animation Controller 动画控制器
 
