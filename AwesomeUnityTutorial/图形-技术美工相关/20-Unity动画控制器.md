@@ -219,9 +219,51 @@
   
 ### 【百日挑战76】unity教程之2D游戏开发初步（三十九）
   
-前言：在上期教程中，我们在官方一个新的2D的RPG游戏教程系列《RubyAdventure2DRpg》中，我们完成学习unity的动画模块中关于 2D 精灵动画 2D Sprite Animation的制作Robot动画部分，我们实现了通过获取x轴和y轴移动方向，然后将参数发送到 Animator Controller并在blendtree根据参数值的不同播放不同的动画剪辑，最后简单的了解了混合树的作用及应用场景。今天我们将继续学习通过代码配合 Animation Controller 来实现玩家角色的动画
+前言：在上期教程中，我们在官方一个新的2D的RPG游戏教程系列《RubyAdventure2DRpg》中，我们完成学习unity的动画模块中关于 2D 精灵动画 2D Sprite Animation的制作Robot动画部分，我们实现了通过获取x轴和y轴移动方向，然后将参数发送到 Animator Controller并在blendtree根据参数值的不同播放不同的动画剪辑，最后简单的了解了混合树的作用及应用场景。今天我们将继续学习通过代码配合 Animation Controller 来实现玩家角色的动画。
   
-让我们来继续制作玩家移动的动画
+目标：我们最终实现的效果是当Ruby站着不动时候播放Idle状态的动画，当我们操作Ruby沿着四个方向移动会播放四个方向奔跑状态的动画剪辑，当停下来的时候则转换为走路状态，当触碰到减血物体（damageZone或Robot）时则从Move转换为Hit状态，表现为Ruby会闪烁并减少生命值，再转换回Idle状态，不同方向都有相应的 Animation Clip播放。
+  
+开始之前让我们来简单介绍下动画状态机，动画过渡及过渡属性。
+  
+步骤：
+  
+1. 为Ruby添加 Animator 组件：  
+  1.1 进入Ruby预制件的预制件模式，添加Animator组件，在 Assets\2DBeginnerTutorialResources\Art\Animations 中找到为你提供的用于 Ruby 的 Controller（你仅需要添加到 Animator 并通过代码控制它），将 Animator 添加到 Ruby 预制件，并将 Animation 文件夹中找到的 RubyController Animator 分配到 Controller 字段。
+  AnimationClips 目录下是关于Ruby的动画剪辑，可通过 Animation 窗口预览各种状态的动画剪辑。
+
+  1.2 如果在选中预制件后打开 Animator，你将看到如下所示的 Ruby Animator Controller：其中包含了四个状态（Idle、Moving、Hit、Launch），且根据箭头各状态之间可互相切换，每个State都由一个blendtree组成，通过 Animation Clip 与参数来控制具体的动画。
+  其中Parameters包含了 速度Speed、朝向Look X、Look Y，而布尔型的Hit、Launch分别代表是否受击和是否发射飞弹。（暂时忽略 Launch 状态，这是下一个关于发射飞弹的教程中要处理的小干扰！）
+
+  现在，只需注意我们有三个状态（即三个混合树）：
+  · Moving：在 Ruby 奔跑时播放。
+  · Idle：Ruby 站立不动时播放。
+  · Hit：Ruby 与机器人或伤害区域碰撞时播放。
+
+  状态之间的白色箭头是过渡。这些箭头定义状态之间的移动。例如，Hit 与 Launch 之间没有过渡，因为 Ruby 受伤害时无法投掷飞弹！
+
+  不同状态间的转换称为 AnimationTransition，点击箭头然后查看 Inspector 以了解该过渡的设置：可以看到其中的Transition properties，各属性说明可参考官方的文档。
+
+  其中的大多数设置（例如图形上的条形）可用于 3D（可以混合动画）。在 2D 中，只有部分设置对我们有用。
+
+  注意，Has Exit Time 为取消选中状态。这表示 Moving 动画不会等到状态机进入到 Idle 动画之前结束，而是会立即发生变化。
+
+  我们这里先关心 Has Exit Time 属性，该属性是一种不依赖参数的特殊过渡。通俗的说就是设置动画是否有退出时间。但是，它依赖状态的标准化时间。选中此选项可在 Exit Time 指定的具体时间进行过渡。
+  我举个例子，假如发生了Idle到Moving状态的转换，而Moving的剪辑没有播放完，如果勾选 Has Exit Time 属性，即可在Settings设置Exit Time（退出时间），即使Moving状态没有播放完，也会立即执行转换进入Idle状态。
+  
+  最重要的部分是底部的 Conditions 部分。在两种情况下会发生过渡：
+  · 如果没有条件，则在动画结束时发生过渡。此处不属于这种情况，因为我们的动画正在循环播放，但是如果你查看从 Hit 到 Idle 的过渡，就属于这种情况：已勾选 Has Exit Time，并且没有设置任何条件，这意味着 Hit 动画将播放一次，然后过渡回 Idle。
+  · 或者，我们可以根据你的参数设置条件。在此处，如果 Ruby 的速度小于 0.1，则状态机将从 Moving 过渡到 Idle。
+
+  你可以单击其他过渡来查看这些过渡，并了解过渡的运行方式。
+  
+  说白了就是用于配置转换状态的条件，即符合何种条件会发生这种转换，这里设置为 Speed Greater 0.1，即当Ruby的Speed参数等于1时候，发生Idle到Moving状态的转换。
+
+  而对于Idle到Hit状态转换的 Conditions 则是布尔值Hit为真时发生该状态的转换，反之不会发生该State的转换。
+
+  你可能想知道，为什么 Hit 参数在 Parameters 列表中显得有所不同。这是因为该参数不是浮点参数。被击中不是移动或速度之类的“量化值”，而是一次性事件。
+
+  这种类型的参数称为“触发器”。如果将该参数用作过渡条件，则从代码激活触发器时（本例中为角色被击中时）将发生过渡。
+
 
 ## 1. Animation Controller 动画控制器
 
