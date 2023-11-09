@@ -263,6 +263,30 @@
   你可能想知道，为什么 Hit 参数在 Parameters 列表中显得有所不同。这是因为该参数不是浮点参数。被击中不是移动或速度之类的“量化值”，而是一次性事件。
 
   这种类型的参数称为“触发器”。如果将该参数用作过渡条件，则从代码激活触发器时（本例中为角色被击中时）将发生过渡。
+  
+### 【百日挑战78】unity教程之2D游戏开发初步（四十）
+  
+前言：在上期教程中，我们在官方一个新的2D的RPG游戏教程系列《RubyAdventure2DRpg》中，我们完成学习unity的动画模块中关于 2D 精灵动画 2D Sprite Animation的制作Robot动画部分，我们学习了关于的动画状态机，动画状态，动画过渡及过渡属性的基础知识，今天我们将继续学习通过代码配合 Animation Controller 来实现玩家角色的动画。
+  
+我们需要添加的代码分为以下几大类：(在相应位置使用TODO注释创建任务列表，可快速速定位)
+//TODO: 1. 创建 Animator 对象和相关数据对象
+//TODO: 2. 传值，把 Animator Controller 中 Blend tree 要使用的参数传递过去。
+// 3个不同的动画状态：Idle、Moving、Hit
+// 我们需要在特定的逻辑下传递对应的参数到 Animation Controller 的 blendtree，这些参数包括：Speed控制Idle和Move状态间的转换，Look X和Look Y控制Ruby的朝向，Launch控制发射飞弹（参数在Animator的Parameters中）
+  
+步骤：
+  
+修改 RubyController 脚本：  
+你现在已了解 Controller 的设置方式，接下来让我们修改 RubyController 脚本，将这些参数发送到 Controller。
+  
+1. 就像机器人一样，添加一个 Animator 变量，然后在 Start 函数中使用 GetComponent 来获取 Animator 并存储在该变量中。
+2. 你还将添加一个名为 lookDirection 的 Vector2 变量（初始化为 (1,0)）：
+  
+   为什么要存储观察方向？因为与机器人相比，Ruby 可以站立不动。她站立不动时，Move X 和 Y 均为 0，因此状态机不知道要使用哪个方向（除非我们指定方向）。
+  
+3. 让 lookDirection 存储 Ruby 的观察方向，这样你就始终可以向状态机提供方向。实际上，如果你查看 Animator 参数，这个参数预期为 Look X 和 Look Y 参数。
+4. 我们需要把向Hit传值true的方法添加到 ChangeHealth() 方法内，一个操作就是触发 Hit 动画。需要通过 animator.SetTrigger (“触发器名称”) 将触发器发送到 Animator。因此，在 ChangeHealth 函数的 if(amount < 0)  代码块内，我们只需添加以下一行即可实现如果Ruby受伤则播放受伤动画剪辑。现在，代码应如下所示：
+5. 再看到角色移动部分：
 
 
 ## 1. Animation Controller 动画控制器
