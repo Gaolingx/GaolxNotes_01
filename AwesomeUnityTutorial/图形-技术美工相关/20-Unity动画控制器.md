@@ -287,8 +287,45 @@
 3. 让 lookDirection 存储 Ruby 的观察方向，这样你就始终可以向状态机提供方向。实际上，如果你查看 Animator 参数，这个参数预期为 Look X 和 Look Y 参数。
 4. 我们需要把向Hit传值true的方法添加到 ChangeHealth() 方法内，一个操作就是触发 Hit 动画。需要通过 animator.SetTrigger (“触发器名称”) 将触发器发送到 Animator。因此，在 ChangeHealth 函数的 if(amount < 0)  代码块内，我们只需添加以下一行即可实现如果Ruby受伤则播放受伤动画剪辑。现在，代码应如下所示：
 5. 再看到角色移动部分：
+   我们前期介绍了我们通过在Update方法中捕获每帧用户键盘的输入来操作角色移动的，按键输入的方式不同角色移动方向也不同，所以animator获取移动轴和传参的方法也应该放在Update方法内。但这里涉及到Idle和Moving两个状态，这里需要自行处理其中的逻辑。
+6. · Vector2 move = new Vector2(horizontal, vertical);
+  position = position + move * speed * Time.deltaTime;
+  你将输入值存储在名为 move 的 Vector2 变量中，而不是独立设置用于移动的 x 和 y。
+7. 功能与你之前设置的完全相同，但只需在一行中同时处理 x 和 y。
+  · if(!Mathf.Approximately(move.x, 0.0f) || !Mathf.Approximately(move.y, 0.0f))
+8. 检查 move.x 或 move.y 是否不等于 0。
+9. 使用 Mathf.Approximately 而不是 ==，这是因为计算机存储浮点数的方式意味着精度会有很小的损失。
+  
+  所以，不应测试完美的相等性，因为最终结果应该是 0.0f 的运算可能会得出类似 0.0000000001f 的结果。Approximately 会考虑这种不精确性，如果除去这种不精确性可以认为数值相等，将返回 true。导致我们看到不期望的结果
+  
+  · lookDirection.Set(move.x, move.y);
+  
+  注意：关于 Mathf.Approximately 方法描述：比较两个浮点值，如果它们相似，则返回 true。（浮点数不能精确的使用相等运算符比较）
+  浮点不精确性使得使用相等运算符比较浮点数不精确。 例如，(1.0 == 10.0 / 10.0) 不会每次都返回 true。 Approximately() 比较两个浮点数，如果它们相互之间的差值处于较小值 (Epsilon) 范围内，则返回 true。
+10. 如果 x 或 y 不等于 0，则表示 Ruby 在移动，请将你的观察方向设置为你的 Move 向量，然后 Ruby 应该看向自己移动的方向。如果她停止移动（Move x 和 y 等于 0），则不会发生这种情况，look 将保持为 Ruby 停止移动之前的值。
+  
+  注意，你本可以设置 lookDirection = move，但这是另一种分配向量的 x 和 y 的方式。
+  
+· lookDirection.Normalize();
+11. 然后，在 lookDirection 上调用 Normalize，从而使长度等于 1。如前面所述，Vector2 类型存储位置，但也可以存储方向！
+  
+  (1,0) 将位置存储为世界中心右侧的一个单位，但还存储向右方向（如果你追踪从 0,0 到 0,1 的箭头，就会得到向右的箭头）。
 
+  向量的长度定义该箭头的长度。例如，等于 (0,-2) 的 Vector2 的长度为 2 并指向下方。如果我们归一化该向量，结果将变为等于 (0,-1)，这样仍然会指向下方，但长度为 1。
 
+  通常，你将会归一化用于存储方向的向量，因为这时的长度并不重要，方向才重要。
+
+  注意：千万不要归一化用于存储位置的向量，因为这种向量更改 x 和 y 时会更改位置！
+  · animator.SetFloat("Look X", lookDirection.x);
+  · animator.SetFloat("Look Y", lookDirection.y);
+  · animator.SetFloat("Speed", move.magnitude);
+12. 完成以上步骤之后，接下来你便有三个代码行，用于将数据发送到 Animator，表示观察方向和速度（move 向量的长度）。
+  如果 Ruby 不动，值将为 0，但如果她移动，则为正数。长度始终为正数，根据上文中的示例，向量 (0,-2) 的长度为 2！
+
+  RubyMoveController 最终代码如下：
+  
+  然后，你可以按 Play，并尝试移动 Ruby 来测试所有动画。运行操作Ruby移动可以发现根据朝向选择不同的动画剪辑，当触发减血方法会播放受击动画（闪烁）。
+  
 ## 1. Animation Controller 动画控制器
 
 Animator Controller允许您安排和维护一组动画剪辑和相关的动画过渡
