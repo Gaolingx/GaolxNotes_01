@@ -411,7 +411,56 @@
   6.1 使用你先前看到过的 Input 类，但这次要使用 GetKeyDown，这个函数可以测试特定的键盘按键，这里是按键“C”。只有用键盘时才有效果。
   6.2 如果要确保在不同设备上有效，可以将 Input.GetButtonDown 与轴名称一起使用（就像前面针对移动执行的操作一样），并在输入设置 (Edit > Project Settings > Input) 中定义该轴对应的按钮。如需了解示例，请查看 Axes > Fire1。
   6.3 现在按 Play，然后按 C 即可发射齿轮。你应该会看到没有齿轮，或者齿轮短暂显示后立即消失，但是控制台显示控制台碰到了Ruby。因为Ruby也是碰撞体，所以子弹发射一瞬间先碰到了玩家Ruby所以就马上消失了，这个问题我们明天再来细说。
-
+  
+### 【百日挑战81】unity教程之2D游戏开发初步（四十三）
+  
+前言：在上期教程中，我们在官方一个新的2D的RPG游戏教程系列《RubyAdventure2DRpg》中，我们完成学习unity世界交互——创建飞弹的部分，我们为Ruby添加了发射飞轮  =的功能，关联 projectile 与 RubyMoveController 组件，使得玩家对象可以创建、控制子弹、发射子弹，但是我们也发现了一些问题：按c键发射齿轮时没有齿轮，或者齿轮短暂显示后立即消失，以及空引用异常，今天我们学习如何处理这样的问题。
+  
+7.你的控制台有两个错误行  
+  
+  7.1 null 引用异常  
+  如果双击 null 引用异常错误，则会打开 Projectile 脚本并定位到 Rigidbody2d.AddForce (direction * force) 行，这表示尽管我们在 Start 中获得了刚体，但 Rigidbody2d 变量还是为空（包含 null）。
+  
+  通过断点调试 projectile.Launch(rubyMoveController.lookDirection, Projectileforce); 这句不难发现，projectile.rigidbody2d 的值为null，这意味着当我们调用 projectile.Launch 方法时 rigidbody2d 的值为空，无法获取刚体对象导致无法执行 AddForce 方法。
+  
+  这就涉及到MonoBehavior生命周期问题了，这是因为在你创建对象时 Unity 不会运行 Start，而是在下一帧才开始运行。因此，在飞弹上调用 Launch 时，只实例化 (Instantiate)，不调用 Start，因此 Rigidbody2d 仍然为空。要解决此问题，请将 Projectile 脚本中的 void Start() 函数重命名为 void Awake()。
+  
+  void Start() 与 void Awake() 区别在于前者在游戏运行第一帧前执行一次，而后者调用 Instantiate 时就会立即调用其中方法，在 Start 方法前执行。
+  
+  与 Start 刚好相反，在创建对象时（调用 Instantiate 时）就会立即调用 Awake，因此在调用 Launch 之前已正确初始化 Rigidbody2d。
+  
+  修改后再次执行，可以发现控制台不再报错了。我们也可以看到齿轮被发射出来。
+  
+  7.2 在日志中了解到齿轮 与 Ruby 发生了碰撞。  
+  现在要解决第二个问题：飞弹与 Ruby 碰撞。这是因为你是在 Ruby 上创建的飞弹，因此一旦创建，物理系统就会立刻告知你，飞弹刚体正在与 Ruby 碰撞体碰撞。然后你在 OnCollisitonEnter 函数中调用 Destroy，因此会立即销毁飞弹。
+  
+你可以测试一下该对象是否与 Ruby 碰撞，然后不销毁飞弹。但还是会遇到一个问题，那就是碰撞后会立即停止移动。
+  
+8.图层和碰撞  
+  要修复这个碰撞问题，正确方法是使用图层。图层是每个游戏对象共有的属性，同一Layer中的刚体可相互碰撞，不同Layer间通常不发生碰撞，游戏对象默认为 Default，可通过 Tags & Layers 设置。我们可将游戏对象分组在一起，以便可以对它们进行筛选。你的目标是创建一个角色图层来放入 Ruby 游戏对象，然后创建一个飞弹图层来放入所有飞弹。
+  
+  我们需要将玩家与子弹所在的Layer分离，然后可以告诉物理系统，角色图层和飞弹图层不能碰撞，因此物理系统将忽略这些图层中的对象之间的所有碰撞。
+  
+  8.1 要查看某个游戏对象在哪个图层，请单击 Inspector 右上角的 Layers 下拉选单。所有对象都从 Default 层开始（图层编号为 0）。游戏最多可以包含 32 个不同的图层。
+  
+  8.2 如果单击下拉选单，则会弹出一个窗口，其中会显示 Unity 定义一些的内置图层，但是你需要创建自己的图层，因此请选择 Add Layer。此时将打开图层管理器。
+  
+  Layer 0 至 7 已由 Unity 锁定，无法更改。所以需要在 Layer 8 中输入 Character，用于存放角色图层，在 Layer 9 中输入 Projectile，用于存放子弹图层。
+  
+  8.3 将游戏对象分配到不同的图层上：现在打开你的 Ruby 预制件，并将其 Layer 属性更改为 Character。保存预制件，然后对飞弹预制件进行同样的操作，但是这次请将图层设置为 Projectile。
+  
+  8.4 设定图层碰撞规则：然后打开 Edit > Project Settings > Physics 2D ，查看底部的 Layer Collision Matrix，便可看到哪些图层彼此碰撞：
+  
+  默认情况下，所有复选框均已勾选，因此所有图层都与其他图层发生碰撞，但你要取消选中 Character 行与 Projectile 列之间的交集，因此这两个图层不再发生碰撞。
+  
+  注：Layer Collision Matrix tab 选项卡设置控制碰撞体（附加到不同的 Rigidbody 2D）是否可以相互接触，具体取决于分配给它们所在游戏对象的层。该矩阵将每个层与其他层相对应地显示，允许您选择哪些特定层可以与另一个层接触。
+  两个层之间的交叉点处的复选标记表示允许这两个层之间的接触，而清除的复选框表示决不允许这两个层之间的接触。当您将鼠标悬停在图层名称或复选框上时，其行和列会突出显示，以便更轻松地查看其影响的图层。
+  
+  8.5 现在你可以进入运行模式，齿轮可以正常发射出去，且和Robot正常碰撞，不会再与 Ruby 发生碰撞，但仍会与其他对象（例如箱子或敌人）发生碰撞。
+  
+  8.6 现在我们只差一个发射飞轮的动作了，我们将继续完善发射飞轮的动画部分，我们只需要在 PlayerWeapon 组件中添加animator.SetTrigger("Launch")，将参数发射到Animator组件，组件接收参数后根据条件过渡animation controller的blendtree对应发射状态下挂接的动画剪辑。
+  
+至此，我们就完成了《RubyAdventure2DRpg》教程的unity世界交互——创建飞弹的部分。
 
 
 ## 1. Animation Controller 动画控制器
