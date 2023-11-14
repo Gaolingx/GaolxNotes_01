@@ -461,6 +461,43 @@
   8.6 现在我们只差一个发射飞轮的动作了，我们将继续完善发射飞轮的动画部分，我们只需要在 PlayerWeapon 组件中添加animator.SetTrigger("Launch")，将参数发射到Animator组件，组件接收参数后根据条件过渡animation controller的blendtree对应发射状态下挂接的动画剪辑。
   
 至此，我们就完成了《RubyAdventure2DRpg》教程的unity世界交互——创建飞弹的部分。
+  
+### 【百日挑战82】unity教程之2D游戏开发初步（四十四）
+  
+前言：在上期教程中，我们在官方一个新的2D的RPG游戏教程系列《RubyAdventure2DRpg》中，我们完善了unity世界交互——创建飞弹的部分，我们通过 void Awake() 方法解决了实例化对象时null 引用异常的问题，通过分离子弹和玩家所在的 Layers 并在 Layer Collision Matrix 设定图层碰撞规则来解决子弹与玩家自碰撞的问题，最后，我们通过添加animator.SetTrigger方法为Ruby配置发射状态的动画，今天我们将开始试着完善gameplay相关的内容——修复机器人。
+  
+一、开始之前，我们对发射飞弹的输入部分做点改进，实现玩家既可以按c键又可以点击鼠标左键发射飞弹。
+  
+1.检查input manager设置：我们首先要在 Project Settings > Input Manager 配置好 Fire1 有关的Button，我们将它作为我们输入的射击键，默认配置了left ctrl和mouse 0，如果这里已经配置好了我们可以直接修改代码了。
+  
+2.可以在判断玩家输入的if语句内添加“或”的方法（满足任一条件则返回ture）增加更多的输入方法，我们找到 RubyMoveController 组件，将 if(Input.GetKeyDown(KeyCode.C)) 改为 if(Input.GetKeyDown(KeyCode.C) || Input.GetAxis("Fire1")!=0) 即可
+注：Input.GetAxis 方法返回的是一个float类型的值而不是bool类型的值，无法直接在if中使用，我们需要使用逻辑运算符!=判断不为0，这样当按下LCtrl或点击鼠标左键时返回的是1.0的浮点值，bool表达式的值返回ture，我们就认为用户按下了Fire1对应的键
+  
+二、修复机器人
+目标：我们希望Ruby抛出齿轮可以修复Robot，当玩家完成修复Robot后将停下来且不再对Ruby造成伤害（不发生碰撞减血）并播放相应动画表示你已经修复了Robot。
+  
+第一步是在 Enemy 脚本中编写一个函数来修复机器人并处理机器人在修复后的反应。目前，你的飞弹在碰撞时只是销毁自身。但你的目标是用飞弹来修复那些攻击性强并已损坏的机器人。
+  
+要修复机器人，请执行以下操作：
+  
+1.我们可以添加一个条件，如果满足则Robot停止移动，要在 EnemyController 脚本中编写函数，请添加一个名为 broken 的 public bool 变量，并将该变量初始化为 true，这样机器人一开始就是损坏的。
+  
+2.我们希望当机器人被修好后（broken值为false），退出方法，让减血和移动的代码不执行。在 Update 函数的开头，添加一个测试来检查机器人是否没有损坏。如果没有损坏，则退出函数。你需要将此代码添加到 Update 和 FixedUpdate 函数中，这样只要 broken的值为false，则会进入该if语句，return跳出函数不再执行后面的语句。
+  
+修复后，机器人将停止移动。
+由于这个原因，提前退出 update 函数将导致用于移动机器人的代码停止执行：
+  
+3.最后，编写可用来修复机器人的函数。
+在 HealthCollectible 组件中，添加一个public类型的 Fix 函数，便于在其他组件中调用（不一定是只能在这个类中执行，我们肯定不是让Ruby自己修复自己...而是被飞轮碰撞后在检测后调用Fix方法修复机器人），关于调用Fix的方法的脚本写在 Projectile 中
+  
+你刚才已经将 broken 设置为 false 并将 Rigidbody2d 的 simulated 属性设置为 false。
+这样会将刚体从物理系统模拟中删除，因此系统不会将机器人视为碰撞对象，并且修好的机器人不会再阻止飞弹，也不能伤害主角。
+  
+4.我们需要在 Projectile 的 OnCollisionEnter2D 调用 healthCollectible 的 Fix 方法，当飞轮碰到Robot就能修复Robot，哪现在要做的剩余工作就是修改 Projectile 脚本中的 OnCollisionEnter2D 函数。请从与飞弹碰撞的对象上获取 EnemyController，如果对象具有 EnemyController，则意味着你已经修复了该敌人。
+  
+5.点击Play并用齿轮射击Robot，当我们的飞弹与Robot发生碰撞时将修复停止移动的机器人。然后你可以攻击机器人，并且不会受到伤害，而且我们还可以穿过Robot，说明物理引擎效果已被取消。
+
+
 
 
 ## 1. Animation Controller 动画控制器
