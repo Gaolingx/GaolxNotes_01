@@ -521,21 +521,21 @@
 
 
 ## 1. Animation Controller 动画控制器
-
+  
 Animator Controller允许您安排和维护一组动画剪辑和相关的动画过渡
-
+  
 对于一个角色或对象。在大多数情况下，有多个动画并在某些游戏条件发生时在它们之间切换是正常的。
-
+  
 例如，您可以从步行切换动画剪辑，每当按下空格键时跳转到动画剪辑。但是，即使您只有一个动画剪辑，您仍然需要将其放入 Animator Controller 中才能在游戏对象
-
+  
 Animator Controller 引用了其中使用的动画剪辑，并使用状态机，它可以被认为是动画剪辑和过渡的流程图，或者是在 Unity 中用可视化编程语言编写的简单程序。
-
+  
 ![](../imgs/MecanimAnimatorControllerWindow.png)
-
+  
 当您开始使用动画窗口为游戏对象设置动画时，或者当您将动画剪辑附加到游戏对象时，Unity 会自动创建一个动画控制器。
-
+  
 要手动创建 Animator Controller，请右键单击 Project 窗口，然后单击Create > Animator Controller。
-
+  
 ## 2. Animation State 动画状态 和 Animation State Machine 动画状态机
 
 动画状态  Animation Stat 是动画状态机 Animation State Machine 的基本构建模块
