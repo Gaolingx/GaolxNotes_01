@@ -287,7 +287,33 @@ Canvas 画布具有 Canvas Scaler 组件，用于定义 UI 在不同的屏幕大
 7.测试：调整遮罩大小，观察我们的血条长度是否随着Mask长度被遮挡显示，正常情况下应该只显示被遮罩的区域，但请注意，这是你在 Hierarchy 中选择的 Mask 遮罩，而不是生命值条！
   
 此时会隐藏生命值条。因为矩形是模板，所以在你缩小矩形时，生命值条上与较小遮罩不重叠的所有部分都将被隐藏。这也是为什么将生命值条的锚点设置在一个角处，而不是根据遮罩来缩放。如果生命值条根据重新缩放，无法达到目的。
-
+  
+### 【百日挑战98】unity教程之2D游戏开发初步（五十六）
+  
+前言：在上期教程中，我们通过为血条栏加上生命值条，学习了UGUI中遮罩（Mask）及其对应锚点的使用方法，避免了直接拉伸血条Image造成的变性的问题，现在已经完成了生命值条的可视部分，完成了血条部分UI界面、图形图像部分的设计，今天我们继续学习通过代码来控制血条栏上的生命值条，实现实时显示玩家（Ruby）当前血量。
+  
+思路：我们需要通过代码传值控制healthMask遮罩层的长短实现血条显示的效果。
+  
+11. 编写生命值条的脚本
+  
+我们在Scripts目录下创建一个名为 UIHealthBar 的新脚本，添加using UnityEngine.UI;的引用，其中包含以下代码行：
+  
+让我们来观察这段代码：
+  
+1.除了使用 rect.width 获取屏幕上的大小和使用 SetSizeWithCurrentAnchors 从代码中设置大小和锚点之外，这里没有其他新内容。
+  
+2.当生命值更改为介于 0 和 1 之间的值（1 表示生命值为满血，0.5 表示一半，以此类推）时，你的代码将调用 SetValue，这将更改我们的遮罩大小，进而隐藏生命值条的右侧部分。
+  
+3.现在，如果返回 Unity 编辑器来编译脚本，你会收到一条错误消息，提示“The type or namespace name 'Image' could not be found”。这是因为 Image 不是 UnityEngine 主代码“命名空间”的一部分（命名空间可将所有类似的内容分组在一起），而是在一个名为 UnityEngine.UI 的子类别中。
+  
+我们可以通过键入 UnityEngine.UI.Image 来解决此问题，但是 GameObject 是 UnityEngine 命名空间的一部分，并且到目前为止，我们还不必编写 UnityEngine.GameObject，为什么会这样呢？
+  
+实际上，在脚本的顶部，还记得在第一个教程中提到的带有“using”关键字的代码行吗？当时我们略过了这一个话题。这些关键字可以将命名空间中的所有内容“导入”到脚本中。
+  
+代码行 using UnityEngine; 让你无需在 UnityEngine 中的所有类（如 GameObject）前面键入 UnityEngine。所以，如果你在 using.UnityEngine; 代码行下面直接添加 using UnityEngine.UI; 代码行，你的代码将会正确编译，因为现在可以在该脚本内直接使用 Image 了。
+  
+为了更改生命值条，要做的最后一件事是告知脚本，生命值已经变了。你需要从 RubyController 脚本的 ChangeHealth 函数中调用 SetValue 来提供新的生命值。
+可以像到先前一样，在 RubyController 脚本中公开 UIHealthBar 类型的公共变量，然后在 Inspector 中手动分配这个变量。但是你需要在创建的每个场景中执行此操作。
 
 
 ## 4. UGUi 入门
@@ -374,7 +400,8 @@ Rect Transform Inspector 中各属性值：
 [菜鸟教程静态成员文档](https://www.runoob.com/csharp/csharp-class.html)
 
 可以使用 static 关键字把类成员定义为静态的。当我们声明一个类成员为静态时，意味着无论有多少个类的对象被创建，只会有一个该静态成员，并且被所有类对象所共享。
-
+  
+例如，我们创建血条UI显示的脚本时，就用到了public static UIHealthBar Instance { get; private set; }来声明公有静态成员属性，获取当前血条本身，因为不论在哪个Scene中切换，玩家的生命值条在游戏中通常有且仅有一个。所以我们可以将该组件声明为静态对象，可以被直接调用而无需事先实例化该对象。
 
 
 <br>
