@@ -352,7 +352,35 @@ myTime.deltaTime;
 
 ### 【百日挑战100】unity教程之2D游戏开发初步（五十八）
 
-前言：在上期教程中，通过编写生命值条的脚本来控制血条栏上的生命值遮罩大小控制血量的显示，实现实时显示玩家（Ruby）当前血量。在之前的教程中，你一直在使用控制台的 Debug.Log 在主角受伤时输出当前的生命值，而现在我们希望将玩家当前的血量反馈到我们的血条UI上，我们需要在控制减血加血的函数块中添加缩放或移动遮罩层的方法
+前言：在上期教程中，通过编写生命值条的脚本来控制血条栏上的生命值遮罩大小控制血量的显示，实现实时显示玩家（Ruby）当前血量。在之前的教程中，你一直在使用控制台的 Debug.Log 在主角受伤时输出当前的生命值，而现在我们希望将玩家当前的血量反馈到我们的血条UI上，我们需要在控制减血加血的函数块中添加缩放或移动遮罩层的方法。
+  
+13. 更新生命值条
+现在，让我们在游戏过程中动态更新生命值条。只需打开 RubyHealthSystem 脚本，找到UI血量更改的方法，然后在 ChangeHealth 函数中在 Debug.Log 代码前加上一句话，用于更改血条遮罩的长度：
+  
+UIHealthBar.Instance.SetMaskValue(currentHealth / (float)maxHealth);
+  
+你现在将 currentHealth 相对于 maxHealth 的比值提供给 UIHealthBar SetValue 函数（将当前的生命值 currentHealth 除以生命上限 maxHealth）。maxHealth 前面的 (float) 让 C# 将 maxHealth 视为一个浮点值。
+  
+currentHealth 和 maxHealth 都是整数，将两个整数相除会被 C# 视为一个整数除法，因此 2/4 不会得到 0.5，而是 0。将其中一个数字强制转换为浮点数会将这个除法变为 2/4.0，这样就会得出的浮点结果等于 0.5。
+  
+整个调用流程大致为就是：currentHealth / maxHealth 得到当前玩家的生命值，传入 value 参数到 SetMaskValue 方法后，我们假设value 为 0.8，用0.8去乘以原始的遮罩层长度 originalSize，这里假设为1，通过 SetSizeWithCurrentAnchors()方法 设置到血条的mask 遮罩层的宽度上，整个血条的遮罩就缩短了20%，这样我们Ruby就显示只有80%的剩余血量了
+  
+现在，你可以将 UIHealthBar 脚本添加到生命值条游戏对象 healthMask 上，将遮罩拖入 Inspector 中的 Mask 属性中，保存，然后进入运行模式。如果你让 Ruby 受到敌人或伤害区域的伤害，她的生命值条便会相应更新。  
+最终运行效果如下：
+  
+最后，让我们复习 RubyHealthSystem 和 UIHealthBar 组件中的代码，确保你尽量理解这其中的每一行代码。
+章节总结：  
+在本教程中，你了解了 Unity 如何渲染 UI，以及如何在编辑器中使用矩形工具放置元素并调整元素大小，从而确保在多种比例下都能正常显示。
+你还学习了如何在脚本和单例中使用静态成员，使 UIHealthBar 脚本可从任何位置被访问。
+在下一教程中，你将进一步强化你的 UI 以添加一个对话的角色，并将介绍视频游戏制作的重要概念：射线投射 (Raycasting)。
+  
+### 【百日挑战101】UGUI必备知识梳理汇总
+
+当然我们也先不急着学习新的模块，下一张让我们来重新复习前面关于UGUI的知识梳理，让大家更好理清里边的思路
+
+
+
+
 
 ## 4. UGUi 入门
 
