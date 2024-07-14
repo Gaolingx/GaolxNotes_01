@@ -1,6 +1,6 @@
 # C#高级编程之——反射（二）
 
-## 二、反射入门——反射的使用
+## 二、反射入门——反射的使用（概念篇）
 
 在上期教程中，我们对反射的概念有了简单的了解，知道什么是反射，反射有什么作用，还对c#一些核心概念做了温习，知道了程序集、模块、元数据、类型的作用、构成以及他们的关系，今天我们来开始对反射的使用进行介绍。
 
@@ -38,3 +38,15 @@ Type type = stu.GetType();
 ### Type的使用
 
 1. 通过 typeof 运算符获取Type类型/通过实例对象获取类型：
+
+```csharp
+public void TestGetType()
+{
+    //通过 typeof 运算符获取Type类型
+    Type type01 = typeof(StudentInfo);
+
+    //通过实例对象获取类型
+    StudentInfo studentInfo = new StudentInfo(); //创建对象
+    Type type02 = studentInfo.GetType(); //GetType 是Object 这个类的方法
+}
+```
