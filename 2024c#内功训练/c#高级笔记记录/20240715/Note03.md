@@ -6,6 +6,18 @@
 
 ### 详细知识点
 
+**关于propertyInfo：**
+
+- CanRead：这是一个布尔值（bool），指示是否可以通过该 PropertyInfo 实例获取属性的值。如果属性的访问器（getter）是公共的（public）或者该属性具有公共的访问器，并且当前反射的上下文（比如访问级别）允许访问它，则 CanRead 返回 true。简单理解：如果这个字段带有get访问器，则CanRead为true，如果带有set访问器，则CanWrite为true，以此类推。
+- CanWrite：这也是一个布尔值（bool），指示是否可以通过该 PropertyInfo 实例设置属性的值。如果属性的访问器（setter）是公共的（public）或者该属性具有公共的访问器，并且当前反射的上下文允许访问它，则 CanWrite 返回 true。
+- GetMethod：这是一个 MethodInfo 对象，代表用于设置属性值的访问器（setter）方法。即反编译后这个get属性代表什么方法，即get访问器被编译成的方法名称，如果属性是只读的（即没有setter），则此属性为 null。SetMethod同理。
+- PropertyType：这是一个 Type 对象，表示属性的数据类型。它指明了属性的值是什么类型的。简单理解：属性的类型，如int值类型的字段，PropertyType为Int32
+- Attributes：特性，这是一个 AttributeCollection 对象，它包含了与该属性关联的所有自定义属性的集合。这个集合允许你查询并操作与属性相关联的自定义属性。
+- CustomAttributes：自定义特性，个属性实际上在 PropertyInfo 类中并不直接存在，但你可能是在引用通过反射API可以获取的自定义属性的能力。通常，我们会使用 GetCustomAttributes 或 GetCustomAttributes<T>() 方法来获取与 PropertyInfo 关联的自定义属性。这些方法返回自定义属性的数组，可以让你查询和操作这些属性。
+- DeclaringType：这是一个 Type 对象，表示声明该属性的类型。如果属性是接口的一部分，则 DeclaringType 返回接口本身；如果属性是类或结构的一部分，则 DeclaringType 返回类或结构的类型。简单理解：表示属性属于什么类下的，例如int a和int b属于Class C下，则DeclaringType为C。
+
+**Type类的具体使用案例：**
+
 1. 获取属性
 
 通过对"Console.WriteLine($"StudentInfo类型中属性的名称:{propertyInfo.Name},类型:{propertyInfo.PropertyType}");"进行断点，观察PropertyInfo中各字段的信息。
