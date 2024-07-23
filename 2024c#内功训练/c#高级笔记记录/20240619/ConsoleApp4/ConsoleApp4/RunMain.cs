@@ -38,6 +38,12 @@ class RunMain
 
     }
 
+    public void TestGetAllField()
+    {
+        Type type01 = typeof(StudentInfo);
+        var fieldInfos = type01.GetFields(BindingFlags.Instance|BindingFlags.NonPublic); //fieldInfos为FieldInfo[]，| 是位运算符，表示并且的意思
+    }
+
     static void Main()
     {
         TestGetPropertyByName("Age");

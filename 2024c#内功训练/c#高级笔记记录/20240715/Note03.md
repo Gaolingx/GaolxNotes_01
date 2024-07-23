@@ -17,7 +17,7 @@
 - Attributes：特性，这是一个 AttributeCollection 对象，它包含了与该属性关联的所有自定义属性的集合。这个集合允许你查询并操作与属性相关联的自定义属性。
 - CustomAttributes：自定义特性，这个属性实际上在 PropertyInfo 类中并不直接存在，但你可能是在引用通过反射API可以获取的自定义属性的能力。通常，我们会使用 GetCustomAttributes 或 GetCustomAttributes<T>() 方法来获取与 PropertyInfo 关联的自定义属性。这些方法返回自定义属性的数组，可以让你查询和操作这些属性。
 - DeclaringType：这是一个 Type 对象，表示声明该属性的类型。如果属性是接口的一部分，则 DeclaringType 返回接口本身；如果属性是类或结构的一部分，则 DeclaringType 返回类或结构的类型。简单理解：表示属性属于什么类下的，例如int a和int b属于Class C下，则DeclaringType为C。
-- BindingFlags：这是一个枚举类型，用于指定在反射操作（如获取类型成员）时应该使用的绑定标志。如Public、NonPublic、Static、Instance等。
+- BindingFlags：这是一个枚举类型，用于指定在反射操作（如获取类型成员）时应该使用的绑定标志。如Public（公共成员）、NonPublic（非公共成员，即访问修饰符为 internal、protected 或 private 的成员）、Static（静态成员）、Instance（实例成员）等。
 
 **Type类的具体使用案例：**
 
@@ -53,3 +53,11 @@ public static void TestGetPropertyByName(string name)
 ```
 
 运行结果如下：
+
+3. 获取所有字段
+
+```csharp
+
+```
+
+运行结果如下，由此我们得出结论：属性是对字段的封装
