@@ -57,7 +57,52 @@ public static void TestGetPropertyByName(string name)
 3. 获取所有字段
 
 ```csharp
+public static void TestGetAllField()
+{
+    Type type01 = typeof(StudentInfo);
+    var fieldInfos = type01.GetFields(BindingFlags.Instance|BindingFlags.NonPublic);
 
+    foreach (var fieldInfo in fieldInfos)
+    {
+        Console.WriteLine($"{nameof(type01)}类型中私有字段的名称:{fieldInfo?.Name},类型:{fieldInfo?.FieldType}");
+    }
+}
 ```
 
-运行结果如下，由此我们得出结论：属性是对字段的封装
+运行结果如下，可以看到我们可以获取StudentInfo类中_studentId、_Id两个私有字段，而<_Id>k__BackingField指的是属性。没有"<...>"如_studentId指的是字段
+由此我们得出结论：属性是对字段的封装，属性里面都封装了一个字段。
+
+4. 获取单个字段
+
+开始之前，我们先在StudentInfo类中加上如下字段和属性：
+
+```csharp
+private int _money;
+
+private int money
+{
+    get { return _money; }
+    set { _money = value; }
+}
+```
+
+Main函数中执行以下代码，传入money，观察控制台输出：
+
+```csharp
+public static void TestGetFieldByName(string name)
+{
+    Type type01 = typeof(StudentInfo);
+    var fieldInfo = type01.GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
+
+    Console.WriteLine($"{nameof(type01)}类型中字段的名称:{fieldInfo?.Name},类型:{fieldInfo?.FieldType}"); //?表示可空
+}
+
+static void Main()
+{
+    TestGetFieldByName("_money");
+}
+```
+
+5. 获取类的命名空间
+
+从这开始，我们将开始学习type的更多用法，例如获取类名、获取类的命名空间、它的基类、验证委托是否是类等。

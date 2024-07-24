@@ -35,4 +35,11 @@ public class StudentInfo
     public int Age { get; set; }
     public string Name { get; set; }
 
+    private int _money;
+    private int money
+    {
+        get { return _money; }
+        set { _money = value; }
+    }
+
 }

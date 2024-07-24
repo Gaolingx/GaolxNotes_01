@@ -38,15 +38,29 @@ class RunMain
 
     }
 
-    public void TestGetAllField()
+    public static void TestGetAllField()
     {
         Type type01 = typeof(StudentInfo);
+        //获取所有私有属性
         var fieldInfos = type01.GetFields(BindingFlags.Instance|BindingFlags.NonPublic); //fieldInfos为FieldInfo[]，| 是位运算符，表示并且的意思
+
+        foreach (var fieldInfo in fieldInfos)
+        {
+            Console.WriteLine($"{nameof(type01)}类型中私有字段的名称:{fieldInfo?.Name},类型:{fieldInfo?.FieldType}");
+        }
+    }
+
+    public static void TestGetFieldByName(string name)
+    {
+        Type type01 = typeof(StudentInfo);
+        var fieldInfo = type01.GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Console.WriteLine($"{nameof(type01)}类型中字段的名称:{fieldInfo?.Name},类型:{fieldInfo?.FieldType}"); //?表示可空
     }
 
     static void Main()
     {
-        TestGetPropertyByName("Age");
+        TestGetFieldByName("_money");
     }
 
     
