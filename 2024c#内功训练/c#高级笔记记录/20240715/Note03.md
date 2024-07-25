@@ -103,6 +103,25 @@ static void Main()
 }
 ```
 
-5. 获取类的命名空间
+5. 获取类的命名空间、全称、基类等
 
 从这开始，我们将开始学习type的更多用法，例如获取类名、获取类的命名空间、它的基类、验证委托是否是类等。
+
+```csharp
+public static void TestGetFullName()
+{
+    Type type01 = typeof(StudentInfo);
+
+    Console.WriteLine($"它的全称是：{type01.FullName}");
+
+    Console.WriteLine($"它的基类是：{type01.BaseType}");
+
+    Console.WriteLine($"它的类名是：{type01.Name}");
+
+    Console.WriteLine($"它的命名空间是：{type01.Namespace}");
+}
+```
+
+运行结果如下：
+
+至此，我们就学习完关于Type类的基本用法，下一张章我们将学习使用Activator.CreateInstance创建实例。

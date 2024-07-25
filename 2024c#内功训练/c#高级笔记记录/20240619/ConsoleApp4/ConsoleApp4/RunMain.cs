@@ -1,5 +1,5 @@
-﻿
-using System.Reflection;
+﻿using System.Reflection;
+using Info.Main;
 
 class RunMain
 {
@@ -58,9 +58,22 @@ class RunMain
         Console.WriteLine($"{nameof(type01)}类型中字段的名称:{fieldInfo?.Name},类型:{fieldInfo?.FieldType}"); //?表示可空
     }
 
+    public static void TestGetFullName()
+    {
+        Type type01 = typeof(StudentInfo);
+
+        Console.WriteLine($"它的全称是：{type01.FullName}"); //命名空间+类名
+
+        Console.WriteLine($"它的基类是：{type01.BaseType}");
+
+        Console.WriteLine($"它的类名是：{type01.Name}");
+
+        Console.WriteLine($"它的命名空间是：{type01.Namespace}");
+    }
+
     static void Main()
     {
-        TestGetFieldByName("_money");
+        TestGetFullName();
     }
 
     
