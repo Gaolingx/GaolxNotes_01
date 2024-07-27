@@ -71,9 +71,20 @@ class RunMain
         Console.WriteLine($"它的命名空间是：{type01.Namespace}");
     }
 
+    public static void TestCreateInstance()
+    {
+        Type type01 = typeof(StudentInfo);
+        // CreateInstance底层其实是调用了 无参构造方法。
+        // 对象创建的唯一途径只能是构造方法被调用
+        var instance = Activator.CreateInstance(type01) as StudentInfo;
+        instance.Age = 19;
+        instance.Name = "爱莉小跟班gaolx";
+        Console.WriteLine($"我的年龄是{instance?.Age},名字是{instance?.Name}");
+    }
+
     static void Main()
     {
-        TestGetFullName();
+        TestCreateInstance();
     }
 
     
