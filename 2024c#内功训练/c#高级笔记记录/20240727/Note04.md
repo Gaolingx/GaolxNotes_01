@@ -38,3 +38,28 @@ public static void TestCreateInstance()
 通过对Console.WriteLine($"...)断点调试我们发现实例不为空，说明对象创建成功。
 
 2. 调用有参构造方法创建实例
+
+现在，我们在StudentInfo类中有如下带有两个参数的构造函数：
+
+```csharp
+public StudentInfo(string name, int age)
+{
+    Name = name;
+    Age = age;
+}
+```
+
+在Main方法中执行如下代码：
+
+```csharp
+public static void TestCreateInstance02()
+{
+    Type type01 = typeof(StudentInfo);
+    var instance = Activator.CreateInstance(type01, "爱莉小跟班gaolx", 19) as StudentInfo;
+    Console.WriteLine($"我的年龄是{instance?.Age},名字是{instance?.Name}");
+}
+```
+
+运行代码，如果没有抛出异常，观察控制台输出我们可以判断调用了StudentInfo类中的有参构造函数。结论：再次的验证 CreateInstance 其实是调用了StudentInfo类的构造方法。
+
+总结：CreateInstance 底层其实是调用了 无参构造方法。对象创建的唯一途径只能是构造方法被调用。

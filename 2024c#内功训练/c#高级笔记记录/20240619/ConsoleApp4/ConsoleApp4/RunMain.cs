@@ -82,9 +82,17 @@ class RunMain
         Console.WriteLine($"我的年龄是{instance?.Age},名字是{instance?.Name}");
     }
 
+    public static void TestCreateInstance02()
+    {
+        Type type01 = typeof(StudentInfo);
+        // 再次验证 CreateInstance 其实是调用了构造方法
+        var instance = Activator.CreateInstance(type01, "爱莉小跟班gaolx", 19) as StudentInfo;
+        Console.WriteLine($"我的年龄是{instance?.Age},名字是{instance?.Name}");
+    }
+
     static void Main()
     {
-        TestCreateInstance();
+        TestCreateInstance02();
     }
 
     
