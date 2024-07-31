@@ -35,7 +35,7 @@ namespace Info.Main
         private string _studentId; //字段
         private int _Id { get; set; } //属性（访问器），get set实际上是两个方法
         public int Age { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = "爱莉大跟班gaolx";
 
         private int _money;
         private int money

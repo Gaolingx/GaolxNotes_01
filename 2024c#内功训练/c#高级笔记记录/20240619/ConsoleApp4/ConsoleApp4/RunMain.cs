@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using Info.Main;
 
 class RunMain
@@ -14,6 +15,7 @@ class RunMain
                                              //由于所有类型都继承自System.Object，所以所有的类型都含有GetType 方法
     }
 
+    //获取属性
     public static void TestGetAllProperty()
     {
         //获取类型
@@ -50,6 +52,7 @@ class RunMain
         }
     }
 
+    //获取字段
     public static void TestGetFieldByName(string name)
     {
         Type type01 = typeof(StudentInfo);
@@ -58,6 +61,7 @@ class RunMain
         Console.WriteLine($"{nameof(type01)}类型中字段的名称:{fieldInfo?.Name},类型:{fieldInfo?.FieldType}"); //?表示可空
     }
 
+    //获取类的信息
     public static void TestGetFullName()
     {
         Type type01 = typeof(StudentInfo);
@@ -71,6 +75,7 @@ class RunMain
         Console.WriteLine($"它的命名空间是：{type01.Namespace}");
     }
 
+    //创建对象
     public static void TestCreateInstance()
     {
         Type type01 = typeof(StudentInfo);
@@ -90,9 +95,33 @@ class RunMain
         Console.WriteLine($"我的年龄是{instance?.Age},名字是{instance?.Name}");
     }
 
+    //操作属性
+    public static void TestOperationProp01()
+    {
+        /*
+         * 操作属性（常规操作）：
+         * StudentInfo obj = new();
+         * obj.Age = 19; // 对象.属性名 = 属性值
+         * var age = obj.Age; // var 变量名 = 对象.属性名
+         */
+
+        var tp = typeof(StudentInfo);
+        // 获取属性
+        var propInfo = tp.GetProperty("Name");
+
+        // 创建对象
+        var instance = Activator.CreateInstance(tp);
+        // 为属性赋值
+        propInfo.SetValue(instance, "爱莉小跟班gaolx");
+
+        // 获取属性的值
+        var name = propInfo.GetValue(instance);
+        Console.WriteLine($"我的名字是{name}");
+    }
+
     static void Main()
     {
-        TestCreateInstance02();
+        TestOperationProp01();
     }
 
     
