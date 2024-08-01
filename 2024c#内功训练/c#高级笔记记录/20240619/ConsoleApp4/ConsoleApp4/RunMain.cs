@@ -119,9 +119,23 @@ class RunMain
         Console.WriteLine($"我的名字是{name}");
     }
 
+    //操作字段
+    public static void TestOperationField01()
+    {
+        var tp = typeof(StudentInfo);
+        var field = tp.GetField("_studentId",BindingFlags.Instance|BindingFlags.NonPublic); //获取私有字段需要GetField的一个重载，BindingFlags指定搜索的访问级别
+
+        var instance = Activator.CreateInstance(tp);
+
+        field?.SetValue(instance, "19"); // 字段赋值
+
+        var obj = field?.GetValue(instance); //获取字段的值
+        Console.WriteLine($"我的年龄是{obj}");
+    }
+
     static void Main()
     {
-        TestOperationProp01();
+        TestOperationField01();
     }
 
     

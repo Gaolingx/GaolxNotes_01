@@ -7,7 +7,7 @@
 ### 详细知识点
 
 **关于Type.GetProperty：**
-这个方法用于获取当前Type对象所表示的类型中指定的属性信息，并返回一个PropertyInfo对象，该对象包含有关该属性的元数据（如名称、类型、访问级别等）。注：该方法默认只能获取到公共（public）的成员属性，如需通过反射访问非公共（如私有、受保护等）的成员属性，你可以使用 Type.GetProperty 方法的一个重载版本，它接受 BindingFlags 枚举作为参数。
+Type.GetProperty方法用于获取当前Type对象所表示的类型中指定的属性信息，并返回一个PropertyInfo对象，该对象包含有关该属性的元数据（如名称、类型、访问级别等）。注：该方法默认只能获取到公共（public）的成员属性，如需通过反射访问非公共（如私有、受保护等）的成员属性，你可以使用 Type.GetProperty 方法的一个重载版本，它接受 BindingFlags 枚举作为参数。
 
 **关于PropertyInfo.SetValue：**
 PropertyInfo类表示某个属性的信息，并且它提供了一个SetValue方法，用于设置与该属性关联的值。这是通过反射API实现的，允许在运行时动态地修改对象的属性。
@@ -27,7 +27,6 @@ var val = propInfo.GetValue(obj);//获取属性的值
 Console.WriteLine(val);
 
 ```
-
 
 操作：
 
