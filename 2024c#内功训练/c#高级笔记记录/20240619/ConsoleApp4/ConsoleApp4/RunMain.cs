@@ -133,9 +133,20 @@ class RunMain
         Console.WriteLine($"我的年龄是{obj}");
     }
 
+    //加载程序集
+    public static void TestGetAssembly01()
+    {
+        var assembly = Assembly.Load("ConsoleApp4");
+    }
+
+    public static void TestGetAssembly02()
+    {
+        var assembly = Assembly.LoadFile(@"F:\GitHub\GaolxNotes_01\2024c#内功训练\c#高级笔记记录\20240619\ConsoleApp4\ConsoleApp4\bin\Debug\net8.0\ConsoleApp4.dll");
+    }
+
     static void Main()
     {
-        TestOperationField01();
+        TestGetAssembly02();
     }
 
     
