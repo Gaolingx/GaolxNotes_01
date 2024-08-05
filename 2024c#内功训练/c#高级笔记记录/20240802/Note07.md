@@ -32,7 +32,7 @@ var assembly1 = Assembly.Load("ClassLibrary1");
 //路径加载程序集名称
 var assembly2 = Assembly.LoadFile(@"d:\path\ClassLibrary1.dll");
 
-//加载程序集后创建对象,第二个参数null 是构造函数的参数
+//加载程序集后创建对象
 object obj = assembly1.CreateInstance("命名空间.类名", false);
 
 //获取程序集完整路径
@@ -77,4 +77,43 @@ public static void TestGetAssembly02()
 
 3. 外部加载程序集后创建对象
 
+为了方便测试程序集加载，我们在当前解决方案下新建c#类库，并让主工程暂时不依赖该工程。
 
+新建类库后，我们在新建的Class1中创建如下代码，并重新生成解决方案。
+
+```csharp
+using System;
+
+namespace TestClassLibrary1
+{
+    public class Class1
+    {
+        public string StudentName = "爱莉小跟班gaolx";
+        private string StudentNickname = "爱莉小跟班";
+
+        public int StudentId { get; set; } = 114514;
+
+        private int _studentAge { get; set; } = 19;
+    }
+}
+```
+
+在不依赖TestClassLibrary1的情况下，我们是无法引用该程序集下的任何类型的，更别说创建它的类的实例，但是我们可以通过加载程序集的方式创建，于是可以通过 assembly.CreateInstance("命名空间.类名", false) 的方法加载程序集后创建对象：
+
+```csharp
+public static void TestGetAssembly03()
+{
+    var assembly = Assembly.LoadFile(@"F:\GitHub\GaolxNotes_01\2024c#内功训练\c#高级笔记记录\20240619\ConsoleApp4\TestClassLibrary1\bin\Debug\netstandard2.1\TestClassLibrary1.dll");
+    var instance = assembly.CreateInstance("TestClassLibrary1.Class1", false); //第二个参数表示忽略大小写
+
+    if (instance != null)
+    {
+        Console.WriteLine($"{nameof(instance)} has been created.");
+    }
+
+}
+```
+
+通过断点我们可以发现我们已经成功加载了Assembly并创建类的对象。
+
+课后作业：根据所学知识完成示例中最后三个例子，要求在控制台分别输出当前程序集和外部加载的程序集的 程序集版本号、获取程序集名称、获取程序集完整路径。

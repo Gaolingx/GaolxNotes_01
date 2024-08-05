@@ -144,9 +144,21 @@ class RunMain
         var assembly = Assembly.LoadFile(@"F:\GitHub\GaolxNotes_01\2024c#内功训练\c#高级笔记记录\20240619\ConsoleApp4\ConsoleApp4\bin\Debug\net8.0\ConsoleApp4.dll");
     }
 
+    public static void TestGetAssembly03()
+    {
+        var assembly = Assembly.LoadFile(@"F:\GitHub\GaolxNotes_01\2024c#内功训练\c#高级笔记记录\20240619\ConsoleApp4\TestClassLibrary1\bin\Debug\netstandard2.1\TestClassLibrary1.dll");
+        var instance = assembly.CreateInstance("TestClassLibrary1.Class1", false); //第二个参数表示忽略大小写
+
+        if (instance != null)
+        {
+            Console.WriteLine($"{nameof(instance)} has been created.");
+        }
+
+    }
+
     static void Main()
     {
-        TestGetAssembly02();
+        TestGetAssembly03();
     }
 
     
