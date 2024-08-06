@@ -156,9 +156,39 @@ class RunMain
 
     }
 
+    //操作构造方法（有参）
+    public static void TestConstructor01()
+    {
+        Type type01 = typeof(StudentInfo);
+        //获取无参构造方法
+        var constructor = type01.GetConstructor(new Type[] { });
+        //创建对象 方法1
+        var obj = constructor?.Invoke(null); //无参构造，所以参数为空
+
+        //创建对象 方法2
+        var obj2 = Activator.CreateInstance(type01);
+
+    }
+
+    //操作构造方法（无参）
+    public static void TestConstructor02()
+    {
+        Type type01 = typeof(StudentInfo);
+        //获取有参构造方法
+        var constructor = type01.GetConstructor(new Type[] {typeof(string),typeof(int)}); //需要指定构造方法参数的类型
+        //创建对象 方法1
+        StudentInfo obj = constructor?.Invoke(new object?[] { "爱莉小跟班gaolx", 18 }) as StudentInfo; //指定参数的值
+
+        //创建对象 方法2
+        StudentInfo obj2 = Activator.CreateInstance(type01, "爱莉大跟班gaolx", 19) as StudentInfo;
+
+        Console.WriteLine($"{nameof(obj)} Name is {obj.Name}");
+        Console.WriteLine($"{nameof(obj2)} Name is {obj2.Name}");
+    }
+
     static void Main()
     {
-        TestGetAssembly03();
+        TestConstructor02();
     }
 
     
