@@ -182,13 +182,65 @@ class RunMain
         //创建对象 方法2
         StudentInfo obj2 = Activator.CreateInstance(type01, "爱莉大跟班gaolx", 19) as StudentInfo;
 
-        Console.WriteLine($"{nameof(obj)} Name is {obj.Name}");
-        Console.WriteLine($"{nameof(obj2)} Name is {obj2.Name}");
+        Console.WriteLine($"{nameof(obj)} Name is {obj?.Name}");
+        Console.WriteLine($"{nameof(obj2)} Name is {obj2?.Name}");
+    }
+
+    //获取所有方法
+    public static void TestGetAllMethod01()
+    {
+        Type type01 = typeof(StudentInfo);
+        var methodInfos = type01.GetMethods();
+
+        int i = 1;
+        foreach ( var m in methodInfos )
+        {
+            Console.WriteLine($"{i++}. {nameof(StudentInfo)} 方法中名称：{m?.Name},返回值类型：{m?.ReturnType}");
+        }
+    }
+
+    public static void TestGetAllMethod02()
+    {
+        Type type01 = typeof(StudentInfo);
+        var methodInfos = type01.GetMethods(BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic);
+
+        int i = 1;
+        foreach (var m in methodInfos)
+        {
+            Console.WriteLine($"{i++}. {nameof(StudentInfo)} 方法中名称：{m?.Name},返回值类型：{m?.ReturnType}");
+        }
+    }
+
+    //获取并调用单个方法
+    //无参数
+    public static void TestGetMethod01()
+    {
+        Type type01 = typeof(StudentInfo);
+
+        var methodInfo = type01.GetMethod("Run");
+        //调用方法
+        // 常规操作：对象.方法名();
+
+        var stu = Activator.CreateInstance(type01); //创建对象
+        methodInfo?.Invoke(stu, null); //默认返回值为object类型
+    }
+
+    //带参数
+    public static void TestGetMethod02()
+    {
+        Type type01 = typeof(StudentInfo);
+
+        var methodInfo = type01.GetMethod("Run2");
+        //调用方法
+        // 常规操作：对象.方法名();
+
+        var stu = Activator.CreateInstance(type01); //此处的参数指的是Run2方法的参数age
+        methodInfo?.Invoke(stu, new object?[] { 19 }); //默认返回值为object类型
     }
 
     static void Main()
     {
-        TestConstructor02();
+        TestGetMethod02();
     }
 
     

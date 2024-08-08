@@ -82,8 +82,8 @@ public static void TestConstructor02()
     //创建对象 方法2
     StudentInfo obj2 = Activator.CreateInstance(type01, "爱莉大跟班gaolx", 19) as StudentInfo;
 
-    Console.WriteLine($"{nameof(obj)} Name is {obj.Name}");
-    Console.WriteLine($"{nameof(obj2)} Name is {obj2.Name}");
+    Console.WriteLine($"{nameof(obj)} Name is {obj?.Name}");
+    Console.WriteLine($"{nameof(obj2)} Name is {obj2?.Name}");
 }
 ```
 

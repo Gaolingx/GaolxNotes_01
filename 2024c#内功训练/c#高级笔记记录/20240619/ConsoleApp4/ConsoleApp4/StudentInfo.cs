@@ -20,6 +20,11 @@ namespace Info.Main
             return $"我的名字是{name}，我是一个私有方法";
         }
 
+        private string Run4(string name)
+        {
+            return $"我的名字是{name}，我是一个私有方法";
+        }
+
         //构造函数
         public StudentInfo()
         {
