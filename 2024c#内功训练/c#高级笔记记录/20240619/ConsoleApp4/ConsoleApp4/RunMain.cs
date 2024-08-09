@@ -44,7 +44,7 @@ class RunMain
     {
         Type type01 = typeof(StudentInfo);
         //获取所有私有属性
-        var fieldInfos = type01.GetFields(BindingFlags.Instance|BindingFlags.NonPublic); //fieldInfos为FieldInfo[]，| 是位运算符，表示并且的意思
+        var fieldInfos = type01.GetFields(BindingFlags.Instance | BindingFlags.NonPublic); //fieldInfos为FieldInfo[]，| 是位运算符，表示并且的意思
 
         foreach (var fieldInfo in fieldInfos)
         {
@@ -123,7 +123,7 @@ class RunMain
     public static void TestOperationField01()
     {
         var tp = typeof(StudentInfo);
-        var field = tp.GetField("_studentId",BindingFlags.Instance|BindingFlags.NonPublic); //获取私有字段需要GetField的一个重载，BindingFlags指定搜索的访问级别
+        var field = tp.GetField("_studentId", BindingFlags.Instance | BindingFlags.NonPublic); //获取私有字段需要GetField的一个重载，BindingFlags指定搜索的访问级别
 
         var instance = Activator.CreateInstance(tp);
 
@@ -175,7 +175,7 @@ class RunMain
     {
         Type type01 = typeof(StudentInfo);
         //获取有参构造方法
-        var constructor = type01.GetConstructor(new Type[] {typeof(string),typeof(int)}); //需要指定构造方法参数的类型
+        var constructor = type01.GetConstructor(new Type[] { typeof(string), typeof(int) }); //需要指定构造方法参数的类型
         //创建对象 方法1
         StudentInfo obj = constructor?.Invoke(new object?[] { "爱莉小跟班gaolx", 18 }) as StudentInfo; //指定参数的值
 
@@ -193,7 +193,7 @@ class RunMain
         var methodInfos = type01.GetMethods();
 
         int i = 1;
-        foreach ( var m in methodInfos )
+        foreach (var m in methodInfos)
         {
             Console.WriteLine($"{i++}. {nameof(StudentInfo)} 方法中名称：{m?.Name},返回值类型：{m?.ReturnType}");
         }
@@ -202,7 +202,7 @@ class RunMain
     public static void TestGetAllMethod02()
     {
         Type type01 = typeof(StudentInfo);
-        var methodInfos = type01.GetMethods(BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic);
+        var methodInfos = type01.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
         int i = 1;
         foreach (var m in methodInfos)
@@ -212,7 +212,7 @@ class RunMain
     }
 
     //获取并调用单个方法
-    //无参数
+    //无参数，公有方法
     public static void TestGetMethod01()
     {
         Type type01 = typeof(StudentInfo);
@@ -225,7 +225,7 @@ class RunMain
         methodInfo?.Invoke(stu, null); //默认返回值为object类型
     }
 
-    //带参数
+    //带参数，公有方法
     public static void TestGetMethod02()
     {
         Type type01 = typeof(StudentInfo);
@@ -238,10 +238,24 @@ class RunMain
         methodInfo?.Invoke(stu, new object?[] { 19 }); //默认返回值为object类型
     }
 
-    static void Main()
+    //带参数，有返回值，私有方法
+    public static void TestGetMethod03()
     {
-        TestGetMethod02();
+        Type type01 = typeof(StudentInfo);
+
+        var methodInfo = type01.GetMethod("Run4", BindingFlags.Instance | BindingFlags.NonPublic); //私有方法
+        //调用方法
+        // 常规操作：对象.方法名();
+
+        var stu = Activator.CreateInstance(type01); //此处的参数指的是Run2方法的参数age
+        var resultObj = methodInfo?.Invoke(stu, new object?[] { "爱莉小跟班gaolx" }); //默认返回值为object类型
+        Console.WriteLine(resultObj);
     }
 
-    
+    static void Main()
+    {
+        TestGetMethod03();
+    }
+
+
 }

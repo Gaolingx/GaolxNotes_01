@@ -6,6 +6,37 @@
 
 ### 详细知识点
 
+`Type.GetMethods` 是 .NET 框架中 `System.Type` 类的一个方法，用于获取当前 `Type` 对象所表示的类型中定义的所有公共方法。这个方法有几个重载版本，允许你以不同的方式检索方法信息。下面是对 `Type.GetMethods` 方法及其重载的简要介绍：
+
+1. Type.GetMethods()
+
+这是最基本的重载版本，不需要任何参数。它返回当前类型中定义的所有公共实例方法，但不包括继承的方法。返回的 `MethodInfo` 数组按照声明的顺序（即源代码中的顺序）进行排序。
+
+```csharp
+MethodInfo[] methods = typeof(MyClass).GetMethods();
+```
+
+2. Type.GetMethods(BindingFlags bindingAttr)
+
+这个重载版本接受一个 `BindingFlags` 枚举值作为参数，允许你指定搜索方法的条件。`BindingFlags` 枚举允许你指定搜索是应该包括公共方法、非公共方法、实例方法、静态方法等。通过组合这些标志，你可以非常灵活地控制搜索的范围。
+
+```csharp
+MethodInfo[] methods = typeof(MyClass).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+```
+
+3. Type.GetMethods(Type returnType)
+
+这个重载版本允许你指定返回类型，并返回所有具有指定返回类型的方法。但是，需要注意的是，在 .NET Framework 和 .NET Core 的官方文档中，并没有直接接受 `Type` 作为参数的 `GetMethods` 重载。这通常是通过结合使用 `BindingFlags` 和 LINQ 来实现的，例如：
+
+```csharp
+MethodInfo[] methods = typeof(MyClass).GetMethods(BindingFlags.Public | BindingFlags.Instance)
+    .Where(m => m.ReturnType == typeof(int)).ToArray();
+```
+
+4. Type.GetMethods(Type returnType, BindingFlags bindingAttr)
+
+虽然直接接受 `Type` 和 `BindingFlags` 作为参数的 `GetMethods` 重载在官方文档中不存在，但你可以通过组合使用 `BindingFlags` 和 LINQ 来达到类似的效果，如上面的示例所示。
+
 
 操作：
 
@@ -14,13 +45,14 @@
 在main函数中执行以下方法，观察控制台输出
 
 ```csharp
+//获取所有方法
 public static void TestGetAllMethod01()
 {
     Type type01 = typeof(StudentInfo);
     var methodInfos = type01.GetMethods();
 
     int i = 1;
-    foreach ( var m in methodInfos )
+    foreach (var m in methodInfos)
     {
         Console.WriteLine($"{i++}. {nameof(StudentInfo)} 方法中名称：{m?.Name},返回值类型：{m?.ReturnType}");
     }
@@ -29,7 +61,7 @@ public static void TestGetAllMethod01()
 public static void TestGetAllMethod02()
 {
     Type type01 = typeof(StudentInfo);
-    var methodInfos = type01.GetMethods(BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic);
+    var methodInfos = type01.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
     int i = 1;
     foreach (var m in methodInfos)
@@ -90,6 +122,8 @@ public string Run3(string name)
 在main函数中执行以下方法，观察控制台输出
 
 ```csharp
+//获取并调用单个方法
+//无参数，公有方法
 public static void TestGetMethod01()
 {
     Type type01 = typeof(StudentInfo);
@@ -103,13 +137,14 @@ public static void TestGetMethod01()
 }
 ```
 
-控制台输出如下，说明我们成功调用了StudentInfo类的Run方法。
+控制台输出如下，说明我们成功调用了StudentInfo类的 Run 方法。
 
 2. 获取并调用带参数方法
 
 在main函数中执行以下方法，观察控制台输出
 
 ```csharp
+//带参数，公有方法
 public static void TestGetMethod02()
 {
     Type type01 = typeof(StudentInfo);
@@ -122,6 +157,8 @@ public static void TestGetMethod02()
     methodInfo?.Invoke(stu, new object?[] { 19 }); //默认返回值为object类型
 }
 ```
+
+控制台输出如下，说明我们成功调用了StudentInfo类的 Run2 方法。
 
 3. 获取并调用带参数的私有方法并接收返回值
 
@@ -137,5 +174,19 @@ private string Run4(string name)
 在main函数中执行以下方法，观察控制台输出
 
 ```csharp
+//带参数，有返回值，私有方法
+public static void TestGetMethod03()
+{
+    Type type01 = typeof(StudentInfo);
 
+    var methodInfo = type01.GetMethod("Run4", BindingFlags.Instance | BindingFlags.NonPublic); //私有方法
+    //调用方法
+    // 常规操作：对象.方法名();
+
+    var stu = Activator.CreateInstance(type01); //此处的参数指的是Run2方法的参数age
+    var resultObj = methodInfo?.Invoke(stu, new object?[] { "爱莉小跟班gaolx" }); //默认返回值为object类型
+    Console.WriteLine(resultObj);
+}
 ```
+
+控制台输出如下，说明我们成功调用了StudentInfo类的私有方法 Run4。
