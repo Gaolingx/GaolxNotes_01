@@ -6,6 +6,8 @@
 
 ### 详细知识点
 
+**关于Type.GetMethods：**
+
 `Type.GetMethods` 是 .NET 框架中 `System.Type` 类的一个方法，用于获取当前 `Type` 对象所表示的类型中定义的所有公共方法。这个方法有几个重载版本，允许你以不同的方式检索方法信息。下面是对 `Type.GetMethods` 方法及其重载的简要介绍：
 
 1. Type.GetMethods()

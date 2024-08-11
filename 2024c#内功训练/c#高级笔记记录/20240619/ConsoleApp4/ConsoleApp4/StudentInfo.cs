@@ -1,6 +1,9 @@
 ﻿
+using System.ComponentModel;
+
 namespace Info.Main
 {
+    [Description("学生类的描述信息")]
     public class StudentInfo
     {
 

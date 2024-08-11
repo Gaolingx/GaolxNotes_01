@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Reflection;
 using Info.Main;
 
@@ -252,9 +253,18 @@ class RunMain
         Console.WriteLine(resultObj);
     }
 
+    //操作特性
+    //获取类的特性
+    public static void TestGetClassAttribute01()
+    {
+        var type01 = typeof(StudentInfo);
+        var descAttribute = type01.GetCustomAttribute<DescriptionAttribute>(); //DescriptionAttribute是[Description]的全称
+        Console.WriteLine($"{nameof(StudentInfo)}类的描述是{descAttribute?.Description}");
+    }
+
     static void Main()
     {
-        TestGetMethod03();
+        TestGetClassAttribute01();
     }
 
 
