@@ -262,6 +262,18 @@ class RunMain
         Console.WriteLine($"{nameof(StudentInfo)}类的描述是{descAttribute?.Description}");
     }
 
+    //拓展方法
+    //OrderBy
+    public static void TestOrderBy()
+    {
+        int[] ints = { 10, 45, 15, 39, 21, 26 };
+        var result = ints.OrderBy(g => g);
+        foreach (var i in result)
+        {
+            System.Console.Write(i + " ");
+        }
+    }
+
     static void Main()
     {
         TestGetClassAttribute01();
