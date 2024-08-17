@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Reflection;
 using Info.Main;
+using ConsoleApp4.Utils;
 
 class RunMain
 {
@@ -274,9 +275,20 @@ class RunMain
         }
     }
 
+    public static void TestExtendUtils01()
+    {
+        string str = "12345";
+        var num = str.ParseInt();
+        Console.WriteLine($"input:{str},output:{num}");
+
+        string str2 = "12345abc";
+        var num2 = str2.ParseInt();
+        Console.WriteLine($"input:{str2},output:{num2}");
+    }
+
     static void Main()
     {
-        TestGetClassAttribute01();
+        TestExtendUtils01();
     }
 
 

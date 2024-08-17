@@ -37,3 +37,66 @@ class ExtensionMethods2
 ```
 
 将鼠标放在OrderBy方法上，可以发现它并不是int[]的方法，而是由System.Linq.Enumerable拓展出来的方法，该方法允许开发者根据指定的属性或表达式对集合中的元素进行排序。
+
+三、自定义扩展方法
+
+步骤：
+
+1. 在你的解决方案的csharp工程下新建一个名为Utils的文件夹，创建一个静态类（此处为ExtendUtils.cs）
+2. 创建一个静态方法，这个方法即是你的扩展方法
+3. 方法中必须将你要扩展的类型通过参数传递进来
+4. 你需要扩展的参数类型前面加this（重点）
+
+```csharp
+// 扩展方法的工具类,注意一定要写成static 静态类
+namespace ConsoleApp4.Utils
+{
+    public static class ExtendUtils
+    {
+        /**
+         * 作者：Gaolingx
+         * 功能：将Object类型 提供一个转换为Int类型的扩展方法
+         * 注意：
+         * 1. 静态类下所有的方法都只能是static 方法
+         * 2. 把你需要扩展的类型前面加this 
+         * 操作步骤：
+         * 1. 将该拓展类设置为static 类
+         * 2. 创建一个static 方法
+         * 3. 在需要扩展的类型前面加一个this 关键字
+         */
+        public static int ParseInt(this string str) //需要扩展的类型 + 参数的值
+        {
+            if (string.IsNullOrWhiteSpace(str))
+            {
+                return 0;
+            }
+
+            int result = 0;
+
+            if (!int.TryParse(str, out result)) //TryParse返回值为ture则表示str可以被转换成int类型，返回输出参数out result的值
+            {
+                return 0;
+            }
+
+            return result;
+        }
+    }
+}
+```
+
+完成上述拓展方法后，回到RunMain类中，引用命名空间，测试我们的自定义拓展方法：
+
+```csharp
+public static void TestExtendUtils01()
+{
+    string str = "12345";
+    var num = str.ParseInt();
+    Console.WriteLine($"input:{str},output:{num}");
+
+    string str2 = "12345abc";
+    var num2 = str2.ParseInt();
+    Console.WriteLine($"input:{str2},output:{num2}");
+}
+```
+
+运行结果如下，可以看到str输出值为12345，说明string类型通过我们自定义的拓展方法成功转化为int类型，str2返回值为0，说明转换失败，由于我们在ParseInt 方法中使用了int.TryParse...对异常进行了处理，因此没有因为转换失败而抛出异常，提高了代码的健壮性。
