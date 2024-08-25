@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Reflection;
 using Info.Main;
 using ConsoleApp4.Utils;
+using ConsoleApp4;
 
 class RunMain
 {
@@ -275,6 +276,7 @@ class RunMain
         }
     }
 
+    //自定义拓展方法
     public static void TestExtendUtils01()
     {
         string str = "12345";
@@ -286,9 +288,20 @@ class RunMain
         Console.WriteLine($"input:{str2},output:{num2}");
     }
 
+    //获取属性上的自定义特性
+    public static void TestGetCustomAttribute01()
+    {
+        var type01 = typeof(Product);
+        //获取指定属性
+        var propInfo = type01.GetProperty("ProductName");
+        //获取自定义特性
+        var attr = propInfo?.GetCustomAttribute(typeof(MyDescriptionAttribute)) as MyDescriptionAttribute;
+        Console.WriteLine($"{nameof(Product)}的描述是:{attr?.Name}");
+    }
+
     static void Main()
     {
-        TestExtendUtils01();
+        TestGetCustomAttribute01();
     }
 
 
