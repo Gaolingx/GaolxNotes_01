@@ -4,6 +4,7 @@ using System.Reflection;
 using Info.Main;
 using ConsoleApp4.Utils;
 using ConsoleApp4;
+using TestGetDescription;
 
 class RunMain
 {
@@ -299,9 +300,15 @@ class RunMain
         Console.WriteLine($"{nameof(Product)}的描述是:{attr?.Name}");
     }
 
+    public static void TestGetDescription()
+    {
+        var desc = OrderStateEnum.WaitPay.GetDescription();
+        Console.WriteLine($"当前订单状态:{desc}");
+    }
+
     static void Main()
     {
-        TestGetCustomAttribute01();
+        TestGetDescription();
     }
 
 
