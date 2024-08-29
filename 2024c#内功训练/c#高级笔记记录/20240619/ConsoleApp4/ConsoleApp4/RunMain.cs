@@ -306,6 +306,29 @@ class RunMain
         Console.WriteLine($"当前订单状态:{desc}");
     }
 
+    class Site
+    {
+        public int id;
+        public string name;
+        public string url;
+    }
+
+    public static void TestJsonToCS()
+    {
+        Site site = new Site { id = 1, name = "米游社", url = "www.miyoushe.com" };
+        Site[] sites = { new Site { id = 1, name = "米游社", url = "www.miyoushe.com" },
+            new Site { id = 1, name = "崩坏三", url = "www.bh3.com" },
+            new Site { id = 1, name = "崩坏：星穹铁道", url = "sr.mihoyo.com" } };
+
+        Site[] value = {
+            new Site { id = 1, name = "米游社", url = "www.miyoushe.com" },
+            new Site { id = 1, name = "崩坏三", url = "www.bh3.com" },
+            new Site { id = 1, name = "崩坏：星穹铁道", url = "sr.mihoyo.com" }
+        };
+        var obj = new List<Site>(value);
+    }
+
+
     static void Main()
     {
         TestGetDescription();
