@@ -5,6 +5,7 @@ using Info.Main;
 using ConsoleApp4.Utils;
 using ConsoleApp4;
 using TestGetDescription;
+using TestJsonAndCSharp;
 
 class RunMain
 {
@@ -331,7 +332,7 @@ class RunMain
 
     static void Main()
     {
-        TestGetDescription();
+        JsonTest.TestObjectToJson();
     }
 
 

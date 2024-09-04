@@ -8,8 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TestGetDescription\TestGetDescription.csproj" />
-    <ProjectReference Include="..\TestJsonAndCSharp\TestJsonAndCSharp.csproj" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
 </Project>
