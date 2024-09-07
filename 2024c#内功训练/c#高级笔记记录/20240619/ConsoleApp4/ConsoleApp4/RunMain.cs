@@ -332,7 +332,7 @@ class RunMain
 
     static void Main()
     {
-        JsonTest.TestObjectToJson();
+        JsonTest.TestJsonArr2();
     }
 
 
