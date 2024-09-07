@@ -330,10 +330,5 @@ class RunMain
     }
 
 
-    static void Main()
-    {
-        JsonTest.TestJsonArr2();
-    }
-
 
 }
