@@ -32,3 +32,102 @@ NUnit是一个专为.NET平台设计的开源单元测试框架，它属于xUnit
 其余相关的Attribute参考如下图：
 
 新建一个类，创建一个测试方法，在其前面加上[Test]，代码中右键点击 运行测试（或按Ctrl+R,T），稍等片刻即可在测试资源管理器看到结果：
+
+## 五、TestFixture
+
+功能：此属性标记包含测试以及（可选）设置或拆解方法的类。
+
+现在，对用作测试夹具的类的大多数限制都已消除。TestFixture类：
+
+- 可以是公共的、受保护的、私有的或内部的。
+- 可能是静态类。
+- 可以是泛型的，只要提供了任何类型参数，或者可以从实际参数中推断出来。
+- 可能不是抽象的 - 尽管该属性可以应用于旨在用作TestFixture基类的抽象类。
+- 如果 TestFixtureAttribute 中没有提供任何参数，则该类必须具有默认构造函数。
+- 如果提供了参数，则它们必须与其中一个构造函数匹配。
+
+如果违反了这些限制中的任何一个，则该类不可作为测试运行，并且将显示为错误。
+
+建议构造函数没有任何副作用，因为 NUnit 可能会在会话过程中多次构造对象。
+
+从 NUnit 2.5 开始，TestFixture 属性对于非参数化、非通用Fixture是可选的。只要该类包含至少一个标有 Test、TestCase 或 TestCaseSource 属性的方法，它就会被视为TestFixture。
+
+```csharp
+using NUnit.Framework;
+
+namespace MyTest;
+
+// [TestFixture] // 2.5 版本以后，可选
+public class FirstTest
+{
+
+    [Test]
+    public void Test1()
+    {
+        Console.WriteLine("test1,hello");
+    }
+    
+}
+```
+
+总结：在2.5版本的以前的nunit需要在测试类前加上 TestFixtureAttribute，2.5版本后可选。
+
+## 六、SetUp 设置
+
+功能：此属性在TestFixture内部使用，以提供在调用每个测试方法之前执行的一组通用函数，用于初始化单元测试的一些数据。（意味着假如在某个方法前加上SetUpAttribute，则在执行测试方法前会先执行这个方法）
+
+SetUp 方法可以是静态方法，也可以是实例方法，您可以在夹具中定义多个方法。通常，多个 SetUp 方法仅在继承层次结构的不同级别定义，如下所述。
+
+如果 SetUp 方法失败或引发异常，则不会执行测试，并报告失败或错误。
+
+实践：运行以下测试，观察测试结果：
+
+```csharp
+using NUnit.Framework;
+
+namespace ConsoleApp4
+{
+    // [TestFixture] // 2.5 版本以后，可选
+    public class MyTestUnit
+    {
+        private string? Name;
+
+        [SetUp]
+        public void InitTest()
+        {
+            Console.WriteLine("初始化单元测试...");
+            Name = "爱莉小跟班gaolx";
+        }
+
+        private int a = 10;
+        [OneTimeSetUp] // 只执行一次
+        public void OneTime()
+        {
+            a++;
+            Console.WriteLine("我只执行一次");
+        }
+
+        [Test]
+        public void Test01()
+        {
+            Console.WriteLine($"我的名字是{Name}");
+            Console.WriteLine($"a的值是：{a}");
+        }
+    }
+}
+
+```
+
+**继承**  
+
+SetUp 属性继承自任何基类。因此，如果基类定义了 SetUp 方法，则会在派生类中的每个测试方法之前调用该方法。
+
+您可以在基类中定义一个 SetUp 方法，在派生类中定义另一个方法。NUnit 将在派生类中调用基类 SetUp 方法之前调用基类 SetUp 方法。
+
+**警告**
+如果在派生类中重写了基类 SetUp 方法，则 NUnit 将不会调用基类 SetUp 方法;NUnit 预计不会使用包括隐藏基方法在内的用法。请注意，每种方法可能都有不同的名称;只要两者都存在属性，每个属性都将以正确的顺序调用。[SetUp]
+
+**笔记**  
+
+1. 尽管可以在同一类中定义多个 SetUp 方法，但您很少应该这样做。与在继承层次结构中的单独类中定义的方法不同，不能保证它们的执行顺序。
+2. 在 .NET 4.0 或更高版本下运行时，如有必要，可以指定异步方法（c# 中的关键字）。
