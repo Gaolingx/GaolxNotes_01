@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System.Diagnostics;
 
 namespace ConsoleApp4
 {
@@ -27,6 +28,16 @@ namespace ConsoleApp4
         {
             Console.WriteLine($"我的名字是{Name}");
             Console.WriteLine($"a的值是：{a}");
+        }
+
+        //断言一
+        [Test]
+        public void Test02()
+        {
+            int min = 3;
+            //断言是静态类
+            Assert.That(min, Is.EqualTo(3)); //Assert.That(期望值, Is.EqualTo(实际值))
+
         }
     }
 }

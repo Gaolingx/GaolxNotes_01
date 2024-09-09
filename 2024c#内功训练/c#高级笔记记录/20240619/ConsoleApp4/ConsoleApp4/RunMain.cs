@@ -20,7 +20,7 @@ class RunMain
                                              //由于所有类型都继承自System.Object，所以所有的类型都含有GetType 方法
     }
 
-    //获取属性
+    //获取所有属性
     public static void TestGetAllProperty()
     {
         //获取类型
@@ -36,6 +36,7 @@ class RunMain
         }
     }
 
+    //获取特定属性
     public static void TestGetPropertyByName(string name)
     {
         //获取类型
@@ -45,6 +46,7 @@ class RunMain
 
     }
 
+    //获取所有字段
     public static void TestGetAllField()
     {
         Type type01 = typeof(StudentInfo);
@@ -57,7 +59,7 @@ class RunMain
         }
     }
 
-    //获取字段
+    //获取特定字段
     public static void TestGetFieldByName(string name)
     {
         Type type01 = typeof(StudentInfo);

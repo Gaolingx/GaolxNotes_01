@@ -24,13 +24,17 @@
 1. 获取所有属性
 
 ```csharp
+//获取所有属性
 public static void TestGetAllProperty()
 {
+    //获取类型
     Type type01 = typeof(StudentInfo);
-    PropertyInfo[] propList = type01.GetProperties();
+    //通过类型获取其中的属性
+    PropertyInfo[] propList = type01.GetProperties(); //注：GetProperties方法有多个重载，默认获取public属性
     //或 var propList = typeof(StudentInfo).GetProperties();
 
-    foreach (var propertyInfo in propList)
+    //打印PropertyInfo（属性）
+    foreach (var propertyInfo in propList) //propertyInfo也是一个实例
     {
         Console.WriteLine($"{nameof(type01)}类型中属性的名称:{propertyInfo.Name},类型:{propertyInfo.PropertyType}");
     }
@@ -42,6 +46,7 @@ public static void TestGetAllProperty()
 2. 获取指定类型的属性
 
 ```csharp
+//获取特定属性
 public static void TestGetPropertyByName(string name)
 {
     //获取类型
@@ -57,10 +62,12 @@ public static void TestGetPropertyByName(string name)
 3. 获取所有字段
 
 ```csharp
+//获取所有字段
 public static void TestGetAllField()
 {
     Type type01 = typeof(StudentInfo);
-    var fieldInfos = type01.GetFields(BindingFlags.Instance|BindingFlags.NonPublic);
+    //获取所有私有属性
+    var fieldInfos = type01.GetFields(BindingFlags.Instance | BindingFlags.NonPublic); //fieldInfos为FieldInfo[]，| 是位运算符，表示并且的意思
 
     foreach (var fieldInfo in fieldInfos)
     {
@@ -89,6 +96,7 @@ private int money
 Main函数中执行以下代码，传入money，观察控制台输出：
 
 ```csharp
+//获取特定字段
 public static void TestGetFieldByName(string name)
 {
     Type type01 = typeof(StudentInfo);
@@ -108,11 +116,12 @@ static void Main()
 从这开始，我们将开始学习type的更多用法，例如获取类名、获取类的命名空间、它的基类、验证委托是否是类等。
 
 ```csharp
+//获取类的信息
 public static void TestGetFullName()
 {
     Type type01 = typeof(StudentInfo);
 
-    Console.WriteLine($"它的全称是：{type01.FullName}");
+    Console.WriteLine($"它的全称是：{type01.FullName}"); //命名空间+类名
 
     Console.WriteLine($"它的基类是：{type01.BaseType}");
 
