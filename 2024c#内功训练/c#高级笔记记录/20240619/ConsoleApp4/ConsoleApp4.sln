@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestClassLibrary1", "TestCl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestGetDescription", "TestGetDescription\TestGetDescription.csproj", "{CB36762B-F505-40CB-AA4C-0FC664C882AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestJsonAndCSharp", "TestJsonAndCSharp\TestJsonAndCSharp.csproj", "{E71AF2BF-79FE-428C-8255-FB9172348C17}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestJsonAndCSharp", "TestJsonAndCSharp\TestJsonAndCSharp.csproj", "{E71AF2BF-79FE-428C-8255-FB9172348C17}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestGeneric", "TestGeneric\TestGeneric.csproj", "{9F8F4936-F970-4516-8BFB-A647149308D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{E71AF2BF-79FE-428C-8255-FB9172348C17}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E71AF2BF-79FE-428C-8255-FB9172348C17}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E71AF2BF-79FE-428C-8255-FB9172348C17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F8F4936-F970-4516-8BFB-A647149308D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F8F4936-F970-4516-8BFB-A647149308D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F8F4936-F970-4516-8BFB-A647149308D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F8F4936-F970-4516-8BFB-A647149308D2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

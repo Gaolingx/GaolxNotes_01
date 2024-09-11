@@ -1,6 +1,6 @@
-# C#高级编程之——反射（三）
+# C#高级编程之——反射（三）——Type使用（案例篇）
 
-## 三、反射入门——反射的使用（案例篇）
+## 三、反射入门
 
 在上期教程中，我们讲解了Type类型的概念，简单使用了typeof 运算符以及GetType 方法通过实例对象获取类型，接下来我们继续深入讲解Type类的使用。
 
@@ -76,7 +76,7 @@ public static void TestGetAllField()
 }
 ```
 
-运行结果如下，可以看到我们可以获取StudentInfo类中_studentId、_Id两个私有字段，而<_Id>k__BackingField指的是属性。没有"<...>"如_studentId指的是字段
+运行结果如下，可以看到我们可以获取StudentInfo类中_studentId、_Id两个私有字段，而 "<_Id>k__BackingField" 指的是属性。没有 "<...>" 如_studentId指的是字段。
 由此我们得出结论：属性是对字段的封装，属性里面都封装了一个字段。
 
 4. 获取单个字段
@@ -133,4 +133,4 @@ public static void TestGetFullName()
 
 运行结果如下：
 
-至此，我们就学习完关于Type类的基本用法，下一张章我们将学习使用Activator.CreateInstance创建实例。
+至此，我们就学习完关于Type类的基本用法，下一章我们将学习使用Activator.CreateInstance创建实例。
