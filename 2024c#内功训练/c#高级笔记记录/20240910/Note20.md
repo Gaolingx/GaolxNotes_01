@@ -107,3 +107,13 @@ namespace TestGeneric
     }
 }
 ```
+
+使用泛型类：
+
+```csharp
+泛型类<string> obj = new();
+obj.ItemName = "爱莉小跟班gaolx";
+ 
+Console.WriteLine("ItemName的值是：" + obj.ItemName);
+Console.WriteLine("ItemName的类型是：" + obj.ItemName.GetType());
+```
