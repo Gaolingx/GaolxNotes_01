@@ -22,12 +22,18 @@ namespace TestGeneric
     }
 
     // 泛型方法——求和
-    public class TestClass02
+    // 如果一个类下面有多个泛型方法，建议将这个类定义成泛型类
+    public class TestClass02<T> //如果在类上定义泛型，则其中的方法均为泛型方法
     {
-        public T Sum<T>(T a, T b) //返回值为泛型，泛型方法的<T>中需要指定类型参数
+        public T Sum(T a, T b) //返回值为泛型，泛型方法的<T>中需要指定类型参数
         {
             // dynamic: 它是在程序运行时才知道是什么类型，但会绕过编译时的类型检查
             return (dynamic)a + b; //由于编译器不知道a和b的类型，需要转换成dynamic类型，运行时确定
+        }
+
+        public void Print()
+        {
+            Console.WriteLine($"{nameof(T)}的类型是{typeof(T).Name}");
         }
     }
 
@@ -36,9 +42,12 @@ namespace TestGeneric
         [Test]
         public void RunTest()
         {
-            TestClass02 test = new TestClass02();
-            test.Sum<int>(1, 2);
+            TestClass02<int> test = new TestClass02<int>(); //实例化时需声明类型
+            test.Sum(1, 2);
             Console.WriteLine($"sum的结果是{test}");
+
+            TestClass02<string> test2 = new TestClass02<string>();
+            test2.Print();
         }
     }
 
