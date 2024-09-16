@@ -23,7 +23,7 @@ namespace TestGeneric
 
     // 泛型方法——求和
     // 如果一个类下面有多个泛型方法，建议将这个类定义成泛型类
-    public class TestClass02<T> //如果在类上定义泛型，则其中的方法均为泛型方法
+    public class TestClass02<T> where T : struct //struct:值类型
     {
         public T Sum(T a, T b) //返回值为泛型，泛型方法的<T>中需要指定类型参数
         {
