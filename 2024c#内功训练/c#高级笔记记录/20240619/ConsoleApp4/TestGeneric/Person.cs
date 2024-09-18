@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace TestGeneric
 {
-    public class Student : Person
+    public class Person
     {
-        public int Id { get; set; }
-        public string Name { get; set; }
+
     }
 }

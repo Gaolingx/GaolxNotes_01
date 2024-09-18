@@ -1,5 +1,6 @@
 ﻿
 using NUnit.Framework;
+using TestGeneric.Covariance;
 
 namespace TestGeneric
 {
@@ -23,7 +24,7 @@ namespace TestGeneric
 
     // 泛型方法——求和
     // 如果一个类下面有多个泛型方法，建议将这个类定义成泛型类
-    public class TestClass02<T> where T : struct //struct:值类型
+    public class TestClass02<T> where T : class //struct:值类型
     {
         public T Sum(T a, T b) //返回值为泛型，泛型方法的<T>中需要指定类型参数
         {
@@ -37,17 +38,56 @@ namespace TestGeneric
         }
     }
 
+    public class TestClass03()
+    {
+        Person p = new Person(); //不报错
+        TestClass02<Person> person = new TestClass02<Person>(); //不报错
+        //TestClass02<Person> person2 = new TestClass02<Student>(); //CS0029
+    }
+
+    public class TestClass04()
+    {
+
+        public class Animal
+        {
+            public virtual void Run()
+            {
+                Console.WriteLine("动物在跑");
+            }
+        }
+
+        public class Dog : Animal
+        {
+            public override void Run()
+            {
+                Console.WriteLine("狗在跑");
+            }
+        }
+
+        [Test]
+        public void Test3()
+        {
+            // 定义泛型接口是为了实现协变（一定要加 out关键字）
+            // 实现类是因为接口本身不能实例化，只能通过具体的类实现
+            IFactory<Dog> iFactory = new FactoryImpl<Dog>();
+            IFactory<Animal> parentFactory = iFactory; // 协变
+
+            Animal animal = parentFactory.Create();
+            animal.Run();// 输出结果：狗在跑
+        }
+    }
+
     public class RunTestClass
     {
         [Test]
         public void RunTest()
         {
-            TestClass02<int> test = new TestClass02<int>(); //实例化时需声明类型
-            test.Sum(1, 2);
-            Console.WriteLine($"sum的结果是{test}");
+            //TestClass02<int> test = new TestClass02<int>(); //实例化时需声明类型
+            //test.Sum(1, 2);
+            //Console.WriteLine($"sum的结果是{test}");
 
-            TestClass02<string> test2 = new TestClass02<string>();
-            test2.Print();
+            //TestClass02<string> test2 = new TestClass02<string>();
+            //test2.Print();
         }
     }
 

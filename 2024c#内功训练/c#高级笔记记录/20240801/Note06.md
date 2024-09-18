@@ -1,13 +1,15 @@
-# C#高级编程之——反射（六）
-
-## 三、反射入门——操作字段
+# C#高级编程之——反射（六）操作字段
 
 在上期教程中，我们学习了Type.GetProperty和PropertyInfo.SetValue两个方法，我们通过反射操作属性（即对属性赋值、获取属性的值），今天我们开始学习通过反射操作字段。
 
-### 详细知识点
+## 详细知识点
 
-**关于Type.GetField：**
+**1. Type.GetField：**
 Type.GetField 允许你在运行时查询和操作对象的类型信息。具体来说，Type.GetField 方法用于获取当前 Type 对象所表示的类或接口的公共字段信息。如果你需要访问非公共字段，你可能需要使用 Type.GetField(string name, BindingFlags bindingAttr) 方法的重载版本，其中 BindingFlags 参数允许你指定搜索的访问级别（如私有、受保护等）和其他搜索选项。
+**2. FieldInfo.GetValue：**
+FieldInfo.GetValue(Object obj) 方法用于获取指定对象的指定字段的值。obj 参数是要从中获取字段值的对象实例。如果字段是静态的，则 obj 可以是 null（或者传递 null 来表示静态字段）。
+**3. FieldInfo.SetValue：**
+FieldInfo.SetValue(Object obj, Object value) 方法用于设置指定对象的指定字段的值。obj 参数是要设置字段值的对象实例。如果字段是静态的，则 obj 可以是 null（或者传递 null 来表示静态字段）。value 参数是要分配给字段的新值。
 
 我们以操作StudentInfo中的_studentId私有字段为例：
 
