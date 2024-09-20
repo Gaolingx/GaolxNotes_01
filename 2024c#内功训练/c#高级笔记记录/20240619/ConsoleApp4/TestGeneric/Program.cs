@@ -1,5 +1,6 @@
 ﻿
 using NUnit.Framework;
+using TestGeneric.Contravariance;
 using TestGeneric.Covariance;
 
 namespace TestGeneric
@@ -74,6 +75,17 @@ namespace TestGeneric
 
             Animal animal = parentFactory.Create();
             animal.Run();// 输出结果：狗在跑
+        }
+    }
+
+    public class TestClass05()
+    {
+        [Test]
+        public void Test4()
+        {
+            INotifier<INotification> notifier = new Notifier<INotification>();
+            INotifier<MainNotification> mailNotifier = notifier; // 逆变
+            mailNotifier.Notify(new MainNotification());
         }
     }
 
