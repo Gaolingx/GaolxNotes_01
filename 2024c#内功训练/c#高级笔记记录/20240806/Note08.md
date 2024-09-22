@@ -1,12 +1,10 @@
-# C#高级编程之——反射（八）
-
-## 三、反射入门——操作构造函数
+# C#高级编程之——反射（八）操作构造函数
 
 在前两个章节中我们学习了如何加载和获取程序集，今天我们来学习如何通过反射操作构造函数。
 
-### 详细知识点
+## 详细知识点
 
-**关于Type.GetConstructor类：**
+**1.1 关于Type.GetConstructor类：**
 Type.GetConstructors 方法是 System.Type 类的一个成员，用于获取表示当前类型构造函数的 ConstructorInfo 对象数组。这些构造函数信息可以用来在运行时动态地创建对象实例或检查类型的构造函数特性。默认情况下，不带参数的 GetConstructors 方法只返回公共构造函数。
 
 该方法有如下重载：
@@ -16,7 +14,7 @@ Type.GetConstructors 方法是 System.Type 类的一个成员，用于获取表�
 - Type.GetConstructors(BindingFlags)
   这个重载版本的 GetConstructors 方法允许你通过 BindingFlags 枚举来指定要搜索的构造函数的访问级别和其他特性。BindingFlags 是一个位掩码，允许你组合多个值来精确控制搜索过程。
 
-示例：
+**1.2 示例：**
 
 ```csharp
 var type = typeof(studentInfo);
@@ -35,7 +33,7 @@ runMethod.Invoke(student, null);
 
 ```
 
-操作：
+**1.3 操作：**
 已知我们的StudentInfo类中有如下两个构造方法：
 
 ```csharp
