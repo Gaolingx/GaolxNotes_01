@@ -1,12 +1,10 @@
-# C#高级编程之——反射（九）
-
-## 三、反射入门——操作方法
+# C#高级编程之——反射（九）操作方法
 
 在上一个章节中我们学习了如何通过反射操作构造函数并创建对象，今天我们来学习如何通过反射操作方法。
 
-### 详细知识点
+## 详细知识点
 
-**关于Type.GetMethods：**
+**1.1 Type.GetMethods：**
 
 `Type.GetMethods` 是 .NET 框架中 `System.Type` 类的一个方法，用于获取当前 `Type` 对象所表示的类型中定义的所有公共方法。这个方法有几个重载版本，允许你以不同的方式检索方法信息。下面是对 `Type.GetMethods` 方法及其重载的简要介绍：
 
@@ -39,10 +37,9 @@ MethodInfo[] methods = typeof(MyClass).GetMethods(BindingFlags.Public | BindingF
 
 虽然直接接受 `Type` 和 `BindingFlags` 作为参数的 `GetMethods` 重载在官方文档中不存在，但你可以通过组合使用 `BindingFlags` 和 LINQ 来达到类似的效果，如上面的示例所示。
 
+**1.2 操作：**
 
-操作：
-
-一、获取类的所有方法
+**1. 获取类的所有方法**
 
 在main函数中执行以下方法，观察控制台输出
 
@@ -76,7 +73,7 @@ public static void TestGetAllMethod02()
 
 控制台分别输出如下，可以看到GetMethods默认输出了StudentInfo类中所有公有方法，当我们指定 BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic 后，则输出StudentInfo类中公有和私有方法。
 
-拓展：
+**1.3 拓展：**
 在C#中，一个类可以包含多种方法，这些方法有的来自于基类（如`System.Object`），有的是自定义的。几乎所有的C#类（除非显式继承自另一个非`Object`的类）都会继承这些方法。下面是对这些方法的简要说明：
 
 1. GetType()
@@ -97,7 +94,7 @@ public static void TestGetAllMethod02()
 6. GetHashCode()
    - `GetHashCode` 方法返回一个整数，该整数是根据对象的内部状态生成的哈希码。
 
-二、获取并调用指定方法
+**1.4 获取并调用指定方法**
 已知我们的StudentInfo类有如下方法及重载：
 
 ```csharp
@@ -119,7 +116,7 @@ public string Run3(string name)
 }
 ```
 
-1. 获取并调用无参数方法
+**1. 获取并调用无参数方法**
 
 在main函数中执行以下方法，观察控制台输出
 
@@ -141,7 +138,7 @@ public static void TestGetMethod01()
 
 控制台输出如下，说明我们成功调用了StudentInfo类的 Run 方法。
 
-2. 获取并调用带参数方法
+**2. 获取并调用带参数方法**
 
 在main函数中执行以下方法，观察控制台输出
 
@@ -162,7 +159,7 @@ public static void TestGetMethod02()
 
 控制台输出如下，说明我们成功调用了StudentInfo类的 Run2 方法。
 
-3. 获取并调用带参数的私有方法并接收返回值
+**3. 获取并调用带参数的私有方法并接收返回值**
 
 为了测试调用私有方法，我们在StudentInfo类中新增如下方法：
 
