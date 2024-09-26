@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace GaolxORM
 {
-    //我们可以把类型当作一种参数（泛型的作用）
     public class DbContext<T> where T : class, new()
     {
         /// <summary>
@@ -44,6 +43,15 @@ namespace GaolxORM
         public T GetModel(dynamic id) //id为dynamic类型，因为主键的类型通常是不确定的（例如可能是int,也有可能是string,long）
         {
             return null;
+        }
+
+        /// <summary>
+        /// 删除功能
+        /// </summary>
+        /// <param name="id"></param>
+        public void Delete(dynamic id)
+        {
+
         }
     }
 }

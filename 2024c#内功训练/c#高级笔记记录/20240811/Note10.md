@@ -1,10 +1,8 @@
-# C#高级编程之——反射（十）
-
-## 三、反射入门——操作特性
+# C#高级编程之——反射（十）操作特性
 
 在上一个章节中我们学习了如何通过反射操作方法，今天我们来学习什么是特性以及如何获取自定义特性。
 
-### 详细知识点
+## 详细知识点
 
 1. **C#中的特性：**
    - 定义：特性是用于在运行时传递程序中各种元素（比如类、方法、结构、组件等）的行为信息的声明性标签。
@@ -56,8 +54,9 @@
     }
    ```
 
-操作：
-一、获取类上的attribute
+3. 操作：
+
+**3.1 获取类上的attribute**
 为了便于测试，我们在StudentInfo类上加上如下特性：
 
 ```csharp
@@ -76,6 +75,7 @@ namespace Info.Main
 在main函数中执行以下方法，观察控制台输出
 
 ```csharp
+//操作特性
 //获取类的特性
 public static void TestGetClassAttribute01()
 {
@@ -84,3 +84,5 @@ public static void TestGetClassAttribute01()
     Console.WriteLine($"{nameof(StudentInfo)}类的描述是{descAttribute?.Description}");
 }
 ```
+
+output:

@@ -1,4 +1,4 @@
-# C#高级编程之——泛型（六）ORM框架搭建
+# C#高级编程之——泛型（六）ORM框架搭建（上）
 
 ## 一、背景
 
@@ -54,5 +54,57 @@ ORM框架还支持数据库迁移和模型同步功能。通过迁移脚本，�
 3.2.1 框架搭建：ok，前面关于ORM框架的介绍就到此为止，让我们新建一个项目，并新建一个名为DbContext的泛型类。
 
 ```csharp
+namespace GaolxORM
+{
+    public class DbContext<T> where T : class, new()
+    {
+        /// <summary>
+        /// 添加功能
+        /// </summary>
+        /// <param name="model">要添加的对象</param>
+        public void Add(T model) //这里的model是要添加的实体对象
+        {
 
+        }
+
+        /// <summary>
+        /// 修改功能
+        /// </summary>
+        /// <param name="model"></param>
+        public void Update(T model)
+        {
+
+        }
+
+        /// <summary>
+        /// 查询功能
+        /// </summary>
+        /// <returns></returns>
+        public List<T> GetList()
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// 编辑功能（根据主键得到实体）
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public T GetModel(dynamic id) //id为dynamic类型，因为主键的类型通常是不确定的（例如可能是int,也有可能是string,long）
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// 删除功能
+        /// </summary>
+        /// <param name="id"></param>
+        public void Delete(dynamic id)
+        {
+
+        }
+    }
+}
 ```
+
+至此我们就完成了ORM框架最基本的框架搭建：增删查改功能的抽象。
