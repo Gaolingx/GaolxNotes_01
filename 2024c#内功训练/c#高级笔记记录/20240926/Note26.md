@@ -1,6 +1,6 @@
 # C#高级编程之——泛型（七）ORM框架搭建（下）
 
-## 四、ORM框架实现
+## 四、ORM框架地基搭建
 
 4.1 orm如何实现对数据库的增删查改功能：
 
@@ -34,12 +34,15 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Data.Common;
 using System.Configuration;
+using System.Collections;
+using System.Reflection;
 
 namespace GaolxORM
 {
-    //帮助类的基类(抽象类)
+    /// <summary>
+    /// 数据库帮助类
+    /// </summary>
     public abstract class DbHelper
     {
         public DbHelper()
@@ -47,88 +50,283 @@ namespace GaolxORM
             ConnectionString = ConfigurationManager.ConnectionStrings["connString"].ConnectionString;
         }
 
-        public abstract DbProviderFactory DbProviderFactory { get; }
+        public static string? ConnectionString { get; set; }
 
-        public string ConnectionString { get; }
-
-        public List<T> GetList<T>(string sql, params SqlParameter[] parameters)
+        //执行添加、删除、修改通用方法
+        public static int ExecuteNonQuery(string sql, params SqlParameter[] paras)
         {
-            using (var connection = new SqlConnection(ConnectionString))
-            {
-                connection.Open();
-                using (var command = new SqlCommand(sql, connection))
-                {
-                    if (parameters != null)
-                    {
-                        command.Parameters.AddRange(parameters);
-                    }
 
-                    using (var reader = command.ExecuteReader())
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {//打开数据库连接
+                conn.Open();
+                //创建执行脚本的对象
+                SqlCommand command = new SqlCommand(sql, conn);
+                command.Parameters.AddRange(paras);
+                int result = command.ExecuteNonQuery();
+                return result;
+            }
+        }
+        /// <summary>
+        /// 执行SQL并返回第一行第一列
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="paras"></param>
+        /// <returns></returns>
+        public static object ExecuteScalar(string sql, params SqlParameter[] paras)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand command = new SqlCommand(sql, conn);
+                command.Parameters.AddRange(paras);
+                object obj = command.ExecuteScalar();
+                return obj;
+            }
+        }
+        /// <summary>
+        /// 根据SQL和泛型方法返回泛型【集合】
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sql"></param>
+        /// <param name="paras"></param>
+        /// <returns></returns>
+        public static List<T> GetListByColumns<T>(string sql, params SqlParameter[] paras)
+        {
+            List<T> list = new List<T>();
+            //获取select 和form中间的字段
+            string newSql = sql.ToLower();
+            string columnStr = newSql.Substring(newSql.IndexOf("select ") + 7, newSql.IndexOf(" from") - 7)
+                .Replace(" ", "")
+                .Replace("\r\n", "")
+                .Replace("[", "")
+                .Replace("]", "");
+            //保存字段
+            ArrayList columns = new ArrayList(columnStr.Split(','));
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand command = new SqlCommand(sql, conn);
+                command.Parameters.AddRange(paras);
+                using (SqlDataReader reader = command.ExecuteReader())
+                {   //typeof()检测类型
+                    Type type = typeof(T);//类型的声明(可声明一个不确定的类型)
+
+                    if (columnStr == "*")//查询所有(里面不用判断)
                     {
-                        return reader.Cast<IDataRecord>()
-                            .Select(r => ConvertToEntity<T>(r))
-                            .ToList();
+                        while (reader.Read())
+                        {
+                            T t = (T)Activator.CreateInstance(type);
+                            //通过反射去遍历属性
+                            foreach (PropertyInfo info in type.GetProperties())
+                            {
+                                info.SetValue(t, reader[info.Name] is DBNull ?
+                                                        null : reader[info.Name]);
+                            }
+                            list.Add(t);
+                        }
+                    }
+                    else//根据查询的列遍历
+                    {
+                        while (reader.Read())
+                        {
+                            T t = (T)Activator.CreateInstance(type);
+                            //通过反射去遍历属性
+                            foreach (PropertyInfo info in type.GetProperties())
+                            {
+                                if (columns.Contains(info.Name.ToLower()))//判断是否存在
+                                {
+                                    info.SetValue(t, reader[info.Name] is DBNull ?
+                                                            null : reader[info.Name]);
+                                }
+                            }
+                            list.Add(t);
+                        }
                     }
                 }
             }
+            return list;//命令行为
         }
 
-        private T ConvertToEntity<T>(IDataRecord record)
+        public static List<T> GetList<T>(string sql, params SqlParameter[] paras)
         {
-            var entity = Activator.CreateInstance<T>();
-            var properties = typeof(T).GetProperties();
-            foreach (var prop in properties)
+            List<T> list = new List<T>();
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
-                if (record.FieldCount > 0 && record.GetName(record.GetOrdinal(prop.Name)) != null)
-                {
-                    prop.SetValue(entity, record[prop.Name]);
+                conn.Open();
+                SqlCommand command = new SqlCommand(sql, conn);
+                command.Parameters.AddRange(paras);
+                using (SqlDataReader reader = command.ExecuteReader())
+                {   //typeof()检测类型
+                    Type type = typeof(T);//类型的声明(可声明一个不确定的类型)
+                    while (reader.Read())
+                    {
+                        T t = (T)Activator.CreateInstance(type);
+                        //通过反射去遍历属性
+                        foreach (PropertyInfo info in type.GetProperties())
+                        {
+                            info.SetValue(t, reader[info.Name] is DBNull ?
+                                                    null : reader[info.Name]);
+                        }
+                        list.Add(t);
+                    }
                 }
             }
-            return entity;
+            return list;//命令行为
         }
 
-        public int ExecuteNonQuery(string sql, params SqlParameter[] parameters)
+        /// <summary>
+        /// 根据SQL和泛型方法返回泛型【对象】
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sql"></param>
+        /// <param name="paras"></param>
+        /// <returns></returns>
+        public static T GetModel<T>(string sql, params SqlParameter[] paras)
         {
-            using (var connection = new SqlConnection(ConnectionString))
-            using (var command = new SqlCommand(sql, connection))
+            Type type = typeof(T);//类型的声明Type
+            T t = default(T);//赋默认值null,可能是值类型
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
-                command.Parameters.AddRange(parameters);
-                connection.Open();
-                return command.ExecuteNonQuery();
+                conn.Open();
+                SqlCommand command = new SqlCommand(sql, conn);
+                command.Parameters.AddRange(paras);
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        t = (T)Activator.CreateInstance(type);
+                        //通过反射去遍历属性
+                        foreach (PropertyInfo info in type.GetProperties())
+                        {
+                            info.SetValue(t, reader[info.Name] is DBNull ?
+                                                    null : reader[info.Name]);
+                        }
+                    }
+                }
             }
+            return t;//命令行为
         }
 
-        public object ExecuteScalar(string sql, params SqlParameter[] parameters)
+        /// <summary>
+        /// 查询返回临时表
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="paras"></param>
+        /// <returns></returns>
+        public static DataTable GetDataTable(string sql, params SqlParameter[] paras)
         {
-            using (var connection = new SqlConnection(ConnectionString))
-            using (var command = new SqlCommand(sql, connection))
+            DataTable dt = null;
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
-                command.Parameters.AddRange(parameters);
-                connection.Open();
-                return command.ExecuteScalar();
+                SqlCommand command = new SqlCommand(sql, conn);
+                command.Parameters.AddRange(paras);
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                dt = new DataTable();
+                adapter.Fill(dt);
             }
+            return dt;
+        }
+        /// <summary>
+        /// 执行SQL返回SqlDataReader对象（游标）
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="paras"></param>
+        /// <returns></returns>
+        public static SqlDataReader ExecuteReader(string sql, params SqlParameter[] paras)
+        {
+            SqlConnection conn = new SqlConnection(ConnectionString);
+            conn.Open();
+            SqlCommand command = new SqlCommand(sql, conn);
+            command.Parameters.AddRange(paras);
+            return command.ExecuteReader(CommandBehavior.CloseConnection);//命令行为
         }
 
-        public SqlDataReader ExecuteReader(string sql, params SqlParameter[] parameters)
+        /// <summary>
+        /// 根据SQL执行返回数据集(多临时表)
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="paras"></param>
+        /// <returns></returns>
+        public static DataSet GetDataSet(string sql, params SqlParameter[] paras)
         {
-            var connection = new SqlConnection(ConnectionString);
-            var command = new SqlCommand(sql, connection);
-            command.Parameters.AddRange(parameters);
-            connection.Open();
-            return command.ExecuteReader(CommandBehavior.CloseConnection);
-        }
-
-        public DataTable FillDataTable(string sql, params SqlParameter[] parameters)
-        {
-            using (var connection = new SqlConnection(ConnectionString))
-            using (var command = new SqlCommand(sql, connection))
-            using (var adapter = new SqlDataAdapter(command))
+            DataSet ds = null;
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
-                command.Parameters.AddRange(parameters);
-                var dataTable = new DataTable();
-                adapter.Fill(dataTable);
-                return dataTable;
+                SqlCommand command = new SqlCommand(sql, conn);
+                command.Parameters.AddRange(paras);
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                ds = new DataSet();
+                adapter.Fill(ds);
             }
+            return ds;
+        }
+
+        /// <summary>
+        /// 执行事务的通用方法
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="paras"></param>
+        /// <returns></returns>
+        public static bool ExecuteTransaction(string[] sql, params SqlParameter[] paras)
+        {
+            bool result = false;
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand command = new SqlCommand();
+                command.Parameters.AddRange(paras);
+                command.Connection = conn;//关联联接对象
+                command.Transaction = conn.BeginTransaction();//开始事务
+                try
+                {
+                    for (int i = 0; i < sql.Length; i++)
+                    {
+                        command.CommandText = sql[i];
+                        command.ExecuteNonQuery();//执行
+                    }
+                    command.Transaction.Commit();//提交
+                    result = true;
+                }
+                catch (Exception ex)
+                {
+                    command.Transaction.Rollback();//回滚
+                    result = false;
+                }
+            }
+            return result;
+        }
+
+        //事务批量添加
+        public static bool ExecuteTransaction(string[] sql, List<SqlParameter[]> list)
+        {
+            bool result = false;
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand command = new SqlCommand();
+                foreach (SqlParameter[] item in list)
+                {
+                    command.Parameters.AddRange(item);
+                }
+                command.Connection = conn;//关联联接对象
+                command.Transaction = conn.BeginTransaction();//开始事务
+                try
+                {
+                    for (int i = 0; i < sql.Length; i++)
+                    {
+                        command.CommandText = sql[i];
+                        command.ExecuteNonQuery();//执行
+                    }
+                    command.Transaction.Commit();//提交
+                    result = true;
+                }
+                catch (Exception ex)
+                {
+                    command.Transaction.Rollback();//回滚
+                    result = false;
+                }
+            }
+            return result;
         }
     }
 }
