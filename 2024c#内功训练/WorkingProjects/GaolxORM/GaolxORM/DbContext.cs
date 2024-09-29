@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -37,12 +40,37 @@ namespace GaolxORM
         }
 
         /// <summary>
-        /// 修改功能
+        /// 更新功能
         /// </summary>
         /// <param name="model"></param>
-        public void Update(T model)
+        public int Update(T model)
         {
+            var tp = typeof(T);
+            var pk = GetPrimaryKey(); //获取主键
+            var props = tp.GetProperties().ToList();
+            //获取所有的属性名称(除主键)
+            var propNames = props.Where(p => !p.Name.Equals(pk)).Select(p => p.Name).ToList();
 
+
+            //update 表 set 字段1=@字段1,字段2=@字段2, where 主键名=主键值
+            string sql = $"update {tp.Name} set ";
+            foreach (var propName in propNames)
+            {
+                sql += $"{propName}=@{propName},";
+            }
+
+            sql = sql.Remove(sql.Length - 1);
+
+            sql += $" where {pk.Name}=@{pk.Name}";
+
+            List<SqlParameter> list = new();
+            foreach (var prop in props)
+            {
+                SqlParameter parameter = new SqlParameter(prop.Name, prop.GetValue(model));
+                list.Add(parameter);
+            }
+
+            return DbHelper.ExecuteNonQuery(sql, list.ToArray());
         }
 
         /// <summary>
@@ -55,22 +83,49 @@ namespace GaolxORM
         }
 
         /// <summary>
-        /// 编辑功能（根据主键得到实体）
+        /// 查询功能
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         public T GetModel(dynamic id) //id为dynamic类型，因为主键的类型通常是不确定的（例如可能是int,也有可能是string,long）
         {
-            return null;
+            var pk = GetPrimaryKey().Name; //获取主键的名称
+                                           //获取一条记录
+            return DbHelper.GetList<T>(
+                $"select * from {typeof(T).Name} where {pk}=@id",
+                new SqlParameter(pk, id)).First();
         }
 
         /// <summary>
         /// 删除功能
         /// </summary>
         /// <param name="id"></param>
-        public void Delete(dynamic id)
+        public int Delete(dynamic id)
         {
+            //delete from 表名 where 主键名=@主键值
 
+            var pk = GetPrimaryKey().Name;
+            return DbHelper.ExecuteNonQuery($"delete from {typeof(T).Name} where {pk}=@{pk}", new SqlParameter(pk, id));
+        }
+
+        /// <summary>
+        /// 获取主键
+        /// </summary>
+        /// <returns></returns>
+        public PropertyInfo GetPrimaryKey()
+        {
+            var props = typeof(T).GetProperties();
+            foreach (var propertyInfo in props)
+            {
+                //获取特性
+                var attrs = propertyInfo.GetCustomAttributes(typeof(KeyAttribute), false);
+                if (attrs.Length > 0)
+                {
+                    return propertyInfo;
+                }
+            }
+
+            return props[0]; // 如果没有Key 特性，就让第一个属性当作主键
         }
     }
 }

@@ -3,10 +3,31 @@
 ## 一、背景
 
 众所周知，在我们对数据库进行增删查改时候（CRUD），我们经常使用诸如 MySqlCommand 这样的工具书写sql语句，但是我们会发现这些sql语句都有许多共同点，例如：
-// select * from student
-// insert into Student(...) values(...)
-// update xxx set ...
-// delete from student where
+
+```sql
+## 1. 增加（Create）
+## 向表中添加新记录通常使用INSERT INTO语句。
+INSERT INTO 表名 (列1, 列2, 列3, ...)  
+VALUES (值1, 值2, 值3, ...);
+
+## 2. 查询（Read）
+## 查询表中的数据通常使用SELECT语句。
+SELECT 列名1, 列名2, ...  
+FROM 表名  
+WHERE 条件;
+
+## 3. 修改（Update）
+## 修改表中的数据通常使用UPDATE语句。WHERE子句用于指定哪些记录需要被更新。
+UPDATE 表名  
+SET 列名1 = 值1, 列名2 = 值2, ...  
+WHERE 条件;
+
+## 4. 删除（Delete）
+## 从表中删除数据通常使用DELETE语句。WHERE子句用于指定哪些记录需要被删除。如果省略WHERE子句，则会删除表中的所有记录。
+DELETE FROM students  
+WHERE name = '张三';
+
+```
 
 我们可以通过反射获取类中的属性名，而属性名和数据库中的字段名通常保持一致，因此，我们可以将这些增删查改的方法进行封装，动态生成sql语句并调用DbHelper操作数据库，并让数据库表中的字段与c#中的对象建立一个映射关系。
 

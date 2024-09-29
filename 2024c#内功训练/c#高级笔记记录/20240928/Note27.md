@@ -4,7 +4,10 @@
 
 **5.1 查询**
 
-sql语句：select * from 表名 (where 条件)
+sql语句：
+SELECT 列名1, 列名2, ...  
+FROM 表名  
+WHERE 条件;
 
 ```csharp
 /// <summary>
@@ -50,7 +53,9 @@ public static List<T> GetList<T>(string sql, params SqlParameter[] paras)
 
 **5.2 添加**
 
-sql语句：insert into Student(...) values(...)
+sql语句：
+INSERT INTO 表名 (列1, 列2, 列3, ...)  
+VALUES (值1, 值2, 值3, ...);
 
 ```csharp
 /// <summary>
@@ -78,5 +83,112 @@ public void Add(T model, int skipCount = 1) //这里的model是要添加的实�
     sql.Append(string.Join("','", values));
     sql.Append("')");
     DbHelper.ExecuteNonQuery(sql.ToString());
+}
+```
+
+**5.3 更新**
+
+sql语句：
+UPDATE 表名  
+SET 列名1 = 值1, 列名2 = 值2, ...  
+WHERE 条件;
+
+```csharp
+
+/// <summary>
+/// 更新功能
+/// </summary>
+/// <param name="model"></param>
+public int Update(T model)
+{
+    var tp = typeof(T);
+    var pk = GetPrimaryKey(); //获取主键
+    var props = tp.GetProperties().ToList();
+    //获取所有的属性名称(除主键)
+    var propNames = props.Where(p => !p.Name.Equals(pk)).Select(p => p.Name).ToList();
+
+
+    //update 表 set 字段1=@字段1,字段2=@字段2, where 主键名=主键值
+    string sql = $"update {tp.Name} set ";
+    foreach (var propName in propNames)
+    {
+        sql += $"{propName}=@{propName},";
+    }
+
+    sql = sql.Remove(sql.Length - 1);
+
+    sql += $" where {pk.Name}=@{pk.Name}";
+
+    List<SqlParameter> list = new();
+    foreach (var prop in props)
+    {
+        SqlParameter parameter = new SqlParameter(prop.Name, prop.GetValue(model));
+        list.Add(parameter);
+    }
+
+    return DbHelper.ExecuteNonQuery(sql, list.ToArray());
+}
+
+/// <summary>
+/// 获取主键
+/// </summary>
+/// <returns></returns>
+public PropertyInfo GetPrimaryKey()
+{
+    var props = typeof(T).GetProperties();
+    foreach (var propertyInfo in props)
+    {
+        //获取特性
+        var attrs = propertyInfo.GetCustomAttributes(typeof(KeyAttribute), false);
+        if (attrs.Length > 0)
+        {
+            return propertyInfo;
+        }
+    }
+
+    return props[0]; // 如果没有Key 特性，就让第一个属性当作主键
+}
+```
+
+**5.4 删除**
+
+sql语句：
+DELETE FROM students  
+WHERE name = '张三';
+
+```csharp
+/// <summary>
+/// 删除功能
+/// </summary>
+/// <param name="id"></param>
+public int Delete(dynamic id)
+{
+    //delete from 表名 where 主键名=@主键值
+
+    var pk = GetPrimaryKey().Name;
+    return DbHelper.ExecuteNonQuery($"delete from {typeof(T).Name} where {pk}=@{pk}", new SqlParameter(pk, id));
+}
+```
+
+**5.5 查询拓展（根据主键）**
+
+sql语句：
+SELECT 列名1, 列名2, ...  
+FROM 表名  
+WHERE 条件;
+
+```csharp
+/// <summary>
+/// 查询功能
+/// </summary>
+/// <param name="id"></param>
+/// <returns></returns>
+public T GetModel(dynamic id) //id为dynamic类型，因为主键的类型通常是不确定的（例如可能是int,也有可能是string,long）
+{
+    var pk = GetPrimaryKey().Name; //获取主键的名称
+                                   //获取一条记录
+    return DbHelper.GetList<T>(
+        $"select * from {typeof(T).Name} where {pk}=@id",
+        new SqlParameter(pk, id)).First();
 }
 ```
