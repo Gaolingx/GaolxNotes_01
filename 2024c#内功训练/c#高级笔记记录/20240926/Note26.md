@@ -29,7 +29,6 @@
 ```csharp
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -37,6 +36,7 @@ using System.Threading.Tasks;
 using System.Configuration;
 using System.Collections;
 using System.Reflection;
+using MySql.Data.MySqlClient;
 
 namespace GaolxORM
 {
@@ -45,12 +45,7 @@ namespace GaolxORM
     /// </summary>
     public abstract class DbHelper
     {
-        public DbHelper()
-        {
-            ConnectionString = ConfigurationManager.ConnectionStrings["connString"].ConnectionString;
-        }
-
-        public static string? ConnectionString { get; set; }
+        private static string? ConnectionString { get; } = ConfigurationManager.ConnectionStrings["connString"].ConnectionString;
 
         /// <summary>
         /// 1. 执行添加、删除、修改通用方法
@@ -58,18 +53,33 @@ namespace GaolxORM
         /// <param name="sql"></param>
         /// <param name="paras"></param>
         /// <returns></returns>
-        public static int ExecuteNonQuery(string sql, params SqlParameter[]? paras)
+        public static int ExecuteNonQuery(string sql, params MySqlParameter[]? paras)
         {
 
-            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            using (MySqlConnection conn = new MySqlConnection(ConnectionString))
             {
                 //打开数据库连接
                 conn.Open();
                 //创建执行脚本的对象
-                SqlCommand command = new SqlCommand(sql, conn);
+                MySqlCommand command = new MySqlCommand(sql, conn);
                 command.Parameters.AddRange(paras);
                 int result = command.ExecuteNonQuery();
                 return result;
+            }
+        }
+
+        public static MySqlCommand ExecuteNonQueryCmd(string sql, params MySqlParameter[]? paras)
+        {
+
+            using (MySqlConnection conn = new MySqlConnection(ConnectionString))
+            {
+                //打开数据库连接
+                conn.Open();
+                //创建执行脚本的对象
+                MySqlCommand command = new MySqlCommand(sql, conn);
+                command.Parameters.AddRange(paras);
+                command.ExecuteNonQuery();
+                return command;
             }
         }
 
@@ -79,12 +89,12 @@ namespace GaolxORM
         /// <param name="sql"></param>
         /// <param name="paras"></param>
         /// <returns></returns>
-        public static object ExecuteScalar(string sql, params SqlParameter[]? paras)
+        public static object ExecuteScalar(string sql, params MySqlParameter[]? paras)
         {
-            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            using (MySqlConnection conn = new MySqlConnection(ConnectionString))
             {
                 conn.Open();
-                SqlCommand command = new SqlCommand(sql, conn);
+                MySqlCommand command = new MySqlCommand(sql, conn);
                 command.Parameters.AddRange(paras);
                 object obj = command.ExecuteScalar();
                 return obj;
@@ -98,7 +108,7 @@ namespace GaolxORM
         /// <param name="sql"></param>
         /// <param name="paras"></param>
         /// <returns></returns>
-        public static List<T> GetListByColumns<T>(string sql, params SqlParameter[]? paras) where T : class, new()
+        public static List<T> GetListByColumns<T>(string sql, params MySqlParameter[]? paras) where T : class, new()
         {
             List<T> list = new List<T>();
             //获取select 和form中间的字段
@@ -110,12 +120,12 @@ namespace GaolxORM
                 .Replace("]", "");
             //保存字段
             ArrayList columns = new ArrayList(columnStr.Split(','));
-            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            using (MySqlConnection conn = new MySqlConnection(ConnectionString))
             {
                 conn.Open();
-                SqlCommand command = new SqlCommand(sql, conn);
+                MySqlCommand command = new MySqlCommand(sql, conn);
                 command.Parameters.AddRange(paras);
-                using (SqlDataReader reader = command.ExecuteReader())
+                using (MySqlDataReader reader = command.ExecuteReader())
                 {
                     //typeof()检测类型
                     Type type = typeof(T);//类型的声明(可声明一个不确定的类型)
@@ -156,7 +166,7 @@ namespace GaolxORM
             return list;//命令行为
         }
 
-        public static List<T> GetList<T>(string sql, params SqlParameter[]? paras) where T : class, new()
+        public static List<T> GetList<T>(string sql, params MySqlParameter[]? paras) where T : class, new()
         {
             DataTable? dt = null;
             dt = GetDataTable(sql, paras);
@@ -170,16 +180,16 @@ namespace GaolxORM
         /// <param name="sql"></param>
         /// <param name="paras"></param>
         /// <returns></returns>
-        public static T GetModel<T>(string sql, params SqlParameter[] paras) where T : class, new()
+        public static T GetModel<T>(string sql, params MySqlParameter[] paras) where T : class, new()
         {
             Type type = typeof(T);//类型的声明Type
             T? t = default(T);//赋默认值null,可能是值类型
-            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            using (MySqlConnection conn = new MySqlConnection(ConnectionString))
             {
                 conn.Open();
-                SqlCommand command = new SqlCommand(sql, conn);
+                MySqlCommand command = new MySqlCommand(sql, conn);
                 command.Parameters.AddRange(paras);
-                using (SqlDataReader reader = command.ExecuteReader())
+                using (MySqlDataReader reader = command.ExecuteReader())
                 {
                     if (reader.Read())
                     {
@@ -202,14 +212,14 @@ namespace GaolxORM
         /// <param name="sql"></param>
         /// <param name="paras"></param>
         /// <returns></returns>
-        public static DataTable GetDataTable(string sql, params SqlParameter[]? paras)
+        public static DataTable GetDataTable(string sql, params MySqlParameter[]? paras)
         {
             DataTable? dt = null;
-            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            using (MySqlConnection conn = new MySqlConnection(ConnectionString))
             {
-                SqlCommand command = new SqlCommand(sql, conn);
+                MySqlCommand command = new MySqlCommand(sql, conn);
                 command.Parameters.AddRange(paras);
-                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                MySqlDataAdapter adapter = new MySqlDataAdapter(command);
                 dt = new DataTable();
                 adapter.Fill(dt);
             }
@@ -217,16 +227,16 @@ namespace GaolxORM
         }
 
         /// <summary>
-        /// 6. 执行SQL返回SqlDataReader对象（游标）
+        /// 6. 执行SQL返回MySqlDataReader对象（游标）
         /// </summary>
         /// <param name="sql"></param>
         /// <param name="paras"></param>
         /// <returns></returns>
-        public static SqlDataReader ExecuteReader(string sql, params SqlParameter[]? paras)
+        public static MySqlDataReader ExecuteReader(string sql, params MySqlParameter[]? paras)
         {
-            SqlConnection conn = new SqlConnection(ConnectionString);
+            MySqlConnection conn = new MySqlConnection(ConnectionString);
             conn.Open();
-            SqlCommand command = new SqlCommand(sql, conn);
+            MySqlCommand command = new MySqlCommand(sql, conn);
             command.Parameters.AddRange(paras);
             return command.ExecuteReader(CommandBehavior.CloseConnection);//命令行为
         }
@@ -237,14 +247,14 @@ namespace GaolxORM
         /// <param name="sql"></param>
         /// <param name="paras"></param>
         /// <returns></returns>
-        public static DataSet GetDataSet(string sql, params SqlParameter[]? paras)
+        public static DataSet GetDataSet(string sql, params MySqlParameter[]? paras)
         {
             DataSet? ds = null;
-            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            using (MySqlConnection conn = new MySqlConnection(ConnectionString))
             {
-                SqlCommand command = new SqlCommand(sql, conn);
+                MySqlCommand command = new MySqlCommand(sql, conn);
                 command.Parameters.AddRange(paras);
-                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                MySqlDataAdapter adapter = new MySqlDataAdapter(command);
                 ds = new DataSet();
                 adapter.Fill(ds);
             }
@@ -257,13 +267,13 @@ namespace GaolxORM
         /// <param name="sql"></param>
         /// <param name="paras"></param>
         /// <returns></returns>
-        public static bool ExecuteTransaction(string[] sql, params SqlParameter[]? paras)
+        public static bool ExecuteTransaction(string[] sql, params MySqlParameter[]? paras)
         {
             bool result = false;
-            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            using (MySqlConnection conn = new MySqlConnection(ConnectionString))
             {
                 conn.Open();
-                SqlCommand command = new SqlCommand();
+                MySqlCommand command = new MySqlCommand();
                 command.Parameters.AddRange(paras);
                 command.Connection = conn;//关联联接对象
                 command.Transaction = conn.BeginTransaction();//开始事务
@@ -293,14 +303,14 @@ namespace GaolxORM
         /// <param name="sql"></param>
         /// <param name="list"></param>
         /// <returns></returns>
-        public static bool ExecuteTransaction(string[] sql, List<SqlParameter[]> list)
+        public static bool ExecuteTransaction(string[] sql, List<MySqlParameter[]> list)
         {
             bool result = false;
-            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            using (MySqlConnection conn = new MySqlConnection(ConnectionString))
             {
                 conn.Open();
-                SqlCommand command = new SqlCommand();
-                foreach (SqlParameter[] item in list)
+                MySqlCommand command = new MySqlCommand();
+                foreach (MySqlParameter[] item in list)
                 {
                     command.Parameters.AddRange(item);
                 }

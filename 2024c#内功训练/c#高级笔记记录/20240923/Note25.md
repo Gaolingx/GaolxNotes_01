@@ -70,7 +70,7 @@ ORM框架还支持数据库迁移和模型同步功能。通过迁移脚本，�
 3.1 开始前准备：
 
 1. 将utils 文件夹中将DbHelper拷贝至当前你的项目中
-2. 添加以下nuget引用：Microsoft.Extensions.Configuration、System.Data.SqlClient
+2. 添加以下nuget引用：Microsoft.Extensions.Configuration、MySql.Data.MySqlClient
 
 3.2.1 框架搭建：ok，前面关于ORM框架的介绍就到此为止，让我们新建一个项目，并新建一个名为DbContext的泛型类。
 

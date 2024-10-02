@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using MySql.Data.MySqlClient;
 
 namespace GaolxORM
 {
@@ -63,10 +64,10 @@ namespace GaolxORM
 
             sql += $" where {pk.Name}=@{pk.Name}";
 
-            List<SqlParameter> list = new();
+            List<MySqlParameter> list = new();
             foreach (var prop in props)
             {
-                SqlParameter parameter = new SqlParameter(prop.Name, prop.GetValue(model));
+                MySqlParameter parameter = new MySqlParameter(prop.Name, prop.GetValue(model));
                 list.Add(parameter);
             }
 
@@ -93,7 +94,7 @@ namespace GaolxORM
                                            //获取一条记录
             return DbHelper.GetList<T>(
                 $"select * from {typeof(T).Name} where {pk}=@id",
-                new SqlParameter(pk, id)).First();
+                new MySqlParameter(pk, id)).First();
         }
 
         /// <summary>
@@ -105,7 +106,7 @@ namespace GaolxORM
             //delete from 表名 where 主键名=@主键值
 
             var pk = GetPrimaryKey().Name;
-            return DbHelper.ExecuteNonQuery($"delete from {typeof(T).Name} where {pk}=@{pk}", new SqlParameter(pk, id));
+            return DbHelper.ExecuteNonQuery($"delete from {typeof(T).Name} where {pk}=@{pk}", new MySqlParameter(pk, id));
         }
 
         /// <summary>
