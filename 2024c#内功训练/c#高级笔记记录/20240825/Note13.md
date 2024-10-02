@@ -1,11 +1,12 @@
-# C#高级编程之——特性（二）
+# C#高级编程之——特性（二）自定义特性
 
 在上一节中我们介绍了C#特性的基本概念、用途以及自定义特性相关知识，今天我们来尝试创建一个自定义特性。
 
-### 五、创建自定义特性
+## 五、创建自定义特性
 
-目标：创建一个描述类型信息的类，该特性仅对属性和字段生效。
-操作步骤：
+**5.1 目标：**创建一个描述类型信息的类，该特性仅对属性和字段生效。
+
+**5.2 创建特性——操作步骤：**
 
 1. 在当前的c#项目里新建一个名为MyDescriptionAttribute的类并继承自Attribute基类。注：自定义特性需要以Attribute结尾并继承自Attribute基类。
 2. 在自定义的Attribute前加上AttributeUsage特性，用于定义特性类的使用方式。由于我们只希望该特性在属性和字段上生效，所以我们应该使用 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)] 。
@@ -18,7 +19,7 @@
 4. 在当前的c#项目里新建一个名为Product的类，写一个ProductName的属性，在它前面加上 [MyDescription(Name ="商品名称")] 。至此我们就完成了自定义特性的创建。
 
 创建完自定义特性后，我们通过反射获取ProductName属性上的MyDescription特性。
-操作步骤：
+**5.3 获取特性——操作步骤：**
 
 1. 回到main方法对应的类，运行以下代码，观察控制台输出：
 
@@ -37,7 +38,7 @@ public static void TestGetCustomAttribute01()
 
 可以看到控制台输出：Product的描述是:商品名称，说明我们成功获取了Product上的ProductName属性的MyDescriptionAttribute自定义特性的值：Name。
 
-笔者补充：
+**5.4 笔者补充：**
 
 1. 特性本质还是一个类，即不论是框架自带的特性还是我们自定义的特性，都需要继承自Attribute类。
 2. Attribute可以理解为是给编译器看的注释，即注释不能直接影响程序的运行，但是特性Attribute可以。
