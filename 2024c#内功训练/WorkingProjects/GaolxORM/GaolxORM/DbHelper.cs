@@ -135,7 +135,40 @@ namespace GaolxORM
         }
 
         /// <summary>
-        /// 4. 查询返回临时表
+        /// 4. 根据SQL和泛型方法返回泛型【对象】
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sql"></param>
+        /// <param name="paras"></param>
+        /// <returns></returns>
+        public static T GetModel<T>(string sql, params SqlParameter[] paras) where T : class, new()
+        {
+            Type type = typeof(T);//类型的声明Type
+            T? t = default(T);//赋默认值null,可能是值类型
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                SqlCommand command = new SqlCommand(sql, conn);
+                command.Parameters.AddRange(paras);
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        t = Activator.CreateInstance(type) as T;
+                        //通过反射去遍历属性
+                        foreach (PropertyInfo info in type.GetProperties())
+                        {
+                            info.SetValue(t, reader[info.Name] is DBNull ?
+                                                    null : reader[info.Name]);
+                        }
+                    }
+                }
+            }
+            return t;//命令行为
+        }
+
+        /// <summary>
+        /// 5. 查询返回临时表
         /// </summary>
         /// <param name="sql"></param>
         /// <param name="paras"></param>
@@ -155,7 +188,7 @@ namespace GaolxORM
         }
 
         /// <summary>
-        /// 5. 执行SQL返回SqlDataReader对象（游标）
+        /// 6. 执行SQL返回SqlDataReader对象（游标）
         /// </summary>
         /// <param name="sql"></param>
         /// <param name="paras"></param>
@@ -170,7 +203,7 @@ namespace GaolxORM
         }
 
         /// <summary>
-        /// 6. 根据SQL执行返回数据集(多临时表)
+        /// 7. 根据SQL执行返回数据集(多临时表)
         /// </summary>
         /// <param name="sql"></param>
         /// <param name="paras"></param>
@@ -190,7 +223,7 @@ namespace GaolxORM
         }
 
         /// <summary>
-        /// 7. 执行事务的通用方法
+        /// 8. 执行事务的通用方法
         /// </summary>
         /// <param name="sql"></param>
         /// <param name="paras"></param>
@@ -226,7 +259,7 @@ namespace GaolxORM
         }
 
         /// <summary>
-        /// 8. 事务批量添加
+        /// 9. 事务批量添加
         /// </summary>
         /// <param name="sql"></param>
         /// <param name="list"></param>
