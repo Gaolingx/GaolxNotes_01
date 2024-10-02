@@ -35,7 +35,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Configuration;
 using System.Collections;
-using System.Reflection;
 using MySql.Data.MySqlClient;
 
 namespace GaolxORM
@@ -43,9 +42,14 @@ namespace GaolxORM
     /// <summary>
     /// 数据库帮助类
     /// </summary>
-    public abstract class DbHelper
+    public class DbHelper
     {
-        private static string? ConnectionString { get; } = ConfigurationManager.ConnectionStrings["connString"].ConnectionString;
+        private static string? ConnectionString { get; }
+
+        static DbHelper()
+        {
+            ConnectionString = ConfigurationManager.ConnectionStrings["connString"].ConnectionString;
+        }
 
         /// <summary>
         /// 1. 执行添加、删除、修改通用方法
@@ -108,64 +112,6 @@ namespace GaolxORM
         /// <param name="sql"></param>
         /// <param name="paras"></param>
         /// <returns></returns>
-        public static List<T> GetListByColumns<T>(string sql, params MySqlParameter[]? paras) where T : class, new()
-        {
-            List<T> list = new List<T>();
-            //获取select 和form中间的字段
-            string newSql = sql.ToLower();
-            string columnStr = newSql.Substring(newSql.IndexOf("select ") + 7, newSql.IndexOf(" from") - 7)
-                .Replace(" ", "")
-                .Replace("\r\n", "")
-                .Replace("[", "")
-                .Replace("]", "");
-            //保存字段
-            ArrayList columns = new ArrayList(columnStr.Split(','));
-            using (MySqlConnection conn = new MySqlConnection(ConnectionString))
-            {
-                conn.Open();
-                MySqlCommand command = new MySqlCommand(sql, conn);
-                command.Parameters.AddRange(paras);
-                using (MySqlDataReader reader = command.ExecuteReader())
-                {
-                    //typeof()检测类型
-                    Type type = typeof(T);//类型的声明(可声明一个不确定的类型)
-
-                    if (columnStr == "*")//查询所有(里面不用判断)
-                    {
-                        while (reader.Read())
-                        {
-                            T? t = Activator.CreateInstance(type) as T;
-                            //通过反射去遍历属性
-                            foreach (PropertyInfo info in type.GetProperties())
-                            {
-                                info.SetValue(t, reader[info.Name] is DBNull ?
-                                                        null : reader[info.Name]);
-                            }
-                            list.Add(t);
-                        }
-                    }
-                    else//根据查询的列遍历
-                    {
-                        while (reader.Read())
-                        {
-                            T? t = Activator.CreateInstance(type) as T;
-                            //通过反射去遍历属性
-                            foreach (PropertyInfo info in type.GetProperties())
-                            {
-                                if (columns.Contains(info.Name.ToLower()))//判断是否存在
-                                {
-                                    info.SetValue(t, reader[info.Name] is DBNull ?
-                                                            null : reader[info.Name]);
-                                }
-                            }
-                            list.Add(t);
-                        }
-                    }
-                }
-            }
-            return list;//命令行为
-        }
-
         public static List<T> GetList<T>(string sql, params MySqlParameter[]? paras) where T : class, new()
         {
             DataTable? dt = null;
@@ -174,40 +120,7 @@ namespace GaolxORM
         }
 
         /// <summary>
-        /// 4. 根据SQL和泛型方法返回泛型【对象】
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="sql"></param>
-        /// <param name="paras"></param>
-        /// <returns></returns>
-        public static T GetModel<T>(string sql, params MySqlParameter[] paras) where T : class, new()
-        {
-            Type type = typeof(T);//类型的声明Type
-            T? t = default(T);//赋默认值null,可能是值类型
-            using (MySqlConnection conn = new MySqlConnection(ConnectionString))
-            {
-                conn.Open();
-                MySqlCommand command = new MySqlCommand(sql, conn);
-                command.Parameters.AddRange(paras);
-                using (MySqlDataReader reader = command.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        t = Activator.CreateInstance(type) as T;
-                        //通过反射去遍历属性
-                        foreach (PropertyInfo info in type.GetProperties())
-                        {
-                            info.SetValue(t, reader[info.Name] is DBNull ?
-                                                    null : reader[info.Name]);
-                        }
-                    }
-                }
-            }
-            return t;//命令行为
-        }
-
-        /// <summary>
-        /// 5. 查询返回临时表
+        /// 4. 查询返回临时表
         /// </summary>
         /// <param name="sql"></param>
         /// <param name="paras"></param>
@@ -227,7 +140,7 @@ namespace GaolxORM
         }
 
         /// <summary>
-        /// 6. 执行SQL返回MySqlDataReader对象（游标）
+        /// 5. 执行SQL返回MySqlDataReader对象（游标）
         /// </summary>
         /// <param name="sql"></param>
         /// <param name="paras"></param>
@@ -242,7 +155,7 @@ namespace GaolxORM
         }
 
         /// <summary>
-        /// 7. 根据SQL执行返回数据集(多临时表)
+        /// 6. 根据SQL执行返回数据集(多临时表)
         /// </summary>
         /// <param name="sql"></param>
         /// <param name="paras"></param>
@@ -262,7 +175,7 @@ namespace GaolxORM
         }
 
         /// <summary>
-        /// 8. 执行事务的通用方法
+        /// 7. 执行事务的通用方法
         /// </summary>
         /// <param name="sql"></param>
         /// <param name="paras"></param>
@@ -298,7 +211,7 @@ namespace GaolxORM
         }
 
         /// <summary>
-        /// 9. 事务批量添加
+        /// 8. 事务批量添加
         /// </summary>
         /// <param name="sql"></param>
         /// <param name="list"></param>
