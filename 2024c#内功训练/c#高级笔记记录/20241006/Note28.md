@@ -23,30 +23,31 @@ public static List<T> GetList<T>(string sql, params MySqlParameter[]? paras) whe
 我们可以看到DataTableExtension中有一个ToList<T>的方法，该方法长这样：
 
 1. 设计思路：
-   通过分析List<T>与DataTable的对应关系我们发现，由于我们是将数据库中的表格（DataTable）中的字段与对象的属性进行映射，即数据库中的每条数据（记录）都对应List集合中的一个对象，因此我们可以通过遍历DataTable中的所有行获取其中列，再对其中（T）的属性进行赋值并添加到List集合最后返回即可。
+   1. 通过分析List<T>与DataTable的对应关系我们发现，由于我们是将数据库中的表格（DataTable）中的字段与对象的属性进行映射，即数据库中的每条数据（记录）都对应List集合中的一个对象，因此我们可以通过遍历DataTable中的所有行获取其中列，再对其中（T）的属性进行赋值并添加到List集合最后返回即可。
+   2. 要对数据库获取到的字段的不同的数据类型进行判断并转换再进行赋值，避免出错。
 
 ```csharp
 public static List<T> ToList<T>(DataTable dt) where T : class, new()
 {
     Type t = typeof(T); //获取类型
     PropertyInfo[] propertys = t.GetProperties(); //获取所有属性
-    List<T> lst = new List<T>();
+    List<T> lst = new List<T>(); //泛型集合
     string typeName = string.Empty;
 
     foreach (DataRow dr in dt.Rows) //遍历表格所有行
     {
         T entity = new T(); //创建对象，注：要有new() 这样的一个泛型约束，等价于Activator.CreateInstance<T>()
-        foreach (PropertyInfo pi in propertys) //循环对属性赋值
+        foreach (PropertyInfo pi in propertys) //循环对对象entity中的属性赋值
         {
             typeName = pi.Name;
             if (dt.Columns.Contains(typeName))
             {
                 if (!pi.CanWrite) continue;
-                object value = dr[typeName];
+                object value = dr[typeName]; //获取字段的值，值在数据表的行中
                 if (value == DBNull.Value) continue;
                 if (pi.PropertyType == typeof(string))
                 {
-                    pi.SetValue(entity, value.ToString(), null);
+                    pi.SetValue(entity, value.ToString(), null); //将字段赋值给属性
                 }
                 else if (pi.PropertyType == typeof(int) ||
                          pi.PropertyType == typeof(int?))
@@ -73,7 +74,7 @@ public static List<T> ToList<T>(DataTable dt) where T : class, new()
             }
         }
 
-        lst.Add(entity);
+        lst.Add(entity); //将对象添加到集合中
     }
 
     return lst;

@@ -86,7 +86,14 @@ namespace GaolxORM
         public static List<T> GetList<T>(string sql, params MySqlParameter[]? paras) where T : class, new()
         {
             DataTable? dt = null;
-            dt = GetDataTable(sql, paras);
+            dt = GetDataTable(sql, CommandType.Text, paras);
+            return DataTableExtension.ToList<T>(dt);
+        }
+
+        public static List<T> GetList<T>(string sql, CommandType cmdType = CommandType.Text, params MySqlParameter[]? paras) where T : class, new()
+        {
+            DataTable? dt = null;
+            dt = GetDataTable(sql, cmdType, paras);
             return DataTableExtension.ToList<T>(dt);
         }
 
@@ -96,12 +103,13 @@ namespace GaolxORM
         /// <param name="sql"></param>
         /// <param name="paras"></param>
         /// <returns></returns>
-        public static DataTable GetDataTable(string sql, params MySqlParameter[]? paras)
+        public static DataTable GetDataTable(string sql, CommandType cmdType = CommandType.Text, params MySqlParameter[]? paras)
         {
             DataTable? dt = null;
             using (MySqlConnection conn = new MySqlConnection(ConnectionString))
             {
                 MySqlCommand command = new MySqlCommand(sql, conn);
+                command.CommandType = cmdType;
                 command.Parameters.AddRange(paras);
                 MySqlDataAdapter adapter = new MySqlDataAdapter(command);
                 dt = new DataTable();
