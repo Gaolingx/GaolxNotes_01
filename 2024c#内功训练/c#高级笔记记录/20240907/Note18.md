@@ -13,7 +13,7 @@ NUnit是一个专为.NET平台设计的开源单元测试框架，它属于xUnit
 
 ## 三、NUnit 使用
 
-步骤：
+**3.1 步骤：**
 打开Nuget包管理器，通过Nuget 安装 如下三个包：
 
 - NUnit
@@ -117,6 +117,8 @@ namespace ConsoleApp4
 }
 
 ```
+
+结果：
 
 **继承**  
 
