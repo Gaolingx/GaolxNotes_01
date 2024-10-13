@@ -88,6 +88,18 @@ public void Test2()
 5. 排序和搜索
 6. 作为其他集合类型的数据源
 
+举例：运行如下代码，观察控制台输出
+
+```csharp
+public void Test3()
+{
+    List<int> list = new List<int>() { 2, 3, 7, 5 }; // 集合初始化器
+    Console.WriteLine($"集合元素个数:{list.Count},容量:{list.Capacity}");
+    list.Add(1);
+    Console.WriteLine($"集合元素个数:{list.Count},容量:{list.Capacity}");
+}
+```
+
 **2.2 声明**
 
 声明泛型集合：
@@ -171,3 +183,20 @@ List<int> list = new List<int>() { 2, 3, 7, 5, 9 }; // 集合初始化器
 </tr>
 </tbody>
 </table></div>
+
+例如：
+
+```csharp
+List<int> list = new List<int>() { 2, 3, 7, 5, 9 };
+
+list.Add(10); // 2, 3, 7, 5, 9,10
+list.Insert(2,6); //   2, 3,6, 7, 5, 9,10
+list.Remove(2); // 3,6, 7, 5, 9,10
+list.RemoveAt(0); // 6, 7, 5, 9,10
+list.RemoveRange(1,2); // 6,9,10
+list.First();// 6
+list.FirstOrDefault(); // 6
+list.Last();// 10
+list.LastOrDefault(); // 10
+list.Clear(); // 集合为空
+```
