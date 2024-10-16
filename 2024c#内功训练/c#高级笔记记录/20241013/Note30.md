@@ -2,11 +2,11 @@
 
 ## 三、泛型集合——Stack<T> 栈
 
-**3.1 特点：**先进后出，后进先出
+### 3.1 特点：先进后出，后进先出
 
-**3.2 使用：**
+### 3.2 使用：
 
-当然可以！`Stack<T>` 是 C# 中提供的一个后进先出（LIFO, Last In First Out）集合类，属于 `System.Collections.Generic` 命名空间。以下是一些常见的用法和示例：
+`Stack<T>` 是 C# 中提供的一个后进先出（LIFO, Last In First Out）集合类，属于 `System.Collections.Generic` 命名空间。以下是一些常见的用法和示例：
 
 ### 1. 初始化栈
 
@@ -104,7 +104,7 @@ foreach (int item in stackArray)
 
 使用`TryPeek`方法的优点在于，它允许你在不引发异常的情况下检查栈是否为空，并在不为空时安全地查看栈顶元素。
 
-**3.3 使用案例**
+### 3.3 使用案例
 
 运行以下代码，观察输出结果：
 

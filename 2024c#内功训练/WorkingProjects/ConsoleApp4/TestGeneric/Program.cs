@@ -25,7 +25,7 @@ namespace TestGeneric
 
     // 泛型方法——求和
     // 如果一个类下面有多个泛型方法，建议将这个类定义成泛型类
-    public class TestClass02<T> where T : class //struct:值类型
+    public class TestClass02<T> //where T : class //struct:值类型
     {
         public T Sum(T a, T b) //返回值为泛型，泛型方法的<T>中需要指定类型参数
         {
@@ -36,6 +36,20 @@ namespace TestGeneric
         public void Print()
         {
             Console.WriteLine($"{nameof(T)}的类型是{typeof(T).Name}");
+        }
+    }
+
+    public class RunTestClass
+    {
+        [Test]
+        public void RunTest()
+        {
+            TestClass02<int> test = new TestClass02<int>(); //实例化时需声明类型
+            var result = test.Sum(1, 2);
+            Console.WriteLine($"sum的结果是{result}");
+
+            TestClass02<string> test2 = new TestClass02<string>();
+            test2.Print();
         }
     }
 
@@ -86,20 +100,6 @@ namespace TestGeneric
             INotifier<INotification> notifier = new Notifier<INotification>();
             INotifier<MainNotification> mailNotifier = notifier; // 逆变
             mailNotifier.Notify(new MainNotification());
-        }
-    }
-
-    public class RunTestClass
-    {
-        [Test]
-        public void RunTest()
-        {
-            //TestClass02<int> test = new TestClass02<int>(); //实例化时需声明类型
-            //test.Sum(1, 2);
-            //Console.WriteLine($"sum的结果是{test}");
-
-            //TestClass02<string> test2 = new TestClass02<string>();
-            //test2.Print();
         }
     }
 
