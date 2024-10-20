@@ -2,14 +2,14 @@
 
 ## 六、泛型集合——HashTable与Dictionary<TKey,TValue>类
 
-### 6.2 Dictionary<TKey,TValue>
+### 7.1 Dictionary<TKey,TValue>
 
-**6.2.1 声明：**表示键和值的集合。TKey : 字典中的键的类型。TValue : 字典中的值的类型。
+**7.1.1 声明：**表示键和值的集合。TKey : 字典中的键的类型。TValue : 字典中的值的类型。
 
 `Dictionary<TKey, TValue>` 是 C# 中一个非常重要的集合类，它表示键值对的集合。每个元素都是一个键值对（Key-Value Pair），通过键（Key）可以快速查找、添加、移除或访问值（Value）。
 解决了HashTable类型安全问题。效率高。但是线程非安全，多线程场景下需要lock确保线程安全，或者使用ConcurrentDictionary。
 
-**6.2.2 常用属性和方法：**
+**7.1.2 常用属性和方法：**
 
 - **Count**：获取字典中键值对的数量。
 - **Item[TKey]**：获取或设置与指定键相关联的值。如果键不存在，获取操作会抛出 `KeyNotFoundException` 异常；设置操作会添加新的键值对。
@@ -22,7 +22,7 @@
 - **TryGetValue(TKey, out TValue)**：获取与指定键相关联的值（如果存在）。该方法返回一个布尔值，指示是否找到键，并通过 `out` 参数返回值（如果找到）。
 - **Clear()**：从字典中移除所有键值对。
 
-**6.2.3 使用：**
+**7.1.3 使用：**
 
 ```csharp
 [Test]
@@ -80,7 +80,7 @@ public void TestDictionary01()
     }
 
     // 7. 判断是否包含键
-    if (!openWith.ContainsKey("ht"))
+    if (!openWith.ContainsKey("化学"))
     {
         openWith.Add("化学", 75);
         Console.WriteLine("Value added for key = \"化学\": {0}",
@@ -129,3 +129,17 @@ public void TestDictionary01()
 ```
 
 运行结果如下：
+
+**7.1.4 总结：**
+
+Dictionary泛型类提供从一组键到一组值的映射。 每次对字典的添加都包含一个值和与其关联的键。 通过使用其键检索值的速度非常快，接近 O (1) ，因为类 Dictionary 作为哈希表实现。
+
+备注：检索速度取决于为 TKey类型指定的哈希算法的质量。
+
+只要对象用作键， Dictionary它就不能以任何方式更改影响其哈希值。 每个键 Dictionary 都必须根据字典的相等比较器是唯一的。 如果键的类型是引用类型TValue，则键不能null，但值可以是。
+
+Dictionary 需要相等实现来确定键是否相等。 可以使用接受comparer参数的构造函数指定泛型接口的IEqualityComparer实现;如果未指定实现，则使用默认泛型相等比较器EqualityComparer.Default。 如果类型 TKey 实现 System.IEquatable 泛型接口，则默认相等比较器使用该实现。
+
+备注：例如，可以使用类提供的 StringComparer 不区分大小写的字符串比较器创建不区分大小写的字符串键的字典。
+
+a Dictionary 的容量是可以保留的元素 Dictionary 数。 随着元素添加到 a Dictionary，通过重新分配内部数组，容量会自动增加。
