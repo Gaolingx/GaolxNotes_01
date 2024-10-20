@@ -273,5 +273,182 @@ namespace TestGenericCollection
 
             // SortedList能排序的本质：实现了ICompare接口
         }
+
+        [Test]
+        public void TestHashtable01()
+        {
+            Hashtable openWith = new Hashtable();
+
+            // 初始化一批数据，不可出现重复键
+            openWith.Add("txt", "notepad.exe");
+            openWith.Add("bmp", "paint.exe");
+            openWith.Add("dib", "paint.exe");
+            openWith.Add("rtf", "wordpad.exe");
+
+            // 如果出现重复键，则会抛出异常
+            try
+            {
+                openWith.Add("txt", "winword.exe");
+            }
+            catch
+            {
+                Console.WriteLine("An element with Key = \"txt\" already exists.");
+            }
+
+            // 通过索引访问
+            Console.WriteLine("For key = \"rtf\", value = {0}.", openWith["rtf"]);
+
+            // 修改索引所关联的值
+            openWith["rtf"] = "winword.exe";
+            Console.WriteLine("For key = \"rtf\", value = {0}.", openWith["rtf"]);
+
+            // 给一个不存在的键赋值，则会新增
+            openWith["doc"] = "winword.exe";
+
+            // 判断是否包含
+            if (!openWith.ContainsKey("ht"))
+            {
+                openWith.Add("ht", "hypertrm.exe");
+                Console.WriteLine("Value added for key = \"ht\": {0}", openWith["ht"]);
+            }
+
+            // 遍历循环，元素被检索为 DictionaryEntry 对象
+            Console.WriteLine();
+            foreach (DictionaryEntry de in openWith)
+            {
+                Console.WriteLine("Key = {0}, Value = {1}", de.Key, de.Value);
+            }
+
+            // 获取所有的值集合
+            ICollection valueColl = openWith.Values;
+
+            // 遍历值集合
+            Console.WriteLine();
+            foreach (string s in valueColl)
+            {
+                Console.WriteLine("Value = {0}", s);
+            }
+
+            // 获取所有的键
+            ICollection keyColl = openWith.Keys;
+
+            // 遍历键集合
+            Console.WriteLine();
+            foreach (string s in keyColl)
+            {
+                Console.WriteLine("Key = {0}", s);
+            }
+
+            // 移除键值对
+            Console.WriteLine("\nRemove(\"doc\")");
+            openWith.Remove("doc");
+
+            if (!openWith.ContainsKey("doc"))
+            {
+                Console.WriteLine("Key \"doc\" is not found.");
+            }
+        }
+
+        [Test]
+        public void TestDictionary01()
+        {
+            Dictionary<string, int> openWith = new Dictionary<string, int>();
+
+            // 初始化数据，不能存在重复键
+            openWith.Add("语文", 90);
+            openWith.Add("数学", 120);
+            openWith.Add("英语", 130);
+            openWith.Add("物理", 60);
+
+            // 1. 添加重复键会抛出异常
+            try
+            {
+                openWith.Add("语文", 90);
+            }
+            catch (ArgumentException)
+            {
+                Console.WriteLine("An element with Key = \"语文\" already exists.");
+            }
+
+            // 2. 通过索引取值
+            Console.WriteLine("For key = \"数学\", value = {0}.",
+                openWith["数学"]);
+
+            // 3. 给已存在的键值索引赋值
+            openWith["数学"] = 130; // Key不存在：新增 Key存在：更新
+            Console.WriteLine("For key = \"数学\", value = {0}.",
+                openWith["数学"]);
+
+            // 4. 如果不存在，则会新增
+            openWith["地理"] = 80;
+
+            // 5. 如果访问一个不存在的索引值，则会抛出异常
+            try
+            {
+                Console.WriteLine("For key = \"化学\", value = {0}.",
+                    openWith["化学"]);
+            }
+            catch (KeyNotFoundException)
+            {
+                Console.WriteLine("Key = \"化学\" is not found.");
+            }
+
+            // 6. tryValue 尝试取值
+            if (openWith.TryGetValue("地理", out var value))
+            {
+                Console.WriteLine("For key = \"地理\", value = {0}.", value);
+            }
+            else
+            {
+                Console.WriteLine("Key = \"地理\" is not found.");
+            }
+
+            // 7. 判断是否包含键
+            if (!openWith.ContainsKey("化学"))
+            {
+                openWith.Add("化学", 75);
+                Console.WriteLine("Value added for key = \"化学\": {0}",
+                    openWith["化学"]);
+            }
+
+            // 8. 遍历循环，元素被检索为 KeyValuePair 对象
+            Console.WriteLine();
+            foreach (KeyValuePair<string, int> kvp in openWith)
+            {
+                Console.WriteLine("Key = {0}, Value = {1}",
+                    kvp.Key, kvp.Value);
+            }
+
+            // 9. 获取所有的值集合
+            Dictionary<string, int>.ValueCollection valueColl =
+                openWith.Values;
+
+            // 10. 遍历值集合
+            Console.WriteLine();
+            foreach (int s in valueColl)
+            {
+                Console.WriteLine("Value = {0}", s);
+            }
+
+            // 11. 获取所有的键集合
+            Dictionary<string, int>.KeyCollection keyColl =
+                openWith.Keys;
+
+            // 12. 遍历键集合
+            Console.WriteLine();
+            foreach (string s in keyColl)
+            {
+                Console.WriteLine("Key = {0}", s);
+            }
+
+            // 13. 移除键值对
+            Console.WriteLine("\nRemove(\"英语\")");
+            openWith.Remove("英语");
+
+            if (!openWith.ContainsKey("英语"))
+            {
+                Console.WriteLine("Key \"英语\" is not found.");
+            }
+        }
     }
 }
