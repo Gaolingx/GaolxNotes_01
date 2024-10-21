@@ -56,3 +56,42 @@ System.Collections.Generic.Dictionary与类一样，ConcurrentDictionary实现ID
 **如何选择：**如果不涉及线程安全问题，一般使用Dictionary<TKey,TValue>， 否则使用ConcurrentDictionary<TKey,TValue>。
 
 **7.1.3 使用：**
+
+```csharp
+[Test]
+public void TestConcurrentDictionary01()
+{
+    ConcurrentDictionary<string, int> dict = new();
+
+    // 1. 添加
+    dict["语文"] = 90;
+    dict.TryAdd("数学", 110);
+
+    // 2. 是否包含键
+    if (dict.ContainsKey("英语"))
+    {
+        Console.WriteLine("The Dictionary Contain Key:英语");
+    }
+
+    // 3. 移除
+    dict.Remove("语文", out int result);
+    Console.WriteLine($"Remove Key:语文,result:{result}");
+
+    // 4. 添加(AddOrUpdate)
+    bool flag = dict.TryAdd("语文", 120);
+    Console.WriteLine($"Key:语文,result:{dict["语文"]}");
+    dict.AddOrUpdate("语文", 80, (k, v) =>
+    {
+        Console.WriteLine($"Key:语文,k={k},v={v}");
+        return 60;
+    }); //如果键存在则修改，但需要声明修改的方法（委托）
+    dict.AddOrUpdate("数学", 120, (k, v) => { return 100; });
+    Console.WriteLine($"Key:数学,result:{dict["数学"]}");
+
+    // 5. 添加(GetOrAdd)
+    var result2 = dict.GetOrAdd("物理", 130); //键不存在则添加
+    Console.WriteLine($"Key:物理,result:{dict["物理"]},isSuccess:{result2}");
+}
+```
+
+运行结果如下：
