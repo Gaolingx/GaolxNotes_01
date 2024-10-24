@@ -97,3 +97,22 @@ File 类的静态方法对所有方法执行安全检查。 如果要多次重�
     - `File.AppendAllLines(string path, string[] contents)`: 将一个字符串数组作为单独的行附加到文件末尾。如果文件不存在，则创建它。
     - `File.AppendAllText(string path, string contents)`: 将一个字符串附加到文件末尾。如果文件不存在，则创建它。
 
+### 使用
+
+1. **文件追加**
+
+运行以下代码，观察D://App/logs路径下是否生成log文件生成，并多次运行，再次查看log是否追加了文本。
+
+```csharp
+// 1. 添加文件路径
+[Test]
+public void TestAppendLines01()
+{
+    File.AppendAllLines("D://App/logs/log.txt", new List<string> {$"Log第一行,Time:{DateTime.Now}",
+    $"Log第二行,Time:{DateTime.Now}"});
+
+    //注:1. 路径不存在会抛出异常，但是文件不存在会自动新建
+}
+```
+
+运行结果如下：
