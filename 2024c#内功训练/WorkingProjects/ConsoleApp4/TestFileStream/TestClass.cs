@@ -50,5 +50,39 @@ namespace TestFileStream
             streamWriter.WriteLine($"Log追加的内容3:TestAppendText01,Time:{DateTime.Now}");
             streamWriter.Flush();
         }
+
+        // 5. 文件复制
+        [Test]
+        public void TestCopy01()
+        {
+            // 参数：源文件(string),目标文件(string)
+            File.Copy("D://App/logs/log.txt", "D://App/logs2/log.txt");
+        }
+
+        // 6. 文件创建
+        [Test]
+        public void TestCreate01()
+        {
+            //创建一个文件流，需要手动释放资源
+            using var fileStream = File.Create("D://App/logs/log3.txt");
+            //向文件流写入内容
+            using StreamWriter  streamWriter = new StreamWriter(fileStream);
+            streamWriter.WriteLine("这是在TestCreate01 写入的内容");
+        }
+
+        // 7. 文件删除
+        [Test]
+        public void TestDelete01()
+        {
+            File.Delete("D://App/logs/log3.txt");
+        }
+
+        // 8. 文件移动
+        [Test]
+        public void TestMove01()
+        {
+            // true:如果存在同名文件则覆盖，默认为false
+            File.Move("D://App/logs2/log.txt", "D://App/logs/log233.txt", true);
+        }
     }
 }

@@ -1,4 +1,4 @@
-# C#高级编程之——I/O文件流
+# C#高级编程之——I/O文件流（一）——追加
 
 ## 什么是文件流
 
@@ -97,13 +97,13 @@ File 类的静态方法对所有方法执行安全检查。 如果要多次重�
     - `File.AppendAllLines(string path, string[] contents)`: 将一个字符串数组作为单独的行附加到文件末尾。如果文件不存在，则创建它。
     - `File.AppendAllText(string path, string contents)`: 将一个字符串附加到文件末尾。如果文件不存在，则创建它。
 
-### 使用
-
-#### 一、追加操作
+### 二、使用——文件追加
 
 运行以下代码，观察D://App/logs路径下是否生成log文件生成，可以多次运行，再次查看log是否追加了文本。
 
-1. **AppendAllLines**
+1. **AppendAllLines(String, IEnumerable, Encoding)**
+
+**注解：**使用指定的编码向一个文件中追加行，然后关闭该文件。如果指定文件不存在，此方法会创建—个文件，向其中写入指定的行，然后关闭该文件。
 
 ```csharp
 // 1. 向一个文件中追加行
@@ -128,7 +128,9 @@ public void TestAppendAllLines02()
 
 运行结果如下：
 
-1. **AppendAllText**
+2. **AppendAllText(String, String, Encoding)**
+
+**注解：**打开一个文件，使用指定的编码，向其中追加指定的字符串，然后关闭该文件。如果文件不存在，此方法将创建—个文件，将指定的字符串写入文件，然后关闭该文件。
 
 ```csharp
 // 3. 向一个文件中追加行（不换行）
@@ -146,7 +148,9 @@ public void TestAppendAllText01()
 
 运行结果如下：
 
-3. **AppendText**
+3. **AppendText(String)**
+
+**注解：**创建一个 StreamWriter，它将UTF-8编码文本追加到现有文件或新文件(如果指定文件不存在)。
 
 ```csharp
 // 4. 创建一个StreamWriter，追加文本到文件
