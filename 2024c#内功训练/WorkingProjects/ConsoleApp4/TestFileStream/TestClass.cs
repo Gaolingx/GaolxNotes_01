@@ -84,5 +84,73 @@ namespace TestFileStream
             // true:如果存在同名文件则覆盖，默认为false
             File.Move("D://App/logs2/log.txt", "D://App/logs/log233.txt", true);
         }
+
+        // 9. 判断文件是否存在
+        [Test]
+        public void TestExists()
+        {
+            string path = "D://App/logs";
+            if (File.Exists($"{path}/log233.txt"))
+            {
+                Console.WriteLine($"{path} 存在同名文件:log233.txt");
+            }
+            else
+            {
+                Console.WriteLine($"{path} 不存在同名文件:log233.txt");
+            }
+        }
+
+        // 10. 打开文件
+        [Test]
+        public void TestOpen01()
+        {
+            using var stream = File.Open("D://App/logs2/log.txt",FileMode.Open);
+            using StreamWriter streamWriter = new StreamWriter(stream);
+            streamWriter.WriteLine($"TestOpen01,Date:{DateTime.Now}");
+        }
+
+        // 11. 打开文件
+        [Test]
+        public void TestOpen02()
+        {
+            // 如果要对File 执行写入操作，我们需要设置文件的写入权限（FileAccess.Write）
+            using var stream = File.Open("D://App/logs2/log.txt", FileMode.Open, FileAccess.Read);
+            using StreamReader streamReader = new StreamReader(stream);
+            string? text = streamReader.ReadLine();
+            Console.WriteLine(text);
+        }
+
+        // 12. 打开并读取
+        [Test]
+        public void TestOpenRead01()
+        {
+            // OpenRead 只有读取权限
+            using var stream = File.OpenRead("D://App/logs2/log.txt");
+            using StreamReader streamReader = new StreamReader(stream);
+            if (!streamReader.EndOfStream) //判断是否是文件最末尾
+            {
+                string? text = streamReader.ReadLine();
+                Console.WriteLine(text);
+            }
+        }
+
+        // 13. 打开并写入
+        [Test]
+        public void TestOpenWrite01()
+        {
+            // OpenWrite 只有写入权限
+            using var stream = File.OpenWrite("D://App/logs2/log.txt");
+            using StreamWriter writer = new StreamWriter(stream);
+            writer.WriteLine($"TestOpenWrite01,Date:{DateTime.Now}");
+        }
+
+        // 14. 读取所有内容
+        [Test]
+        public void TestReadAllText01()
+        {
+            var stringArr = File.ReadAllText("D://App/logs2/log.txt", System.Text.Encoding.UTF8);
+            Console.WriteLine(stringArr);
+            Console.WriteLine(stringArr.Length);
+        }
     }
 }
