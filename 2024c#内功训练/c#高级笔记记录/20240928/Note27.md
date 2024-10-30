@@ -1,4 +1,4 @@
-# C#高级编程之——泛型（七）ORM框架实现
+# C#高级编程之——泛型（八）ORM框架实现
 
 ## 五、ORM框架实现
 
@@ -23,31 +23,25 @@ public List<T> Select(Expression<Func<T,bool>> expression = null) //TODO:表达�
 DbHelper中的实现如下：
 
 ```csharp
-public static List<T> GetList<T>(string sql, params SqlParameter[] paras)
+/// <summary>
+/// 3. 根据SQL和泛型方法返回泛型【集合】
+/// </summary>
+/// <typeparam name="T"></typeparam>
+/// <param name="sql"></param>
+/// <param name="paras"></param>
+/// <returns></returns>
+public static List<T> GetList<T>(string sql, params MySqlParameter[]? paras) where T : class, new()
 {
-    List<T> list = new List<T>();
-    using (SqlConnection conn = new SqlConnection(ConnectionString))
-    {
-        conn.Open();
-        SqlCommand command = new SqlCommand(sql, conn);
-        command.Parameters.AddRange(paras);
-        using (SqlDataReader reader = command.ExecuteReader())
-        {   //typeof()检测类型
-            Type type = typeof(T);//类型的声明(可声明一个不确定的类型)
-            while (reader.Read())
-            {
-                T t = (T)Activator.CreateInstance(type);
-                //通过反射去遍历属性
-                foreach (PropertyInfo info in type.GetProperties())
-                {
-                    info.SetValue(t, reader[info.Name] is DBNull ?
-                                            null : reader[info.Name]);
-                }
-                list.Add(t);
-            }
-        }
-    }
-    return list;//命令行为
+    DataTable? dt = null;
+    dt = GetDataTable(sql, CommandType.Text, paras);
+    return DataTableExtension.ToList<T>(dt);
+}
+
+public static List<T> GetList<T>(string sql, CommandType cmdType = CommandType.Text, params MySqlParameter[]? paras) where T : class, new()
+{
+    DataTable? dt = null;
+    dt = GetDataTable(sql, cmdType, paras);
+    return DataTableExtension.ToList<T>(dt);
 }
 ```
 

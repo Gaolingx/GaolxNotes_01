@@ -1,4 +1,4 @@
-# C#高级编程之——I/O文件流（一）FileInfo类
+# C#高级编程之——I/O文件流（二）FileInfo类
 
 ## 一、定义
 
@@ -108,7 +108,7 @@ public void TestInfo03()
     // 如果只是对文件单次操作，则可以使用 File 静态类
     FileInfo fileInfo = new FileInfo("D://App/logs2/log.txt");
     var stream = fileInfo.OpenRead(); //只读
-    StreamReader reader = new StreamReader(stream);
+    using StreamReader reader = new StreamReader(stream);
     var str = reader.ReadLine();
     Console.WriteLine(str);
 }
