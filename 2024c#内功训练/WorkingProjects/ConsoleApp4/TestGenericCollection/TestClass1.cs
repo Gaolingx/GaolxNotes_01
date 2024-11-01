@@ -486,5 +486,40 @@ namespace TestGenericCollection
             var result2 = dict.GetOrAdd("物理", 130); //键不存在则添加
             Console.WriteLine($"Key:物理,result:{dict["物理"]},isSuccess:{result2}");
         }
+
+        [Test]
+        public void TestHashSet01()
+        {
+            //ISet<int> ints = new HashSet<int>();
+            HashSet<int> ints = new HashSet<int>();
+
+            // 1. 添加元素
+            ints.Add(1);
+            ints.Add(1);
+            ints.Add(2);
+            ints.Add(2);
+            ints.Add(3);
+
+            //该集合之所以可以被遍历。是因为实现了IEnumerable<T>
+            foreach (int i in ints)
+            {
+                Console.WriteLine(i);
+            }
+
+            // 2. List<T>集合去除重复元素
+            List<int> list = new List<int>() { 10, 10, 20, 20 };
+
+            foreach (int i in list)
+            {
+                Console.WriteLine($"List:{i}");
+            }
+
+            HashSet<int> ints2 = list.ToHashSet();
+            foreach (int i in ints2)
+            {
+                Console.WriteLine($"List to HashSet:{i}");
+            }
+
+        }
     }
 }

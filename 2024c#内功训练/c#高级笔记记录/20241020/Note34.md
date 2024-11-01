@@ -1,6 +1,6 @@
-# C#高级编程之——泛型集合（六）字典集合
+# C#高级编程之——泛型集合（七）字典集合
 
-## 六、泛型集合——HashTable与Dictionary<TKey,TValue>类
+## 七、泛型集合——HashTable与Dictionary<TKey,TValue>类
 
 ### 7.1 Dictionary<TKey,TValue>
 

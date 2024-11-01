@@ -1,6 +1,6 @@
-# C#高级编程之——泛型集合（七）字典集合
+# C#高级编程之——泛型集合（八）字典集合
 
-## 七、泛型集合——ConcurrentDictionary 类
+## 八、泛型集合——ConcurrentDictionary 类
 
 ## 线程安全性
 

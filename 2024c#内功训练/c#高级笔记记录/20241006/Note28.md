@@ -25,6 +25,7 @@ public static List<T> GetList<T>(string sql, params MySqlParameter[]? paras) whe
 1. 设计思路：
    1. 通过分析List<T>与DataTable的对应关系我们发现，由于我们是将数据库中的表格（DataTable）中的字段与对象的属性进行映射，即数据库中的每条数据（记录）都对应List集合中的一个对象，因此我们可以通过遍历DataTable中的所有行获取其中列，再对其中（T）的属性进行赋值并添加到List集合最后返回即可。
    2. 要对数据库获取到的字段的不同的数据类型进行判断并转换再进行赋值，避免出错。
+2. 实现如下：
 
 ```csharp
 public static List<T> ToList<T>(DataTable dt) where T : class, new()
