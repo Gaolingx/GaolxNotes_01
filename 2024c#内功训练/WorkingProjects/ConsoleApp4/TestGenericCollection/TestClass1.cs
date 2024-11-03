@@ -521,5 +521,24 @@ namespace TestGenericCollection
             }
 
         }
+
+        [Test]
+        public void TestSortedSet01()
+        {
+            SortedSet<int> ints = new SortedSet<int>();
+
+            // 1. 添加元素
+            ints.Add(5);
+            ints.Add(20);
+            ints.Add(8);
+            ints.Add(10);
+            ints.Add(30);
+
+            // 2. 遍历集合
+            foreach (var item in ints)
+            {
+                Console.WriteLine(item); //检查元素是否被排序
+            }
+        }
     }
 }
