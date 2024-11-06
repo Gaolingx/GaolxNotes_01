@@ -3,6 +3,7 @@ using NUnit.Framework;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TestGenericCollection
 {
@@ -539,6 +540,97 @@ namespace TestGenericCollection
             {
                 Console.WriteLine(item); //检查元素是否被排序
             }
+        }
+
+        [Test]
+        public void TestSortedClassType()
+        {
+            HashSet<Student> students = new HashSet<Student>();
+            students.Add(new Student(1, "爱莉"));
+            students.Add(new Student(2, "爱莉"));
+            students.Add(new Student(2, "流萤"));
+            students.Add(new Student(2, "流萤"));
+            students.Add(new Student(3, "希儿"));
+            students.Add(new Student(4, "符玄"));
+
+            // 默认情况下，所有的属性值都一样，则表示重复
+            foreach (var student in students)
+            {
+                Console.WriteLine($"Student ID:{student.Id},Name:{student.Name}");
+            }
+
+            Console.WriteLine("====================");
+
+            // 创建一个HashSet，比较名字是否相同
+            HashSet<Student> students2 = new HashSet<Student>(new StudentComparerRule()); //传入自定义比较规则
+            students2.Add(new Student(1, "爱莉"));
+            students2.Add(new Student(2, "爱莉"));
+            students2.Add(new Student(2, "流萤"));
+            students2.Add(new Student(2, "流萤"));
+            students2.Add(new Student(3, "希儿"));
+            students2.Add(new Student(4, "符玄"));
+
+            foreach (var student in students2)
+            {
+                Console.WriteLine($"Student ID:{student.Id},Name:{student.Name}");
+            }
+        }
+
+        [Test]
+        public void TestSortedClassType2()
+        {
+            SortedSet<Student> students = new SortedSet<Student>(new StudentCompareRule2());
+            students.Add(new Student(1, "爱莉"));
+            students.Add(new Student(2, "爱莉"));
+            students.Add(new Student(2, "流萤"));
+            students.Add(new Student(2, "流萤"));
+            students.Add(new Student(3, "希儿"));
+            students.Add(new Student(4, "符玄"));
+
+            foreach (var student in students)
+            {
+                Console.WriteLine($"Student ID:{student.Id},Name:{student.Name}");
+            }
+        }
+    }
+
+    internal class Student
+    {
+        public int Id { get; set; }
+        public string? Name { get; set; }
+
+        public Student() { }
+        public Student(int id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
+    }
+
+    // 自定义比较规则 1
+    internal class StudentComparerRule : IEqualityComparer<Student>
+    {
+        // 比较规则的方法
+        public bool Equals(Student? x, Student? y)
+        {
+            // 如果名字一样，则重复
+            return x.Name.Equals(y.Name);
+        }
+
+        // 自定义哈希码
+        public int GetHashCode([DisallowNull] Student obj)
+        {
+            return base.GetHashCode();
+        }
+    }
+
+    // 自定义比较规则 2
+    internal class StudentCompareRule2 : IComparer<Student>
+    {
+        public int Compare(Student? x, Student? y)
+        {
+            // 返回值>0,表示x大,返回值=0,表示x=y,返回值<0,表示y大
+            return x.Id - y.Id;
         }
     }
 }
