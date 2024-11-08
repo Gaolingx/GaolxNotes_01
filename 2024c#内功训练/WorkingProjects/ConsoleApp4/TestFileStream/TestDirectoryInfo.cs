@@ -50,5 +50,27 @@ namespace TestFileStream
                 Console.WriteLine(dir.FullName);
             }
         }
+
+        // 4. 获取目录的文件列表
+        [Test]
+        public void TestGetFiles01()
+        {
+            DirectoryInfo info = new DirectoryInfo("D://App/logs3");
+
+            //获取当前目录下的所有文件
+            var files = info.GetFiles();
+            foreach (var file in files)
+            {
+                Console.WriteLine($"FullName:{file.FullName},Length:{file.Length}");
+            }
+
+            //获取当前目录及子目录所有文件
+            //*.*:所有文件名以及所有的文件后缀名
+            var files2 = info.GetFiles("*.*",SearchOption.AllDirectories);
+            foreach (var file in files2)
+            {
+                Console.WriteLine($"FullName:{file.FullName},Length:{file.Length}");
+            }
+        }
     }
 }
