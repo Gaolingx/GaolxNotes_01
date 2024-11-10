@@ -1,4 +1,4 @@
-# C#高级编程之——泛型集合（五）SortedList<TKey,TValue>
+# C#高级编程之——泛型集合（四）SortedList<TKey,TValue>
 
 ## 五、泛型集合——SortedList<TKey,TValue> 类
 
@@ -169,3 +169,5 @@ public void TestSortedList02()
     // SortedList能排序的本质：实现了ICompare接口
 }
 ```
+
+运行结果如下：
