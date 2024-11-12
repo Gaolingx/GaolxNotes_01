@@ -41,3 +41,48 @@ Read 和 Write 方法以各种格式读取和写入数据。 对于支持查找�
 释放 Stream 对象会刷新任何缓冲数据，并实质上调用 Flush 方法。 Dispose 还会释放操作系统资源，例如文件句柄、网络连接或用于任何内部缓冲的内存。 BufferedStream 类提供将缓冲流环绕另一个流的功能，以提高读取和写入性能。
 
 从 .NET Framework 4.5 开始，Stream 类包括用于简化异步操作的异步方法。 异步方法在其名称中包含 Async，例如 ReadAsync、WriteAsync、CopyToAsync和 FlushAsync。 通过这些方法，无需阻止主线程即可执行资源密集型 I/O 操作。 在 Windows 8.x 应用商店应用或桌面应用中，这种性能注意事项尤其重要，其中耗时的流操作可能会阻止 UI 线程，并使你的应用看起来好像不起作用一样。 异步方法与 Visual Basic 和 C# 中的 async 和 await 关键字结合使用。
+
+## 文件流（一）-FileStream流
+
+### 定义
+
+命名空间:
+System.IO
+程序集:
+System.Runtime.dll
+Source:
+FileStream.cs
+
+功能：为文件提供 Stream，支持同步和异步读取和写入操作。
+
+继承:Object->MarshalByRefObject->Stream->FileStream
+派生:System.IO.IsolatedStorage.IsolatedStorageFileStream
+
+### 使用
+
+#### 创建文件流
+
+- FileStream(String, FileMode)
+  使用指定的路径和创建模式初始化 FileStream 类的新实例。
+- FileStream(String, FileMode, FileAccess)
+  使用指定的路径、创建模式和读/写权限初始化 FileStream 类的新实例。
+
+```csharp
+[Test]
+public void TestFStream()
+{
+    //1. 创建文件流
+   using Stream stream = new FileStream("D://App/logs/log.txt",FileMode.Open, FileAccess.Read);
+    //2. 读取文件流
+    //只能读取流中的字符串（不适合二进制文件）
+    StreamReader reader = new StreamReader(stream);
+
+    while(!reader.EndOfStream)
+    {
+        string? text = reader.ReadLine();
+        Console.WriteLine(text);
+    }
+}
+```
+
+运行结果如下：
