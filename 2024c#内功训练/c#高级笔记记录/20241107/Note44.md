@@ -1,6 +1,8 @@
 # C#高级编程之——文件流-Stream流
 
-## 定义
+## Stream 类
+
+**定义：**
 
 命名空间:
 System.IO
@@ -42,7 +44,7 @@ Read 和 Write 方法以各种格式读取和写入数据。 对于支持查找�
 
 从 .NET Framework 4.5 开始，Stream 类包括用于简化异步操作的异步方法。 异步方法在其名称中包含 Async，例如 ReadAsync、WriteAsync、CopyToAsync和 FlushAsync。 通过这些方法，无需阻止主线程即可执行资源密集型 I/O 操作。 在 Windows 8.x 应用商店应用或桌面应用中，这种性能注意事项尤其重要，其中耗时的流操作可能会阻止 UI 线程，并使你的应用看起来好像不起作用一样。 异步方法与 Visual Basic 和 C# 中的 async 和 await 关键字结合使用。
 
-## 文件流（一）-FileStream流
+## 文件流 FileStream类
 
 ### 定义
 
