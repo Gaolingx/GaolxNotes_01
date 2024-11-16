@@ -1,4 +1,4 @@
-# C#高级编程之——泛型集合（八）字典集合
+# C#高级编程之——泛型集合（七）字典集合
 
 ## 八、泛型集合——ConcurrentDictionary 类
 
@@ -8,15 +8,15 @@
 
 有关线程安全的替代，请参阅 ConcurrentDictionary 类或 ImmutableDictionary 类。
 
-### 7.1 ConcurrentDictionary<TKey,TValue>
+### 8.1 ConcurrentDictionary<TKey,TValue>
 
-**7.1.1 声明：**表示可由多个线程同时访问的键/值对的线程安全集合。TKey ： 字典中的键的类型。TValue ：字典中的值的类型。
+**8.1.1 声明：**表示可由多个线程同时访问的键/值对的线程安全集合。TKey ： 字典中的键的类型。TValue ：字典中的值的类型。
 
 所有公共成员和受保护成员 ConcurrentDictionary 都是线程安全的，并且可以从多个线程并发使用。 但是，通过重写（包括扩展方法） ConcurrentDictionary 之一访问的成员不能保证线程安全，并且可能需要由调用方同步。
 
 System.Collections.Generic.Dictionary与类一样，ConcurrentDictionary实现IDictionary接口。 此外， ConcurrentDictionary 还提供了几种方法用于在字典中添加或更新键/值对，如下表所述。
 
-**7.1.2 常用属性和方法：**
+**8.1.2 常用属性和方法：**
 
 <div class="table-wrapper"><table class="md-table">
 <thead>
@@ -55,7 +55,7 @@ System.Collections.Generic.Dictionary与类一样，ConcurrentDictionary实现ID
 
 **如何选择：**如果不涉及线程安全问题，一般使用Dictionary<TKey,TValue>， 否则使用ConcurrentDictionary<TKey,TValue>。
 
-**7.1.3 使用：**
+**8.1.3 使用：**
 
 ```csharp
 [Test]
@@ -95,3 +95,7 @@ public void TestConcurrentDictionary01()
 ```
 
 运行结果如下：
+
+## 九、总结
+
+常见的C#集合及其他们的区别

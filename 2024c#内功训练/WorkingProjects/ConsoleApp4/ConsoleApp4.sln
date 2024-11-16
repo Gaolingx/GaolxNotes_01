@@ -15,7 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestGeneric", "TestGeneric\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestGenericCollection", "TestGenericCollection\TestGenericCollection.csproj", "{D30123E7-5938-4A95-8FDA-2E2653A7442F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestFileStream", "TestFileStream\TestFileStream.csproj", "{1940D28B-6FD1-4FBF-AABC-A5D014660B34}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFileStream", "TestFileStream\TestFileStream.csproj", "{1940D28B-6FD1-4FBF-AABC-A5D014660B34}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudyDelegate", "StudyDelegate\StudyDelegate.csproj", "{8EC04225-4537-4A10-8C29-D0D66CD24112}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,10 @@ Global
 		{1940D28B-6FD1-4FBF-AABC-A5D014660B34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1940D28B-6FD1-4FBF-AABC-A5D014660B34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1940D28B-6FD1-4FBF-AABC-A5D014660B34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EC04225-4537-4A10-8C29-D0D66CD24112}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EC04225-4537-4A10-8C29-D0D66CD24112}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EC04225-4537-4A10-8C29-D0D66CD24112}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EC04225-4537-4A10-8C29-D0D66CD24112}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
