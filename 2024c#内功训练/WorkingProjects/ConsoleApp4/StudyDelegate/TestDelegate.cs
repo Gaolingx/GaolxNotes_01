@@ -76,5 +76,13 @@ namespace StudyDelegate
             Console.WriteLine(str2);
             Console.WriteLine(str3);
         }
+
+        [Test]
+        public void TestDelegate4()
+        {
+            // 1.使用反射查看委托的本质
+            Type type = typeof(DoSpeak3);
+            Console.WriteLine($"{nameof(DoSpeak3)} is Class:{type.IsAnsiClass}, is Sealed:{type.IsSealed}");
+        }
     }
 }
