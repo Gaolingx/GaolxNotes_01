@@ -2,9 +2,9 @@
 
 ## 三、使用——文件复制
 
-1. **Copy(String, String)**
+### 1. Copy(String, String)
 
-**注解：**将现有文件复制到新文件。不允许覆盖同名的文件。
+**注解：**将现有文件复制到新文件。不允许覆盖同名的文件。（覆盖同名文件会抛出异常）
 
 ```csharp
 // 5. 文件复制
@@ -20,13 +20,13 @@ public void TestCopy01()
 
 运行代码，观察D://App/logs2 路径下是否有文件生成，说明我们成功复制了文件，如果重复运行，则会抛出异常。
 
-2. **Copy(String, String, Boolean)**
+### 2. Copy(String, String, Boolean)
 
 **注解：**将现有文件复制到新文件。允许覆盖同名的文件（如果第三个参数为true）。
 
 ### 四、使用——文件创建
 
-1. **Create(String)**
+### 1. Create(String)
 
 **注解：**在指定路径中创建或覆盖文件。
 
@@ -45,13 +45,13 @@ public void TestCreate01()
 
 运行结果如下：
 
-2. **Create(String, Int32)**
+### 2. Create(String, Int32)
 
 **注解：**在指定路径中创建或覆盖文件，指定缓冲区大小。
 
 ### 五、使用——文件删除
 
-1. **Delete(String)**
+### 1. Delete(String)
 
 **注解：**删除指定文件。
 
@@ -68,7 +68,7 @@ public void TestDelete01()
 
 ### 六、使用——文件移动
 
-1. **Move(String, String, Boolean)**
+### 1. Move(String, String, Boolean)
 
 **注解：**将指定文件移动到新位置，提供指定新文件名和覆盖目标文件(如果它已存在)的选项。
 
