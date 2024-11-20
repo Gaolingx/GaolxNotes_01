@@ -83,5 +83,47 @@ int result = del(5, 3);  // 调用委托实例
 
    * `public MethodInfo Method { get; }`: 获取与委托关联的方法的`MethodInfo`对象。
 
-
 ## 多播委托
+
+概念：一个委托注册绑定多个具有**相同签名**的方法。
+
+特点：
+
+* 包含多个方法：一个多播委托可以包含多个方法的引用。
+* 顺序执行：当多播委托被调用时，它包含的方法会按照添加的顺序依次执行。
+
+示例：
+
+```csharp
+private void SpeakA()
+{
+    Console.WriteLine("Speak A");
+}
+
+private void SpeakB()
+{
+    Console.WriteLine("Speak B");
+}
+
+/// <summary>
+/// 多播委托
+/// </summary>
+[Test]
+public void TestMultiDelegate()
+{
+    //注册第一个方法
+    DoSpeak speakDel = new DoSpeak(SpeakA);
+    //注册第二个方法
+    speakDel += SpeakB;
+
+    //触发多个方法，依次调用
+    speakDel?.Invoke();
+    Console.WriteLine("=============");
+
+    //解绑一个方法
+    speakDel -= SpeakA;
+    speakDel?.Invoke();
+}
+```
+
+运行结果如下：

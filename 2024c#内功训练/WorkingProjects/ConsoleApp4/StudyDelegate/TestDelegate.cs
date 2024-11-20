@@ -84,5 +84,35 @@ namespace StudyDelegate
             Type type = typeof(DoSpeak3);
             Console.WriteLine($"{nameof(DoSpeak3)} is Class:{type.IsAnsiClass}, is Sealed:{type.IsSealed}");
         }
+
+        private void SpeakA()
+        {
+            Console.WriteLine("Speak A");
+        }
+
+        private void SpeakB()
+        {
+            Console.WriteLine("Speak B");
+        }
+
+        /// <summary>
+        /// 多播委托
+        /// </summary>
+        [Test]
+        public void TestMultiDelegate()
+        {
+            //注册第一个方法
+            DoSpeak speakDel = new DoSpeak(SpeakA);
+            //注册第二个方法
+            speakDel += SpeakB;
+
+            //触发多个方法，依次调用
+            speakDel?.Invoke();
+            Console.WriteLine("=============");
+
+            //解绑一个方法
+            speakDel -= SpeakA;
+            speakDel?.Invoke();
+        }
     }
 }
