@@ -2,7 +2,7 @@
 
 ## 七、使用——判断文件存在
 
-1. **Exists(String)**
+1. **File.Exists(String)**
 
 **注解：**确定指定的文件是否存在。
 
@@ -27,7 +27,7 @@ public void TestExists()
 
 ## 八、使用——文件打开
 
-1. **Open(String, FileMode)**
+1. **File.Open(String, FileMode)**
 
 **注解：**通过不共享的读/写访问权限打开指定路径上的 FileStream。
 
@@ -46,7 +46,7 @@ public void TestOpen01()
 
 运行结果如下：
 
-2. **Open(String, FileMode, FileAccess)**
+2. **File.Open(String, FileMode, FileAccess)**
 
 **注解：**通过指定的模式和不共享的访问权限打开指定路径上的 FileStream。
 
@@ -65,7 +65,7 @@ public void TestOpen02()
 
 运行结果如下：
 
-3. **OpenRead(String)**
+3. **File.OpenRead(String)**
 
 **注解：**打开现有文件以进行读取。
 
@@ -105,7 +105,7 @@ public void TestOpenWrite01()
 
 运行结果如下：
 
-5. **ReadAllText(String, Encoding)**
+5. **File.ReadAllText(String, Encoding)**
 
 **注解：**打开一个文件，使用指定的编码读取文件中的所有文本，然后关闭此文件。
 

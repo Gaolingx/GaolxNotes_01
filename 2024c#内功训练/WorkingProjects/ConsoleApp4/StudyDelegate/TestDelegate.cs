@@ -114,5 +114,26 @@ namespace StudyDelegate
             speakDel -= SpeakA;
             speakDel?.Invoke();
         }
+
+        /// <summary>
+        /// 匿名方法
+        /// </summary>
+        [Test]
+        public void TestDelegate5()
+        {
+            //方法一:匿名方法
+            DoSpeak speakDel = delegate { Console.WriteLine("你调用了第一个匿名方法"); };
+            //方法二:Lambda表达式（本质还是匿名方法）
+            speakDel += () => { Console.WriteLine("你调用了第二个匿名方法"); };
+            speakDel?.Invoke();
+
+            DoSpeak3 speak3 = delegate (int val) { return SpeakLanguages(val); };
+            string? str = speak3?.Invoke(0);
+            Console.WriteLine(str);
+
+            DoSpeak3 speak4 = (int val) => { return SpeakLanguages(val); };
+            string? str2 = speak4?.Invoke(1);
+            Console.WriteLine(str2);
+        }
     }
 }
