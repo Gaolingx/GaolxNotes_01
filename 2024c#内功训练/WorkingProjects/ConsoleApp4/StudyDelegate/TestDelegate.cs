@@ -135,5 +135,57 @@ namespace StudyDelegate
             string? str2 = speak4?.Invoke(1);
             Console.WriteLine(str2);
         }
+
+        /// <summary>
+        /// 匿名对象
+        /// </summary>
+        [Test]
+        public void TestObject()
+        {
+            // 匿名对象：没有名称的对象
+            var x = new { Name = "流萤", Age = 20, Like = "机甲" };
+            var y = new { Name = "青雀", Age = 18, Like = "摸鱼" };
+
+            // 在当前的作用域下可访问
+            Console.WriteLine($"Name;{x.Name},Age:{x.Age},Like:{x.Like}");
+            Console.WriteLine($"Name;{y.Name},Age:{y.Age},Like:{y.Like}");
+        }
+
+        /// <summary>
+        /// 内置委托——Action
+        /// </summary>
+        [Test]
+        public void TestAction()
+        {
+            // 声明委托（0个参数）
+            Action action = () => { Console.WriteLine("这是一个无参无返回值的内置委托"); };
+            // 调用委托（方式一）
+            action?.Invoke();
+            // 调用委托（方式二）
+            if (action != null)
+            {
+                action();
+            }
+
+            Console.WriteLine("=============");
+            // 声明委托（一个参数）
+            Action<int> action1 = (int i) =>
+            {
+                Console.WriteLine($"这是一个带一个参数无返回值的内置委托,value:{i}");
+            };
+            // 声明委托（多个参数）
+            Action<int, string> action2 = (int i, string j) =>
+            {
+                Console.WriteLine($"这是一个带一个参数无返回值的内置委托,value:{i},{j}");
+            };
+            Action<int, int, string> action3 = (int i, int j, string k) =>
+            {
+                Console.WriteLine($"这是一个带一个参数无返回值的内置委托,i+j={i + j},{k}");
+            };
+            action1?.Invoke(1);
+            action2?.Invoke(20, "爱莉小跟班");
+            action3?.Invoke(30, 40, "流萤");
+
+        }
     }
 }

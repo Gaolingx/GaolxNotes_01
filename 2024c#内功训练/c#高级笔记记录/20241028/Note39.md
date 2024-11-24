@@ -1,4 +1,4 @@
-# C#高级编程之——I/O文件流（二）FileInfo类
+# C#高级编程之——I/O文件流（四）FileInfo类
 
 ## 一、定义
 
@@ -79,7 +79,7 @@ public void TestInfo01()
 
 ## 四、使用——操作文本
 
-1. **AppendText()**
+1. **FileInfo.AppendText()**
 
 **注解：**创建一个 StreamWriter，该 FileInfo实例所表示的文件追加文本。
 
@@ -94,7 +94,7 @@ public void TestInfo02()
 }
 ```
 
-2. **OpenRead()**
+2. **FileInfo.OpenRead()**
 
 **注解：**创建只读 FileStream。
 
