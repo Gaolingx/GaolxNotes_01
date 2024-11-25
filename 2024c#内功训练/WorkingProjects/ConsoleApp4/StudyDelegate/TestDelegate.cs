@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System.Numerics;
 
 namespace StudyDelegate
 {
@@ -186,6 +187,36 @@ namespace StudyDelegate
             action2?.Invoke(20, "爱莉小跟班");
             action3?.Invoke(30, 40, "流萤");
 
+        }
+
+        /// <summary>
+        /// 内置委托——Func
+        /// </summary>
+        [Test]
+        public void TestFunc()
+        {
+            // 无参有返回值
+            Func<int> func = () => { return 10; };
+            // 方法体内如果只有一行代码，可以简写成如下
+            Func<int> func2 = () => 10;
+
+            // 1个参数有返回值
+            Func<int, string> func3 = (x1) => { return (x1++).ToString(); };
+            // 1个参数有返回值
+            Func<int, int, string> func4 = (x1, x2) => { return (x1 + x2).ToString(); };
+            // more
+            Func<float, float, float, float> CalculateMagnitude = (x, y, z) =>
+            {
+                return (float)Math.Sqrt(x * x + y * y + z * z);
+            };
+
+            // 调用
+            string? result = func3?.Invoke(10);
+            Console.WriteLine($"func3 result:{result}");
+            string? result2 = func4?.Invoke(20, 30);
+            Console.WriteLine($"func3 result:{result2}");
+            float result3 = CalculateMagnitude.Invoke(3, 4, 5);
+            Console.WriteLine($"Vector3(3,4,5) Magnitude:{result3}");
         }
     }
 }

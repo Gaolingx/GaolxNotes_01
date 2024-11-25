@@ -20,7 +20,7 @@ public delegate void Action<in T>(T obj);
   - `obj` T
    此委托封装的方法的参数。
 
-Action委托用于封装**没有返回值**（void）的方法。
+Action委托用于封装**没有返回值**（void）的内置委托。
 1、Action 声明无参数委托
 2、Action<T> 声明有一个参数委托
 3、Action<T1,T2> 声明有2个参数委托
@@ -100,3 +100,51 @@ public delegate TResult Func<in T,out TResult>(T arg);
 - 返回值
   - `TResult`
    此委托封装的方法的返回值。
+
+Func委托用于封装**有返回值**的内置委托。
+1、Func 声明无参数委托
+2、Func<T,TResult> 声明有一个参数委托
+3、Func<T1,T2,TResult> 声明有2个参数委托
+4、Func<T1,T2,T3,TResult> 声明有3个参数委托
+5、Func<T1,..,TResult> 委托输入参数个数最多16个。
+
+- 特点
+  - 它有17个重载方法
+  - 有T1到T16个输入参数
+  - 最后—个参数TResult代表返回类型
+
+示例：
+
+```csharp
+/// <summary>
+/// 内置委托——Func
+/// </summary>
+[Test]
+public void TestFunc()
+{
+    // 无参有返回值
+    Func<int> func = () => { return 10; };
+    // 方法体内如果只有一行代码，可以简写成如下
+    Func<int> func2 = () => 10;
+
+    // 1个参数有返回值
+    Func<int, string> func3 = (x1) => { return (x1++).ToString(); };
+    // 1个参数有返回值
+    Func<int, int, string> func4 = (x1, x2) => { return (x1 + x2).ToString(); };
+    // more
+    Func<float, float, float, float> CalculateMagnitude = (x, y, z) =>
+    {
+        return (float)Math.Sqrt(x * x + y * y + z * z);
+    };
+
+    // 调用
+    string? result = func3?.Invoke(10);
+    Console.WriteLine($"func3 result:{result}");
+    string? result2 = func4?.Invoke(20, 30);
+    Console.WriteLine($"func3 result:{result2}");
+    float result3 = CalculateMagnitude.Invoke(3, 4, 5);
+    Console.WriteLine($"Vector3(3,4,5) Magnitude:{result3}");
+}
+```
+
+运行结果如下：
