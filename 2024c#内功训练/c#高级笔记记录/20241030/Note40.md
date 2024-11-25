@@ -1,4 +1,4 @@
-# C#高级编程之——I/O文件流（三）目录操作
+# C#高级编程之——I/O文件流（五）目录操作
 
 ## 1. Directory
 
@@ -41,7 +41,7 @@ DirectoryInfo将 类用于典型的操作，例如复制、移动、重命名、
 
 如果要多次重用对象，请考虑使用 的DirectoryInfo**实例方法**，而不是类的Directory相应静态方法，因为安全检查并不总是必要的。
 
-### 属性
+### 三、属性
 
 <div class="has-inner-focus"><table class="table table-sm margin-top-none" aria-label="表 3">
         	<tbody><tr data-moniker=" dotnet-uwp-10.0 netcore-1.0 netcore-1.1 netstandard-1.3 netstandard-1.4 netstandard-1.6 net-5.0 net-6.0 net-7.0 net-8.0 net-9.0 netcore-2.0 netcore-2.1 netcore-2.2 netcore-3.0 netcore-3.1 netframework-1.1 netframework-2.0 netframework-3.0 netframework-3.5 netframework-4.0 netframework-4.5 netframework-4.5.1 netframework-4.5.2 netframework-4.6 netframework-4.6.1 netframework-4.6.2 netframework-4.7 netframework-4.7.1 netframework-4.7.2 netframework-4.8 netframework-4.8.1 netstandard-2.0 netstandard-2.1 ">
@@ -217,12 +217,11 @@ DirectoryInfo将 类用于典型的操作，例如复制、移动、重命名、
         	</tr>
 	</tbody></table></div>
 
-
-### 三、使用
+### 四、使用
 
 #### 3.1 创建目录
 
-**1. Directory.CreateDirectory(String)**
+#### 1. Directory.CreateDirectory(String)
 
 **注解**：在指定路径中创建所有目录和子目录，除非它们已经存在。
 
