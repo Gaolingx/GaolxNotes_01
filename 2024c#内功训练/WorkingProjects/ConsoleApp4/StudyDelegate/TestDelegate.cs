@@ -83,7 +83,7 @@ namespace StudyDelegate
         {
             // 1.使用反射查看委托的本质
             Type type = typeof(DoSpeak3);
-            Console.WriteLine($"{nameof(DoSpeak3)} is Class:{type.IsAnsiClass}, is Sealed:{type.IsSealed}");
+            Console.WriteLine($"{nameof(DoSpeak3)} is Class:{type.IsClass}, is Sealed:{type.IsSealed}");
         }
 
         private void SpeakA()
