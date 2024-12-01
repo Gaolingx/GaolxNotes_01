@@ -65,7 +65,7 @@ public void TestEvent02()
 {
     Event1 += () => { Console.WriteLine("Speak Chinese."); };
     Type type = Event1.GetType();
-    Console.WriteLine($"{nameof(DoSpeak3)} is Class:{type.IsAnsiClass}, is Sealed:{type.IsSealed}");
+    Console.WriteLine($"{nameof(Event1)} is Class:{type.IsClass}, is Sealed:{type.IsSealed}");
     Console.WriteLine();
 }
 ```
@@ -94,10 +94,147 @@ public delegate void EventHandler(object sender, EventArgs e);
 
 当事件需要传递额外信息时，可以使用泛型版本的 `EventHandler<TEventArgs>`，其中 `TEventArgs` 继承自 `EventArgs`：
 
+**操作步骤**：
+
+1. **自定义事件数据类**：`MyEventArgs` 继承自 `EventArgs`，并包含一个 `Message` 属性。
+
+   ```csharp
+   // 自定义事件数据类
+   public class MyEventArgs : EventArgs
+   {
+       public string Message { get; }
+   
+       public MyEventArgs(string message)
+       {
+           Message = message;
+       }
+   }
+   ```
+
+2. **发布者类**：`Publisher` 类声明了一个 `MyEvent` 事件，并在 `DoSomething` 方法中触发该事件。
+
+   ```csharp
+      // 发布者类
+   public class Publisher
+   {
+       // 声明事件
+       public event EventHandler<MyEventArgs>? MyEvent;
+   
+       // 触发事件的方法
+       protected virtual void OnMyEvent(MyEventArgs e)
+       {
+           MyEvent?.Invoke(this, e);
+       }
+   
+       // 模拟某个操作触发事件
+       public void DoSomething()
+       {
+           Console.WriteLine("Doing something...");
+           OnMyEvent(new MyEventArgs("Hello, this is a custom event!"));
+       }
+   }
+   ```
+
+3. **订阅者类**：`Subscriber` 类包含一个处理事件的方法 `HandleMyEvent`。
+
+   ```csharp
+   // 订阅者类
+   public class Subscriber
+   {
+       public void HandleMyEvent(object? sender, MyEventArgs e)
+       {
+           Console.WriteLine("Received event with message: " + e.Message);
+       }
+   }
+   ```
+
+4. **主程序**：在 `Test` 方法中，创建 `Publisher` 和 `Subscriber` 实例，并订阅 `MyEvent` 事件。然后调用 `DoSomething` 方法触发事件，最后取消订阅。
+
+   ```csharp
+   [Test]
+   public void TestEvent03()
+   {
+       Publisher publisher = new Publisher();
+       Subscriber subscriber = new Subscriber();
+   
+       // 订阅事件
+       publisher.MyEvent += subscriber.HandleMyEvent;
+   
+       // 触发事件
+       publisher.DoSomething();
+   
+       // 取消订阅事件
+       publisher.MyEvent -= subscriber.HandleMyEvent;
+   }
+   ```
+
+完整代码：
+
+```csharp
+//------------事件------------//
+// 自定义事件数据类
+public class MyEventArgs : EventArgs
+{
+    public string Message { get; }
+
+    public MyEventArgs(string message)
+    {
+        Message = message;
+    }
+}
+
+// 发布者类
+public class Publisher
+{
+    // 声明事件
+    public event EventHandler<MyEventArgs>? MyEvent;
+
+    // 触发事件的方法
+    protected virtual void OnMyEvent(MyEventArgs e)
+    {
+        MyEvent?.Invoke(this, e);
+    }
+
+    // 模拟某个操作触发事件
+    public void DoSomething()
+    {
+        Console.WriteLine("Doing something...");
+        OnMyEvent(new MyEventArgs("Hello, this is a custom event!"));
+    }
+}
+
+// 订阅者类
+public class Subscriber
+{
+    public void HandleMyEvent(object? sender, MyEventArgs e)
+    {
+        Console.WriteLine("Received event with message: " + e.Message);
+    }
+}
+
+[Test]
+public void TestEvent03()
+{
+    Publisher publisher = new Publisher();
+    Subscriber subscriber = new Subscriber();
+
+    // 订阅事件
+    publisher.MyEvent += subscriber.HandleMyEvent;
+
+    // 触发事件
+    publisher.DoSomething();
+
+    // 取消订阅事件
+    publisher.MyEvent -= subscriber.HandleMyEvent;
+}
+```
+
+运行结果如下：
+
 ## 事件与委托区别
 
 1. 事件只能在方法的外部进行声明，而委托在方法的外部和内部都可以进行声明;
-2. 事件只能在类的内部进行触发，不能在类的外部进行触发。而委托在类的内部和外部都可触发;
+2. 事件只能在类的内部进行触发，不能在类的外部进行触发。而委托在类的内部和外部都可触发;（可以包装成方法并对外暴露）
 3. 委托一般用于回调，而事件一般用于外部接口。在观察者模式中，被观察者可在内部声明一个事件作为外部观察者注册的接口。
 4. 事件只能通过+=，-=方式绑定/解绑方式
 5. 事件是一个特殊的委托，查看反编译工具之后的代码，发现事件是一个private委托，所有的委托类型都继承自System.MulticastDelegate，而System.MulticastDelegate又继承自System.Delegate。
