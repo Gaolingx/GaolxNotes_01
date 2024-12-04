@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MySql.Data.MySqlClient;
 using System.Configuration;
-using System.Collections;
-using MySql.Data.MySqlClient;
+using System.Data;
 
 namespace GaolxORM
 {
@@ -19,7 +13,12 @@ namespace GaolxORM
 
         static DbHelper()
         {
-            ConnectionString = ConfigurationManager.ConnectionStrings["connString"].ConnectionString;
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            var appSettings = config.AppSettings;
+            string connStr = appSettings.Settings["connString"].Value;
+            string dataBase = appSettings.Settings["dataBase"].Value;
+
+            ConnectionString = $"{connStr}{dataBase}";
         }
 
         /// <summary>
