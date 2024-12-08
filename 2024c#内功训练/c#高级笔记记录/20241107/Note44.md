@@ -2,7 +2,7 @@
 
 ## Stream 类
 
-**定义：**
+### 定义
 
 命名空间:
 System.IO
@@ -11,8 +11,7 @@ System.Runtime.dll
 Source:
 Stream.cs
 
-**简介：**提供字节序列的泛型视图。 这是一个抽象类。
-
+- 功能：提供字节序列的泛型视图。 这是一个抽象类。
 - 继承：Object->MarshalByRefObject->Stream
 - 派生：
   - Microsoft.JScript.COMCharStream
@@ -55,10 +54,9 @@ System.Runtime.dll
 Source:
 FileStream.cs
 
-功能：为文件提供 Stream，支持同步和异步读取和写入操作。
-
-继承:Object->MarshalByRefObject->Stream->FileStream
-派生:System.IO.IsolatedStorage.IsolatedStorageFileStream
+- 功能：为文件提供 Stream，支持同步和异步读取和写入操作。
+- 继承:Object->MarshalByRefObject->Stream->FileStream
+- 派生:System.IO.IsolatedStorage.IsolatedStorageFileStream
 
 ### 使用
 
