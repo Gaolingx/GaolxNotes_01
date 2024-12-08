@@ -22,7 +22,15 @@ Scene 视图是正在创建的世界的交互式视图。Scene 视图可用于�
 3D 坐标系是 3D 游戏开发与 VR 开发中的基础概念。一般而言 3D 坐标系都是使用的  
 笛卡尔坐标系来描述物体的坐标信息，笛卡尔坐标系：分为左手坐标系与右手坐标系
 
+<p>笛卡尔坐标系简介</p></div></div><div class="ql-fold-content"><p>平面上的笛卡尔坐标系是一个通过一对唯一指定每个点的坐标系。称为坐标的实数，是从两个固定垂线到该点的有符号距离定向线，称为坐标线、坐标轴或系统的轴（复数axis）。它们相交的点称为原点，坐标为(0, 0)。类似的，三维空间中任意点的位置可以通过三个笛卡尔坐标来指定，这三个笛卡尔坐标是该点到三个相互垂直的平面的有符号距离。更一般地，n笛卡尔坐标指定n维欧几里得空间中任意维度 n的点。这些坐标是从该点到n 个相互垂直的固定超平面的有符号距离。</p><p>    </p><p>三维空间的笛卡尔坐标系由经过公共点（原点 ）<em>且</em>成对垂直的有序三元线（轴 ）组成<em>；</em>每个轴的方向；以及所有三个轴的单一长度单位。与二维情况一样，每个轴都成为一条数轴。对于空间中的任意点<em>P ，可以考虑通过P</em>垂直于每个坐标轴的超平面，并将该超平面与轴相交的点解释为数字。<em>P</em>的笛卡尔坐标是按所选顺序排列的这三个数字。逆向构造在给定三个坐标的情况下&nbsp;确定点<em>P。</em></p><p>或者，点<em>P</em>的每个坐标可以视为从<em>P</em>到由其他两个轴定义的超平面的距离，其符号由相应轴的方向确定。</p><p>每对轴定义一个<em>坐标超平面</em>。这些超平面将空间划分为八个<em style="color: rgb(51, 102, 204);">八分圆</em>。八分圆是：</p><div class="ql-image"><div class="ql-image-box"><img preview="imgPreview" src="https://upload-bbs.miyoushe.com/upload/2023/08/25/277273444/4559119f78b9d08168fe234d40c6cced_5941903788190080409.png?x-oss-process=image//resize,s_600/quality,q_80/auto-orient,0/interlace,1/format,png" large="https://upload-bbs.miyoushe.com/upload/2023/08/25/277273444/4559119f78b9d08168fe234d40c6cced_5941903788190080409.png?x-oss-process=image/auto-orient,0/interlace,1/format,png" data-pswp-uid="1"></div><div class="ql-image-mask"><div class="ql-image-link">超链图片</div></div></div><p>  </p><p>坐标通常写为三个数字（或代数公式），用括号括起来并用逗号分隔，如(3, −2.5, 1)或(&nbsp;<em>t</em>&nbsp;,&nbsp;<em>u</em>&nbsp;+&nbsp;<em>v</em>&nbsp;,&nbsp;<em>π</em>&nbsp;/2)。因此，原点的坐标为(0, 0, 0)，三个轴上的单位点为(1, 0, 0)、(0, 1, 0)和(0, 0, 1)。</p><p>三个轴上的坐标没有标准名称（但是，有时会使用术语<em>横坐标</em>、<em>纵坐标</em>和<em>应用）。</em>坐标通常用字母<em>X</em>、<em>Y</em>和<em>Z</em>或<em>x</em>、<em>y</em>和<em>z</em>表示。这些轴则可以分别称为<em>X</em>轴、<em>Y</em>轴和<em>Z</em>轴。那么坐标超平面可以称为<em>XY</em>平面、<em>YZ</em>平面和<em>XZ</em>平面。</p><p>在数学、物理和工程背景中，前两个轴通常被定义或描述为水平的，第三个轴朝上。在这种情况下，第三个坐标可以称为<em>高度</em>或<em>高度</em>。通常选择方向，以便从点(0, 0, 1)观察时，第一轴到第二轴的 90 度角看起来是逆时针的；<em>通常称为右手</em><em style="color: rgb(51, 102, 204);">定则的</em>约定。——摘自《维基百科》</p></div></div>
+
+![](../../imgs/unity_三维笛卡尔坐标系.png)
+<center>三维笛卡尔坐标系</center>
+
+</br>
+
 ![](../../imgs/unity_3d坐标.png)
+<center>左手坐标系与右手坐标系</center>
 
 Unity 中使用的是左手坐标系，X 轴代表水平方向 horizontal, Y 轴代表垂直方向 vertical ，Z 轴代表深度。Vector3(x,y,z)
 
@@ -147,6 +155,8 @@ Unity 会在 Scene 视图中突出显示选择的游戏对象及其子项。默�
 
 ![](../../imgs/unity_视图控制栏.png)
 
+<center>Scene 视图工具栏</center>
+
 ### 4.1 绘制模式（Draw mode）下拉菜单
 
 第一个下拉菜单选择要用于描绘场景的“绘制模式”
@@ -172,6 +182,8 @@ Unity 会在 Scene 视图中突出显示选择的游戏对象及其子项。默�
 
 ### 4.4 场景可见性开关
 
+![](../../imgs/unity_GameObjectActive.png)
+
 场景可见性开关可打开和关闭游戏对象场景可见性。在打开时，Unity 将应用场景可见性设置。关闭时，Unity 将忽略这些设置。此开关还显示场景中隐藏的游戏对象数量。
 
 请注意：这仅仅是控制物体是否在scene视图中显示游戏对象的快捷按钮，只影响场景可见性，但这个并不影响游戏本身（如Game视图）的可见性，如果你希望彻底隐藏某个游戏对象，需要在Hierachy视图中取消勾选该gameobject或者在c#脚本中使用SetActive()方法。
@@ -195,6 +207,8 @@ Unity 会在 Scene 视图中突出显示选择的游戏对象及其子项。默�
 
 ## 5. Gizmos 菜单
 
+![](../../imgs/unity_EditorGizmos.png)
+
 Gizmos 菜单包含用于控制对象、图标和辅助图标的显示方式的许多选项。此菜单在 Scene 视图和 Game 视图中均可用。
 
 ## 6. 场景可见性
@@ -204,6 +218,9 @@ Gizmos 菜单包含用于控制对象、图标和辅助图标的显示方式的�
 操作方式和“拾取”控件完全一样
 
 ![](../../imgs/unity_可见性.png)
+<center>场景可见性</center>
+
+</br>
 
 > 注意：
 >
