@@ -44,17 +44,17 @@
 > 注意：  
 > 如果要让骨骼位置不移动，需要先将 Mesh 对象移动到骨骼的位置
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 > 参考资料：
 >
 > - [Blender [2.8/2.9] How to create PERFECT Custom Bone Shapes](https://www.youtube.com/watch?v=5Rltnk36PtI)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

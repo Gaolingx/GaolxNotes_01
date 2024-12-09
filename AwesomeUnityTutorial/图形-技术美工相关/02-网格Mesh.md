@@ -48,9 +48,9 @@ Unity 使用**带蒙皮的网格渲染器 (Skinned Mesh Renderer)** 组件来渲
 
 ![](../imgs/Inspector-SkinnedMeshRenderer.png)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

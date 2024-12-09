@@ -470,9 +470,9 @@ Rect Transform Inspector 中各属性值：
 例如，我们创建血条UI显示的脚本时，就用到了public static UIHealthBar Instance { get; private set; }来声明公有静态成员属性，获取当前血条本身，因为不论在哪个Scene中切换，玩家的生命值条在游戏中通常有且仅有一个。所以我们可以将该组件声明为静态对象，可以被直接调用而无需事先实例化该对象。
 
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 >参考资料
 >

@@ -97,9 +97,9 @@ UV 映射允许艺术家在不使用大量网格数据或单独的纹理来提�
 > - [https://www.myfreetextures.com/](https://www.myfreetextures.com/)
 > - [https://pixabay.com/images/search/texture/](https://pixabay.com/images/search/texture/)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

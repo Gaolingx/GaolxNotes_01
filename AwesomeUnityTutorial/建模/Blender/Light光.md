@@ -97,20 +97,20 @@ Blender 中共有四种光源，适合于不同的环境
 
 ![](../../imgs/area_light_shape.png)
 
-<br>
-<br>
+</br>
+</br>
 
-<hr>
-<br>
+</hr>
+</br>
 
 > 参考资料：
 
 > - [blender 渲染引擎 官方文档](https://docs.blender.org/manual/zh-hans/latest/render/introduction.html)
 > - [light 官方文档](https://docs.blender.org/manual/zh-hans/latest/render/lights/light_object.html)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

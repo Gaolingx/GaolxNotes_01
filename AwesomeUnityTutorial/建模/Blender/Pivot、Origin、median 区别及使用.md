@@ -59,9 +59,9 @@ Origin 是对象创建时的中心点位，在 Blender 中，显示为选中对�
 
 用 Shift + 右键，可以将其定位到任意位置
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

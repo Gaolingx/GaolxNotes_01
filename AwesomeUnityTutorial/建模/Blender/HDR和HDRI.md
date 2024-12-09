@@ -10,9 +10,9 @@ HDRI 文件是一种文件，扩展名是 hdr 或 tif 格式，有足够的能�
 >
 > - [http://www.bgteach.com/group/1/thread/187?type=onlyOwner&sort=desc](http://www.bgteach.com/group/1/thread/187?type=onlyOwner&sort=desc)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

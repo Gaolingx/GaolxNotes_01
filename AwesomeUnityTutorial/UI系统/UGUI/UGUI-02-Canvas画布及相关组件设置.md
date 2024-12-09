@@ -153,9 +153,9 @@ transform.SetAsLastSibling()
 
 ![](../../imgs/uiSortOrder.png)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

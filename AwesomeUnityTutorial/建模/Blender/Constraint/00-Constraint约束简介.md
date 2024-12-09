@@ -64,19 +64,19 @@
 - 跟踪
 - 关系
 
-<br>
+</br>
 
-<hr>
-<br>
-<br>
+</hr>
+</br>
+</br>
 
 > 参考资料：
 >
 > - [Constraint 官方文档](https://docs.blender.org/manual/zh-hans/latest/animation/constraints/introduction.html)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

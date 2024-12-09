@@ -155,7 +155,7 @@ Scene 选项卡分为几个部分：
 
 实时光照贴图选项卡,显示由 Enlighten Realtime Global Illumination system （先导实时全局照明系统） 生成的全部光照贴图。如果您的项目中未启用 Enlighten Realtime Global Illumination，则此选项卡将为空。
 
-<br>
+</br>
 
 ### 2.4 直接光和间接光
 
@@ -214,9 +214,9 @@ Baked Global Illumination 系统包括：
 > 
 > * [lighting unity 官方文档](https://docs.unity3d.com/cn/2022.1/Manual/LightingOverview.html)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

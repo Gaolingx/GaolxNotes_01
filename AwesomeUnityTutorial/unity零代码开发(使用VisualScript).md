@@ -53,9 +53,9 @@
 9、最后回到Player对象，找到Variable组件，添加name（变量名字）：myName，Type（类型）填：String，Value（值）填：爱莉小跟班，不要忘了将我们写的Graph绑定给Script Machine的Graph，保存运行，效果与之前一样。
   
 所以，哪怕是图形化编程也没有想象的那么简单，学习可视化编程不是意味着不用学习编程的概念了，不论是用脚本编程还是可视化编程，他们用到的算法，思路，概念还是基本一致的，只是编程的工具变了，从写代码变成了“连连看”，所以希望大家还是要沉下心，脚踏实地学习c#脚本，这是程序员的基础，并同时使用可视化编程为我们学习复杂脚本编程的铺路石，让我们能更好的理解编程逻辑。
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

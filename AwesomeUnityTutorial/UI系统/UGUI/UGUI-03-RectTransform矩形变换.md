@@ -48,9 +48,9 @@ Rect Transform Inspector 中各属性值：
 * 相对位置：使用Custom模式调整锚点时（调整时，场景中会出现百分比数字），当前对象的顶点和对应的锚点的相对位置（对于父对象）不变
 
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 >参考资料
 >
@@ -58,9 +58,9 @@ Rect Transform Inspector 中各属性值：
 > - [UGUI 包文档](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/index.html)
 > - [其他 UI 资料- UI 系统学习](https://pmlpml.github.io/unity3d-learning/09-ui.html)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

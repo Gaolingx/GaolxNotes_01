@@ -209,9 +209,9 @@ TextMesh Pro 支持两种文本对象。一个用于 Unity 的 UI，另一个用
 > * Characters from File 不需要用最全的，最好是使用够用的就行，否则生成的字体文件会较大
 > * 生成 TextMeshPro 中文字体资源时，不同的字体表现不一样，尽可能选择著名大厂字体，避免 BUG，否则，可能出现各种问题，比如：生成失败、字体不清晰、字体自带背景（背景不透明）等
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 > 参考资料：
 > * [TextMeshPro官方文档](https://docs.unity3d.com/Packages/com.unity.textmeshpro@4.0/manual/RichTextSprite.html)
@@ -220,9 +220,9 @@ TextMesh Pro 支持两种文本对象。一个用于 Unity 的 UI，另一个用
 > * [TextMesh Pro: Font Asset Creation 官方教程](https://learn.unity.com/tutorial/textmesh-pro-font-asset-creation)
 > * [Unity 中 创建 TextMeshPro 中文字体（含常见汉字 TXT 文件）](https://blog.csdn.net/qq_37454669/article/details/121128100)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

@@ -188,9 +188,9 @@ vfx.SendEvent("OnStop");
     当鼠标被按下时，执行指定特效的OnPlay事件
 
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 
 > 参考资料：
@@ -208,9 +208,9 @@ vfx.SendEvent("OnStop");
 >
 > VFX 的一些延展使用方式：https://zhuanlan.zhihu.com/p/143173978
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

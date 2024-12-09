@@ -64,9 +64,9 @@ Anchor Min 对应于 Scene View 中左下角的锚点手柄，Anchor Max 对应�
     在 Inspector 的 Pivot /Anchors属性中，直接通过设置 Pivot /Anchors的值进行定位。  
     Pivot /Anchors  x/y 值 都是  [0-1] 之间 ，矩形左下角为 (0,0) 
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 >参考资料
 >
@@ -74,9 +74,9 @@ Anchor Min 对应于 Scene View 中左下角的锚点手柄，Anchor Max 对应�
 > - [UGUI 包文档](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/index.html)
 > - [其他 UI 资料- UI 系统学习](https://pmlpml.github.io/unity3d-learning/09-ui.html)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

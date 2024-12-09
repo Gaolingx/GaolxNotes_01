@@ -353,9 +353,9 @@ Tilling 和 Offset 跟上面的功能相同
 > - [ Occlusion Map 遮挡贴图](http://www.noobyard.com/article/p-ulvnjlzv-pb.html)
 > - [灰度图、高度图和法线贴图 介绍及原理](https://blog.csdn.net/Game_jqd/article/details/82056157)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

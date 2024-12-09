@@ -56,9 +56,9 @@ Material 类表示 C# 代码中的材质。有关信息，请参阅在 C# 脚本
 
 ![](../imgs/urp_material_inspector.png)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

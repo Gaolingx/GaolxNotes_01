@@ -43,9 +43,9 @@ Blender 内置三个各具优势的渲染引擎:
 > - [Blender 官方文档](https://docs.blender.org/manual/zh-hans/3.0/render/introduction.html)
 > - [知乎讨论](https://www.zhihu.com/question/25745472)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

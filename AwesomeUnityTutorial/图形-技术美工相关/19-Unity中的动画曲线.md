@@ -142,9 +142,9 @@ Animation 视图__可用于动画化更多属性，而不仅限于__游戏对象
 > * [CC 动画 教程 官方文档](https://learn.unity.com/tutorial/refine-your-animation)
 > * [Unity 动画曲线 - Unity 官方文档](https://docs.unity3d.com/cn/2022.1/Manual/animeditor-AnimationCurves.html)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

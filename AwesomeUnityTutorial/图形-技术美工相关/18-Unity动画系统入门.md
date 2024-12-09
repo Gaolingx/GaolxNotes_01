@@ -136,9 +136,9 @@ https://www.mixamo.com/ 是 Adobe 为大家提供的免费的人物模型及动�
 > * [CC 动画 教程 官方文档](https://learn.unity.com/tutorial/create-your-first-3d-animations)
 > * [Unity 动画系统 - Unity 官方文档](https://docs.unity3d.com/cn/2022.1/Manual/AnimationSection.html)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

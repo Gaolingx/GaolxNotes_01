@@ -199,10 +199,10 @@ IK：子骨骼移动时，自动推算出影响到的父骨骼应该移动的位
 
 IK 主要是通过骨骼约束完成的，尽管在姿势模式中也有一个简单的自动 IK 功能。 它们以相同的方法工作，但约束提供了更多的选择和控制。
 
-<br>
-<hr>
-<br>
-<br>
+</br>
+</hr>
+</br>
+</br>
 
 > 参考资料：
 >
@@ -210,9 +210,9 @@ IK 主要是通过骨骼约束完成的，尽管在姿势模式中也有一个�
 > - [FK & IK 简介](https://orzgame.blog.csdn.net/article/details/105642689)
 > - [https://www.raywenderlich.com/31539225-creating-reusable-characters-with-blender-and-unity](https://www.raywenderlich.com/31539225-creating-reusable-characters-with-blender-and-unity)
 
-<br>
-<hr>
-<br>
+</br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)

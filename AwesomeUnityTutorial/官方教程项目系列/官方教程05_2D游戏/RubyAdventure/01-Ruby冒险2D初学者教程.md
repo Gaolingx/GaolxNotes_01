@@ -355,10 +355,10 @@ public class RubyController : MonoBehaviour
   
 前言：在上期教程中，我们通过官方一个新的2D的RPG游戏教程系列《RubyAdventure2DRpg》学习了关于游戏中的时间和帧率，以及使用 Time.deltaTime 方法以单位/秒来表示 Ruby 的移动速度改进之前角色控制器移动部分随帧数不同移动速度不同的弊端，且做到不浪费硬件资源。今天我们接着系统学习如何使用瓦片地图来创建我们的游戏世界。
 
-<br>
+</br>
 
-<hr>
-<br>
+</hr>
+</br>
 
 配套视频教程：
 [https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912](https://space.bilibili.com/43644141/channel/seriesdetail?sid=299912)
