@@ -11,7 +11,7 @@
 
 测试平台：Intel 9700K+DDR4 3600 32G，框架为.NET 5.0。测试方式为创建100万次，比较执行时间。拷贝的对象如下：
 
-```C#
+```CS
 [Serializable]
 class UserInfo
     {
@@ -32,7 +32,7 @@ class UserInfo
 
 简单对象创建，不考虑有构造函数的情况。
 
-```C#
+```CS
 NewUserInfo newInfo = new NewUserInfo()
 {
     Name = info.Name,
@@ -48,7 +48,7 @@ NewUserInfo newInfo = new NewUserInfo()
 2、反射
 
 这也是在日常代码中最常用的方式之一。
-```C#
+```CS
 private static TOut TransReflection<TIn, TOut>(TIn tIn)
 {
     TOut tOut = Activator.CreateInstance<TOut>();
@@ -80,7 +80,7 @@ UserInfo newInfo = JsonSerializer.Deserialize<UserInfo>(JsonSerializer.Serialize
 
 首先不推荐使用这种方式，一是BinaryFormatter.Serialize微软已不推荐使用（据微软官网文档说是有漏洞，具体有什么漏洞没细究），二是必须在要序列化的对象上面写上Serializable的关键字，三是速度并不理想。
 
-```C#
+```CS
 private static TOut ObjectMemoryConvert<TIn, TOut>(TIn tIn)
 {
     using (MemoryStream ms = new MemoryStream())
@@ -97,7 +97,7 @@ private static TOut ObjectMemoryConvert<TIn, TOut>(TIn tIn)
 5、AutoMapper
 
 熟悉的AutoMapper，性能也没有让我们失望。
-```C#
+```CS
 //循环外创建MapperConfig
 var config = new MapperConfiguration(cfg => cfg.CreateMap<UserInfo, UserInfo>());
 var mapper = config.CreateMapper();
@@ -110,7 +110,7 @@ UserInfo newInfo = mapper.Map<UserInfo>(info);
 6、表达式树
 
 重头戏来了，此处代码来源于文首中的博客中，性能让人大吃一惊。其原理是反射和表达式树相结合，先用反射获取字段然后缓存起来，再用表达式树赋值。
-```C#
+```CS
 public static class TransExp<TIn, TOut>
 {
     private static readonly Func<TIn, TOut> cache = GetFunc();
@@ -150,7 +150,7 @@ UserInfo newInfo = TransExp<UserInfo, UserInfo>.Trans(info);
 
 ## 附上本次测试用的完整代码。
 
-```C#
+```CS
 using AutoMapper;
 using System;
 using System.Collections.Generic;

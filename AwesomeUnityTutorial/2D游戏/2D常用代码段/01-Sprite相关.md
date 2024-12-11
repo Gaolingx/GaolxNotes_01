@@ -2,7 +2,7 @@
 
 ## 1. 读取 Multiply 格式中的指定 Sprite
 
-```C#
+```CS
 //获取整个图片文件中的所有 Sprite,并存入数组中
 Sprite[] sprites = AssetDatabase.LoadAllAssetsAtPath("Assets/Sprites/LevelAssets/0x72_16x16DungeonTileset.v4.png").OfType<Sprite>().ToArray();
 

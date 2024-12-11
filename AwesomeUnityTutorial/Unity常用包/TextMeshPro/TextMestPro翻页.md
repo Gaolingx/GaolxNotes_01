@@ -18,7 +18,7 @@ TextMeshPro 组件的 Overflow 属性，需要设置为 Page，后面数字是�
 
 ## 3. 代码
 
-```C#
+```CS
 public class NonPlayerCharacter : MonoBehaviour
 {
     public float displayTime = 4.0f;

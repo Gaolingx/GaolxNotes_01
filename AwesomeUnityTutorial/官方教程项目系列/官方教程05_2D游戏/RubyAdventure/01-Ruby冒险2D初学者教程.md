@@ -103,7 +103,7 @@ Unity 在每帧执行 Update 内的代码，为了形成动感，游戏（就像
 
 代码版本 1：
 
-```C#
+```CS
 public class RubyController : MonoBehaviour
 {
     // 每帧调用一次 Update
@@ -156,7 +156,7 @@ input 是UnityEngine中用于管理用户输入的的一个类，GetAxis 是获�
   
 代码版本 2：
   
-```C#
+```CS
 public class RubyController : MonoBehaviour
 {
    // 每帧调用一次 Update
@@ -221,7 +221,7 @@ Axis 轴 Axes 是它的负数形式
   
 代码版本 3：
 
-```C#
+```CS
 public class RubyController : MonoBehaviour
 {
    // 每帧调用一次 Update
@@ -271,7 +271,7 @@ Game视图中点击右上角“State”，即可查看游戏运行时的各种�
   
 代码版本 4，重点关注Start方法：
 
-```C#
+```CS
 public class RubyController : MonoBehaviour
 {
     // 在第一次帧更新之前调用 Start
@@ -323,7 +323,7 @@ public class RubyController : MonoBehaviour
   
 **代码版本 5**
 
-```C#
+```CS
 public class RubyController : MonoBehaviour
 {
     // 将速度暴露出来，使其可调

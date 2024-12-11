@@ -28,7 +28,7 @@ visual studio 中新建类不同版本看到的界面不同，主要看当前安
 
 ![](../../../imgs/vsdown.png)
 
-```C#
+```CS
 //命名空间引用，不必要的可以删掉
 //不加命名空间的话，需要写类的全名
 using System.Collections;
@@ -67,7 +67,7 @@ public class NewBehaviourScript : MonoBehaviour
 > - 如果在同一个代码文件中使用同名的不同类，就需要使用类的全名加以区分
 > - 另外，使用反射 reflection 时，一般也需要写类的全名
 
-```C#
+```CS
 namespace 命名空间名称
 {
     类代码...
@@ -189,7 +189,7 @@ namespace Assets._Scripts.Entity
 
 ### 2.2 对象实例化
 
-```C#
+```CS
 类名 对象名 = new 构造方法(参数列表);
 ```
 

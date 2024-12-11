@@ -93,7 +93,7 @@ unity 虽然开源，但并不完全免费，分多个版本，个人版免费�
 4. 在 Hierarchy 窗口中选中 Main Camera ，在右侧为其添加组件 C# script ，并命名为 HelloWorld
 5. 双击 HelloWorld 脚本，会关联到 Visual Studio ，在其中编辑脚本如下：
 
-```C#
+```CS
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -142,7 +142,7 @@ public class HelloWorld : MonoBehaviour
 #### 4.4.1 显示 Log
 
 1. 在想要查看信息的位置添加代码：
-   ```C#
+   ```CS
    Debug.log(要输出的信息....); // 输出的信息必须为字符串类型
    ```
 2. 打开 Unity 中的 Console（控制台） 窗口，在运行游戏时，可以查看指定的输出信息
@@ -216,7 +216,7 @@ Unity 中最基本的游戏元素，默认值包含 Transform 组件（变形组
 1. 组件的获取
    通过当前游戏对象的 GetComponent<T>() 方法，可以获取指定类型的组件
 
-   ```C#
+   ```CS
    // 获取当前游戏对象的刚体组件
    Rigidbody rigid = this.gameObject.GetComponent<Rigidbody>();
    if(rigid == null) //如果不存在
@@ -300,14 +300,14 @@ Unity 默认是单线程的，所以协程就是为了解决单线程问题（�
 
 ### 7.1 在脚本中创建第一个 Game Object （游戏对象）
 
-```C#
+```CS
 //直接用类创建一个新的游戏对象
 GameObject gameObject = new GameObject("MyGameObject1");
 ```
 
 ### 7.2 通过序列化方式引用资源
 
-```C#
+```CS
 // 引用项目中的 prefab 或模型
 public GameObject prefab;
 // 声明一个私有的 游戏对象实例

@@ -40,7 +40,7 @@
    ![](../imgs/0909-0911/0910/image%20(2).png)
 
 2. 由于新建的项目默认不会安装cinemachine组件，导致依赖缺失而编译错误，导入package之后可能会提示诸如“error CS0246: The type or namespace name 'CinemachineVirtualCamera' could not be found (are you missing a using directive or an assembly reference?)”等报错信息而无法运行和构建游戏，这需要我们手动在Package Manager安装Cinemachine的包。
-
+   ![](../imgs/0909-0911/捕获11.PNG);
    ![](../imgs/0909-0911/0910/image%20(3).png)
 
 游戏类型： 3D ARPG (动作角色扮演游戏)  、第三人称俯视角射击（TPS）
