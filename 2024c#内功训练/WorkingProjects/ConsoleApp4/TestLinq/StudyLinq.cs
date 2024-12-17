@@ -16,6 +16,19 @@ namespace TestLinq
             };
             return stuInfos;
         }
+
+        public static List<ClassGroup> GetClassGroups()
+        {
+            List<ClassGroup> classGroups = new List<ClassGroup>()
+            {
+                new ClassGroup{Id = 1001,GroupName="组1"},
+                new ClassGroup{Id = 1002,GroupName="组2"},
+                new ClassGroup{Id = 1003,GroupName="组3"},
+                new ClassGroup{Id = 1004,GroupName="组4"},
+            };
+            return classGroups;
+        }
+
         #endregion
 
         /// <summary>
@@ -141,6 +154,53 @@ namespace TestLinq
             foreach (var stuInfo in stuLst)
             {
                 Console.WriteLine($"Id = {stuInfo.Id}, Name = {stuInfo.Name}, Age = {stuInfo.Age}, Remark = {stuInfo.Remark}");
+            }
+        }
+
+        /// <summary>
+        /// 查询年龄大于等于20岁的学生，显示学生Id，名字，总分（Chinese+Math+English+Physics）
+        /// </summary>
+        [Test]
+        public void TestLinq07()
+        {
+            // 方法一：
+            var stuInfoLst = from item in GetStudentInfos()
+                             where item.Age >= 20
+                             select new { item.Id, item.Name, Total = item.Chinese + item.Math + item.English + item.Physics }; // 需要定义属性接受表达式的指
+
+            foreach (var stuInfo in stuInfoLst)
+            {
+                Console.WriteLine($"Id = {stuInfo.Id}, Name = {stuInfo.Name},Total Score = {stuInfo.Total}");
+            }
+            Console.WriteLine("====================");
+
+            // 方法二：
+            var stuInfoLst2 = from item in GetStudentInfos()
+                              let total = item.Chinese + item.Math + item.English + item.Physics
+                              where item.Age >= 20
+                              select new { item.Id, item.Name, Total = total }; // 需要定义属性接受表达式的指
+
+            foreach (var stuInfo in stuInfoLst2)
+            {
+                Console.WriteLine($"Id = {stuInfo.Id}, Name = {stuInfo.Name},Total Score = {stuInfo.Total}");
+            }
+            Console.WriteLine("====================");
+        }
+
+        /// <summary>
+        /// 查询学生详情，显示学生名字和所在的组名（分类名称）
+        /// </summary>
+        [Test]
+        public void TestLinq08()
+        {
+            var stuInfoLst = from p in GetStudentInfos()
+                             from g in GetClassGroups()
+                             where p.Id == g.Id
+                             select new { p.Name, g.GroupName };
+
+            foreach (var item in stuInfoLst)
+            {
+                Console.WriteLine($"Name = {item.Name}, GroupName = {item.GroupName}");
             }
         }
     }
