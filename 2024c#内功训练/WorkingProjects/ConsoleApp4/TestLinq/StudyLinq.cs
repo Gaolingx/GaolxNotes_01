@@ -9,10 +9,10 @@ namespace TestLinq
         {
             List<StuInfo> stuInfos = new List<StuInfo>()
             {
-                new StuInfo { Id = 1001, Name = "流萤", Sex = "女", Age = 20, Chinese = 100, Math = 120, English = 95, Physics = 70, Score = 500, Grade = "A" },
-                new StuInfo { Id = 1002, Name = "符玄", Sex = "女", Age = 20, Chinese = 105, Math = 130, English = 100, Physics = 80, Score = 500, Grade = "A" },
-                new StuInfo { Id = 1003, Name = "爱莉希雅", Sex = "女", Age = 18, Chinese = 110, Math = 90, English = 105, Physics = 65, Score = 500, Grade = "B" },
-                new StuInfo { Id = 1003, Name = "琪亚娜", Sex = "女", Age = 19, Chinese = 90, Math = 85, English = 100, Physics = 60, Score = 500, Grade = "B" }
+                new StuInfo { Id = 1001, Name = "流萤", Sex = "女", Age = 20, Chinese = 100, Math = 120, English = 95, Physics = 70, Score = 500, Grade = "A",GroupId = 1 },
+                new StuInfo { Id = 1002, Name = "符玄", Sex = "女", Age = 20, Chinese = 105, Math = 130, English = 100, Physics = 80, Score = 500, Grade = "A",GroupId = 1 },
+                new StuInfo { Id = 1003, Name = "爱莉希雅", Sex = "女", Age = 18, Chinese = 110, Math = 90, English = 105, Physics = 65, Score = 500, Grade = "B" ,GroupId = 2},
+                new StuInfo { Id = 1003, Name = "琪亚娜", Sex = "女", Age = 19, Chinese = 90, Math = 85, English = 100, Physics = 60, Score = 500, Grade = "B" ,GroupId = 3}
             };
             return stuInfos;
         }
@@ -21,10 +21,36 @@ namespace TestLinq
         {
             List<ClassGroup> classGroups = new List<ClassGroup>()
             {
-                new ClassGroup{Id = 1001,GroupName="组1"},
-                new ClassGroup{Id = 1002,GroupName="组2"},
-                new ClassGroup{Id = 1003,GroupName="组3"},
-                new ClassGroup{Id = 1004,GroupName="组4"},
+                new ClassGroup{Id = 1,GroupName="组1"},
+                new ClassGroup{Id = 2,GroupName="组2"},
+                new ClassGroup{Id = 3,GroupName="组3"},
+                new ClassGroup{Id = 4,GroupName="组4"},
+            };
+            return classGroups;
+        }
+
+        public static List<StuInfo> GetStudentInfos2()
+        {
+            List<StuInfo> stuInfos = new List<StuInfo>()
+            {
+                new StuInfo { Id = 1001, Name = "流萤", Sex = "女", Age = 20, Chinese = 100, Math = 120, English = 95, Physics = 70, Score = 500, Grade = "A",GroupId = 1 },
+                new StuInfo { Id = 1002, Name = "符玄", Sex = "女", Age = 20, Chinese = 105, Math = 130, English = 100, Physics = 80, Score = 500, Grade = "A",GroupId = 1 },
+                new StuInfo { Id = 1003, Name = "爱莉希雅", Sex = "女", Age = 18, Chinese = 110, Math = 90, English = 105, Physics = 65, Score = 500, Grade = "B" ,GroupId = 2},
+                new StuInfo { Id = 1003, Name = "琪亚娜", Sex = "女", Age = 19, Chinese = 90, Math = 85, English = 100, Physics = 60, Score = 500, Grade = "B" ,GroupId = 3},
+                new StuInfo { Id = 1003, Name = "派蒙", Sex = "女", Age = 9, Chinese = 80, Math = 95, English = 110, Physics = 60, Score = 500, Grade = "A" ,GroupId = 6} // 分类ID不存在
+            };
+            return stuInfos;
+        }
+
+        public static List<ClassGroup> GetClassGroups2()
+        {
+            List<ClassGroup> classGroups = new List<ClassGroup>()
+            {
+                new ClassGroup{Id = 1,GroupName="组1"},
+                new ClassGroup{Id = 2,GroupName="组2"},
+                new ClassGroup{Id = 3,GroupName="组3"},
+                new ClassGroup{Id = 4,GroupName="组4"}, // 不存在任何数据
+                new ClassGroup{Id = 5,GroupName="组5"}, // 不存在任何数据
             };
             return classGroups;
         }
@@ -195,12 +221,83 @@ namespace TestLinq
         {
             var stuInfoLst = from p in GetStudentInfos()
                              from g in GetClassGroups()
-                             where p.Id == g.Id
+                             where p.GroupId == g.Id
                              select new { p.Name, g.GroupName };
 
             foreach (var item in stuInfoLst)
             {
                 Console.WriteLine($"Name = {item.Name}, GroupName = {item.GroupName}");
+            }
+        }
+
+        /// <summary>
+        /// 查询学生详情，显示学生名字和所在的组名（通过join 内连接关联）
+        /// </summary>
+        [Test]
+        public void TestLinq09()
+        {
+            var stuInfoLst = from p in GetStudentInfos2()
+                             join g in GetClassGroups2()
+                             on p.GroupId equals g.Id //关联数据源，不能用 ==，而是 equals关键字
+                             select new { p.Name, g.GroupName };
+
+            foreach (var item in stuInfoLst)
+            {
+                Console.WriteLine($"Name = {item.Name}, GroupName = {item.GroupName}");
+            }
+        }
+
+        /// <summary>
+        /// 从小组信息中查询小组id，小组名称，以及这个小组下所有学生的数量
+        /// </summary>
+        [Test]
+        public void TestLinq10()
+        {
+            var groupItems = from g in GetClassGroups2()
+                             join p in GetStudentInfos2()
+                             on g.Id equals p.GroupId
+                             into ps //将分类对象 g 下所有的 p 保存到 ps 中，即ps存储了分类g下所有的学生信息
+                             select new { g.Id, g.GroupName, Count = ps.Count() };
+
+            foreach (var item in groupItems)
+            {
+                Console.WriteLine($"Id = {item.Id}, GroupName = {item.GroupName}, Student Count:{item.Count}");
+            }
+        }
+
+        /// <summary>
+        /// 既要查询学生信息，要求显示学生的id，学生名字，小组名字。
+        /// </summary>
+        [Test]
+        public void TestLinq11()
+        {
+            // 情况一：有学生未分组（左表：Students）
+            var stuInfos = from students in GetStudentInfos2()
+                           join classGroup in GetClassGroups2()
+                           on students.GroupId equals classGroup.Id
+                           into cs
+                           // 从分类组 cs 中获取分类信息，如果（右数据集合）没有匹配的元素则使用 默认值：class null，或者new一个分类对象，指定它的初始值
+                           from c2 in cs.DefaultIfEmpty(new ClassGroup() { GroupName = "无" }) // 有分类：显示分类，无分类：显示无
+                           select new { students.Id, students.Name, c2.GroupName };
+
+            foreach (var item in stuInfos)
+            {
+                Console.WriteLine($"Id = {item.Id}, Student Name = {item.Name}, Group Name:{item.GroupName}");
+            }
+            Console.WriteLine("====================");
+
+            // 情况二：有分组无学生（左表：ClassGroups）
+
+            var groupItems = from classGroup in GetClassGroups2()
+                             join students in GetStudentInfos2()
+                             on classGroup.Id equals students.GroupId
+                             into ps
+                             from p2 in ps.DefaultIfEmpty(new StuInfo()) // 当分类没有对应的学生信息时需要做相应的null值处理
+                             select new { p2.Id, p2.Name, classGroup.GroupName };
+
+            foreach (var item in groupItems)
+            {
+                Console.WriteLine($"Id = {item.Id}, Student Name = {item.Name}, Group Name:{item.GroupName}");
             }
         }
     }

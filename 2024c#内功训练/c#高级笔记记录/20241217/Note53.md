@@ -44,8 +44,34 @@ public void TestLinq07()
 
 LINQ查询可以包含多个from字句，从多个数据源（例如两个列表）进行联合查询。
 
-例如，假设我们有两个列表，一个包含学生信息，另一个包含小组信息，学生id与小组id一一对应。我们希望找到所有选修了特定课程的学生，并分别显示学生所在的小组。
+例如，假设我们有两个列表，一个包含学生信息，另一个包含小组信息，学生信息中的小组id与小组信息中的id一一对应。我们希望找到所有选修了特定课程的学生，并分别显示学生所在的小组。
 显然，我们需要从学生信息和小组学习两个数据源中查数据。
+
+学生信息：
+
+```csharp
+namespace TestLinq
+{
+    /// <summary>
+    /// 学生信息
+    /// </summary>
+    internal class StuInfo
+    {
+        public int Id { get; set; }
+        public string? Name { get; set; }
+        public string? Sex { get; set; }
+        public int Age { get; set; }
+        public double Chinese { get; set; }
+        public double Math { get; set; }
+        public double English { get; set; }
+        public double Physics { get; set; }
+        public double Score { get; set; }
+        public string? Grade { get; set; }
+        public int GroupId { get; set; }
+    }
+}
+
+```
 
 小组信息：
 
@@ -61,17 +87,33 @@ namespace TestLinq
 
 ```
 
-小组数据源：
+学生数据：
+
+```csharp
+public static List<StuInfo> GetStudentInfos()
+{
+    List<StuInfo> stuInfos = new List<StuInfo>()
+    {
+        new StuInfo { Id = 1001, Name = "流萤", Sex = "女", Age = 20, Chinese = 100, Math = 120, English = 95, Physics = 70, Score = 500, Grade = "A",GroupId = 1 },
+        new StuInfo { Id = 1002, Name = "符玄", Sex = "女", Age = 20, Chinese = 105, Math = 130, English = 100, Physics = 80, Score = 500, Grade = "A",GroupId = 1 },
+        new StuInfo { Id = 1003, Name = "爱莉希雅", Sex = "女", Age = 18, Chinese = 110, Math = 90, English = 105, Physics = 65, Score = 500, Grade = "B" ,GroupId = 2},
+        new StuInfo { Id = 1003, Name = "琪亚娜", Sex = "女", Age = 19, Chinese = 90, Math = 85, English = 100, Physics = 60, Score = 500, Grade = "B" ,GroupId = 3}
+    };
+    return stuInfos;
+}
+```
+
+小组数据：
 
 ```csharp
 public static List<ClassGroup> GetClassGroups()
 {
     List<ClassGroup> classGroups = new List<ClassGroup>()
     {
-        new ClassGroup{Id = 1001,GroupName="组1"},
-        new ClassGroup{Id = 1002,GroupName="组2"},
-        new ClassGroup{Id = 1003,GroupName="组3"},
-        new ClassGroup{Id = 1004,GroupName="组4"},
+        new ClassGroup{Id = 1,GroupName="组1"},
+        new ClassGroup{Id = 2,GroupName="组2"},
+        new ClassGroup{Id = 3,GroupName="组3"},
+        new ClassGroup{Id = 4,GroupName="组4"},
     };
     return classGroups;
 }
@@ -88,7 +130,7 @@ public void TestLinq08()
 {
     var stuInfoLst = from p in GetStudentInfos()
                      from g in GetClassGroups()
-                     where p.Id == g.Id
+                     where p.GroupId == g.Id
                      select new { p.Name, g.GroupName };
 
     foreach (var item in stuInfoLst)
