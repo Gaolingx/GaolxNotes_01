@@ -300,5 +300,68 @@ namespace TestLinq
                 Console.WriteLine($"Id = {item.Id}, Student Name = {item.Name}, Group Name:{item.GroupName}");
             }
         }
+
+        /// <summary>
+        /// 查询年龄大于19岁且位于第一小组的学生信息
+        /// </summary>
+        [Test]
+        public void TestLinq12()
+        {
+            var stuInfos = from p in GetStudentInfos2()
+                           where p.Age > 19
+                           where p.GroupId == 1
+                           // 等价于 where p.Age > 19 && p.GroupId == 1
+                           select p;
+
+            foreach (var stuInfo in stuInfos)
+            {
+                Console.WriteLine($"Id = {stuInfo.Id}, Name = {stuInfo.Name}, Sex = {stuInfo.Sex}, Age = {stuInfo.Age}, Chinese = {stuInfo.Chinese}, " +
+                    $"Math = {stuInfo.Math}, English = {stuInfo.English}, Physics = {stuInfo.Physics}, Score = {stuInfo.Score}, Grade = {stuInfo.Grade}, Group = {stuInfo.GroupId}");
+            }
+        }
+
+        /// <summary>
+        /// 根据小组id，查询所在组的学生数量
+        /// </summary>
+        /// <param name="groupId"></param>
+        /// <returns></returns>
+        private static int GetStudentsCountByGroupId(int groupId)
+        {
+            int count = GetStudentInfos2().Where(item => item.GroupId == groupId).Count();
+            return count;
+        }
+
+        /// <summary>
+        /// 查询小组的详细信息，显示小组ID，小组名称，小组人数
+        /// </summary>
+        [Test]
+        public void TestLinq13()
+        {
+            var groupItems = from classGroup in GetClassGroups2()
+                             select new { classGroup.Id, classGroup.GroupName, Count = GetStudentsCountByGroupId(classGroup.Id) };
+
+            foreach (var item in groupItems)
+            {
+                Console.WriteLine($"Group Id = {item.Id}, Group Name = {item.GroupName}, Student Count:{item.Count}");
+            }
+        }
+
+        /// <summary>
+        /// 查询小组的详细信息，显示小组ID，小组名称，小组人数，且只返回小组中的学生个数大于0的查询结果
+        /// </summary>
+        [Test]
+        public void TestLinq14()
+        {
+            var groupItems = from classGroup in GetClassGroups2()
+                             let count = GetStudentsCountByGroupId(classGroup.Id)
+                             where count > 0
+                             select new { classGroup.Id, classGroup.GroupName, Count = count };
+
+            foreach (var item in groupItems)
+            {
+                Console.WriteLine($"Group Id = {item.Id}, Group Name = {item.GroupName}, Student Count:{item.Count}");
+            }
+        }
+
     }
 }
