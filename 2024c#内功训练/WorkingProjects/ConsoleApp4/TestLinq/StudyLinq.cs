@@ -363,5 +363,44 @@ namespace TestLinq
             }
         }
 
+        private static bool GetStudentAge(StuInfo stuInfo)
+        {
+            if (stuInfo.Age > 18)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 查询年龄大于18岁的所有学生信息
+        /// </summary>
+        [Test]
+        public void TestLinq15()
+        {
+            var students = GetStudentInfos2();
+            var data = students.Where(delegate (StuInfo val) { return GetStudentAge(val); }); // Func<TSource, bool>
+            //var data2 = students.Where(item => item.Age > 19);
+
+            foreach (var stuInfo in data)
+            {
+                Console.WriteLine($"Id = {stuInfo.Id}, Name = {stuInfo.Name}, Sex = {stuInfo.Sex}, Age = {stuInfo.Age}, Chinese = {stuInfo.Chinese}, " +
+                    $"Math = {stuInfo.Math}, English = {stuInfo.English}, Physics = {stuInfo.Physics}, Score = {stuInfo.Score}, Grade = {stuInfo.Grade}, Group = {stuInfo.GroupId}");
+            }
+        }
+
+        /// <summary>
+        /// 获取集合中所有学生数量
+        /// </summary>
+        [Test]
+        public void TestLinq16()
+        {
+            var students = GetStudentInfos2();
+            var studentCount = students.Count(); // 不带条件Count
+            var studentCount2 = students.Count(item => item.Age > 18); // 带条件Count
+
+            Console.WriteLine($"All Students Count:{studentCount}");
+            Console.WriteLine($"Age Over 18 Students Count:{studentCount2}");
+        }
     }
 }

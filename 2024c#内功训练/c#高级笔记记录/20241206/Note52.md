@@ -18,6 +18,12 @@ LINQ 主要有以下几种类型：
 
 ## 三、Linq 的基本语法
 
+Linq 的基本语法分为三种写法：
+
+- 声明式查询方法（如通过查询操作符：from、select、in、order by、join、let、where...）
+- 方法语法（通过一系列拓展方法：Where、Select、Count、OrderBy、Max...）
+- 声明式查询方法和方法语法混合使用
+
 ### 查询表达式语法
 
 查询表达式语法是一种类似于 SQL 的声明性查询语法，它使用关键字如 `from`、`where`、`select`、`join`、`group by`、`order by` 等来构建查询。以下是一些基本示例：
