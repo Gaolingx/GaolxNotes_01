@@ -402,5 +402,89 @@ namespace TestLinq
             Console.WriteLine($"All Students Count:{studentCount}");
             Console.WriteLine($"Age Over 18 Students Count:{studentCount2}");
         }
+
+        /// <summary>
+        /// 提取学生信息中的名字、性别、年龄 三个数据（使用Select方法）
+        /// </summary>
+        [Test]
+        public void TestLinq17()
+        {
+            var students = GetStudentInfos2();
+            var studentData = students.Select(item => new { item.Name, item.Sex, item.Age }); // Func<TSource, TResult>
+
+            foreach (var item in studentData)
+            {
+                Console.WriteLine($"Student Name:{item.Name}, Student Sex:{item.Sex}, Student Age:{item.Age}");
+            }
+        }
+
+        /// <summary>
+        /// 提取学生信息中的名字、性别、年龄 三个数据，并根据年龄大小从小到大进行排序
+        /// </summary>
+        [Test]
+        public void TestLinq18()
+        {
+            var students = GetStudentInfos2();
+            var studentData = students.OrderBy(item => item.Age).Select(item => new { item.Name, item.Sex, item.Age }); // Func<TSource, TResult>
+
+            foreach (var item in studentData)
+            {
+                Console.WriteLine($"Student Name:{item.Name}, Student Sex:{item.Sex}, Student Age:{item.Age}");
+            }
+        }
+
+        /// <summary>
+        /// 提取学生信息中的名字、性别、年龄 三个数据，并根据年龄大小从大到小进行排序（降序排列）
+        /// </summary>
+        [Test]
+        public void TestLinq19()
+        {
+            var students = GetStudentInfos2();
+            var studentData = students.OrderByDescending(item => item.Age).Select(item => new { item.Name, item.Sex, item.Age }); // Func<TSource, TResult>
+
+            foreach (var item in studentData)
+            {
+                Console.WriteLine($"Student Name:{item.Name}, Student Sex:{item.Sex}, Student Age:{item.Age}");
+            }
+        }
+
+        /// <summary>
+        /// 1. 查询学生信息中的名字、性别、年龄 三个数据，并输出年龄最小的学生信息。
+        /// 2. 查询学生信息中位于第一组的第一条记录的学生信息。
+        /// </summary>
+        [Test]
+        public void TestLinq20()
+        {
+            var students = GetStudentInfos2();
+            var student = students.OrderBy(item => item.Age).Select(item => new { item.Name, item.Sex, item.Age, item.GroupId }).First();
+            Console.WriteLine($"Student Name:{student.Name}, Student Sex:{student.Sex}, Student Age:{student.Age}, Student Group:{student.GroupId}");
+
+            var student2 = students.First(item => item.GroupId == 1); // 只会查询满足条件的第一条记录（集合首个元素）
+            Console.WriteLine($"Student Name:{student2.Name}, Student Sex:{student2.Sex}, Student Age:{student2.Age}, Student Group:{student2.GroupId}");
+        }
+
+        [Test]
+        public void TestLinq21()
+        {
+            var students = GetStudentInfos2();
+
+            try
+            {
+                var student2 = students.First(item => item.GroupId == 10); // 如果没有满足条件的数据，则会抛出InvalidOperationException 异常
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Error:{ex.Message}");
+            }
+
+            try
+            {
+                var student2 = students.FirstOrDefault(item => item.GroupId == 10); // 找不到元素时会返回类型的默认值，且不会抛出异常
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error:{ex.Message}");
+            }
+        }
     }
 }
