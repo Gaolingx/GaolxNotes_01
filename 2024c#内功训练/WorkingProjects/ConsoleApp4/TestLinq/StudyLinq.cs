@@ -472,7 +472,7 @@ namespace TestLinq
             {
                 var student2 = students.First(item => item.GroupId == 10); // 如果没有满足条件的数据，则会抛出InvalidOperationException 异常
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine($"Error:{ex.Message}");
             }
@@ -485,6 +485,28 @@ namespace TestLinq
             {
                 Console.WriteLine($"Error:{ex.Message}");
             }
+        }
+
+        [Test]
+        public void TestLinq22()
+        {
+            var students = GetStudentInfos2();
+
+            var maxAgeStudent = students.Max(item => item.Age); // 比较依据：Age
+            // 从学生信息的集合中获取年龄最大的学生的年龄
+            Console.WriteLine($"Max Student Age:{maxAgeStudent}");
+
+            var minAgeStudent = students.Min(item => item.Age);
+            // 从学生信息的集合中获取年龄最小的学生的年龄
+            Console.WriteLine($"Min Student Age:{minAgeStudent}");
+
+            var totalChineseScore = students.Sum(item => item.Chinese);
+            // 获取学生信息集合中所有学生语文科目的总分
+            Console.WriteLine($"Student Chinese Total Score:{totalChineseScore}");
+
+            var avgPhysicsScore = students.Average(item => item.Physics);
+            // 获取学生信息集合中所有学生物理科目的平均分
+            Console.WriteLine($"Student Physics Average Score:{avgPhysicsScore}");
         }
     }
 }
