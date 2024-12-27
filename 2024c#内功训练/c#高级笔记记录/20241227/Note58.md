@@ -2,7 +2,7 @@
 
 ## 十一、Linq 方法语法 Max、Min、Sum、Average
 
-在C#的LINQ（Language Integrated Query）中，`Max`、`Min`、`Sum` 和 `Average` 是方法语法中用于聚合运算的几个重要方法。它们分别用于计算集合中的最大值、最小值、总和和平均值。这些方法通常用于数值类型的集合，但也可以用于实现了自定义比较逻辑的集合。
+简单介绍Linq查询中几个聚合操作的方法：Max、Min、Sum、Average、Count（前面已经介绍过），在C#的LINQ（Language Integrated Query）中，`Max`、`Min`、`Sum` 和 `Average` 是方法语法中用于聚合运算的几个重要方法。它们分别用于计算集合中的最大值、最小值、总和和平均值。这些方法通常用于数值类型的集合，但也可以用于实现了自定义比较逻辑的集合。
 
 ### Max 方法
 

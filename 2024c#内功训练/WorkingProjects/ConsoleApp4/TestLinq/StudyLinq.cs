@@ -508,5 +508,77 @@ namespace TestLinq
             // 获取学生信息集合中所有学生物理科目的平均分
             Console.WriteLine($"Student Physics Average Score:{avgPhysicsScore}");
         }
+
+        /// <summary>
+        /// Concat:连接两个序列（有重复元素）
+        /// </summary>
+        [Test]
+        public void TestLinq23()
+        {
+            int[] numArr1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            int[] numArr2 = { 1, 3, 5, 7, 9, 11 };
+
+            var numArr3 = numArr1.Concat(numArr2);
+
+            Console.WriteLine("====== Concat ======");
+            foreach (int num in numArr3)
+            {
+                Console.WriteLine(num);
+            }
+        }
+
+        /// <summary>
+        /// Union:求两个集合并集（无重复元素）
+        /// </summary>
+        [Test]
+        public void TestLinq24()
+        {
+            int[] numArr1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            int[] numArr2 = { 1, 3, 5, 7, 9, 11 };
+
+            var numArr3 = numArr1.Union(numArr2);
+
+            Console.WriteLine("====== Union ======");
+            foreach (int num in numArr3)
+            {
+                Console.WriteLine(num);
+            }
+        }
+
+        /// <summary>
+        /// Intersect:求两个集合交集（提取集合中相同元素）
+        /// </summary>
+        [Test]
+        public void TestLinq25()
+        {
+            int[] numArr1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            int[] numArr2 = { 1, 3, 5, 7, 9, 11 };
+
+            var numArr3 = numArr1.Intersect(numArr2);
+
+            Console.WriteLine("====== Intersect ======");
+            foreach (int num in numArr3)
+            {
+                Console.WriteLine(num);
+            }
+        }
+
+        /// <summary>
+        /// Except:求两个集合差集（从某集合中删除与另一个集合中相同的项）
+        /// </summary>
+        [Test]
+        public void TestLinq26()
+        {
+            int[] numArr1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            int[] numArr2 = { 1, 3, 5, 7, 9, 11 };
+
+            var numArr3 = numArr1.Except(numArr2);
+
+            Console.WriteLine("====== Except ======");
+            foreach (int num in numArr3)
+            {
+                Console.WriteLine(num);
+            }
+        }
     }
 }
