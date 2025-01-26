@@ -1,6 +1,8 @@
 # 如何高效的在手机上渲染？浅谈移动端 TB(D)R 架构
 
-前言：当前，手机游戏对GPU的需求在日益剧增，目前市场上的移动端GPU主要由三家公司主导，分别是ImgTec的PowerVR系列、Qualcomm（高通）的 Adreno 以及 ARM（安谋）的 Mali，以及还有华为的马良（Maleoon）和苹果的Apple Silicon系列，由于移动端的特殊性，在追求高性能的同时，手机游戏还需要考虑功耗问题。为了延长手机的续航时间，GPU需要具备更高的能效比，因此，这也让桌面端和移动端的GPU架构变得截然不同，作为一起科普向杂谈，所以我们今天来聊聊移动端的GPU在架构层面是如何在高效渲染的同时降低能耗的。
+前言：当前，手机游戏对GPU的需求在日益剧增，目前市场上的移动端GPU主要由三家公司主导，分别是ImgTec的PowerVR系列、Qualcomm（高通）的 Adreno 以及 ARM（安谋）的 Mali，以及还有华为的马良（Maleoon）和苹果的Apple Silicon系列，由于移动端的特殊性，相对于桌面gpu单纯追求更高的帧率，移动端的方案则需要同时考虑更低的发热，更小的功耗，更高的性能，并在他们之中寻找平衡点。因此，这也让桌面端和移动端的GPU架构变得截然不同，作为一起科普向杂谈，所以我们今天来聊聊移动端的GPU在架构层面是如何在高效渲染的同时降低能耗的。
+
+![](imgs/00.PNG)
 
 ## 名词解释
 
@@ -98,14 +100,16 @@ Adreno/Mali/PowerVR 三家在处理隐面剔除除的方式是不一样的。
 > ASTC采用块压缩的思想，将纹理分为多个小块进行压缩，每个块可以有不同的压缩格式和压缩比，从而根据纹理的特性进行灵活调整。
 > 
 > ![](imgs/网页捕获_25-1-2025_214740_community.arm.com.jpeg)
+> [参考](https://community.arm.com/arm-community-blogs/b/mobile-graphics-and-gaming-blog/posts/how-low-can-you-go-building-low-power-low-bandwidth-arm-mali-gpus)
 
 ## TB(D)R 架构存在的问题
 
 尽管 TBR 有很多好处：降低了很多来自屏幕空间大小的缓冲区的内存带宽消耗，而且可以带来非常低消耗的抗锯齿实现。那么代价是什么呢？
 
-回顾下 TBR 的渲染流程，它将屏幕分割成小块（Tile），然后分别对每个小块进行渲染。binning过程是在Vertex阶段之后，将输出的几何数据存储到显存，然后才被FragmentShader读取，几何数据过多的管线，容易在此处有性能瓶颈。在TBR架构中，GPU内部集成有很小的片上缓存（On-Chip Buffer），用于临时存储每个Tile的渲染结果。渲染时，先将一个Tile内的图像渲染到片上缓存，然后再拷贝到主显存中。
+我们已经知道了，在TBR架构中，GPU内部集成有很小的片上缓存（On-Chip Buffer），用于临时存储每个Tile的渲染结果。渲染时，先将一个Tile内的图像渲染到片上缓存，然后再拷贝到主显存中。
+回顾下 TBR 的渲染流程，它将屏幕分割成小块（Tile），然后分别对每个小块进行对应的三角形变换，着色，深度测试（binning过程是在Vertex阶段之后），将输出的几何数据存储到显存，然后才被FragmentShader读取。
 
-因此，场景中的mesh如果非常复杂，会直接影响 TBR GPU 的性能。TBR GPU 的这种做法，让大多数的手游都没办法使用非常高精度的模型。减面、降低顶点复杂度，是移动端图形开发至今为止都绕不开的话题。也正因如此，mesh shader 这种在桌面端初露头角的技术，在目前的移动端很难推广开去。（例如 Nanite 的假设就是，模型精度远高于屏幕分辨率精度，三角形可以大量地小于一个像素的大小。这种场景直接用 TBR GPU 渲染，就是最坏的情况：顶点的数量 ~= 或者 > 像素的数量）。
+因此，在这个过程中，几何数据过多的管线，容易在此处有性能瓶颈。如果场景中的mesh如果非常复杂，会直接影响 TBR GPU 的性能。TBR GPU 的这种做法，让大多数的手游都没办法使用非常高精度的模型。减面、降低顶点复杂度，是移动端图形开发至今为止都绕不开的话题。也正因如此，mesh shader 这种在桌面端初露头角的技术，在目前的移动端很难推广开去。（例如 Nanite 的假设就是，模型精度远高于屏幕分辨率精度，三角形可以大量地小于一个像素的大小。这种场景直接用 TBR GPU 渲染，就是最坏的情况：顶点的数量 ~= 或者 > 像素的数量）。
 
 同时，这也就意味着移动端要尽可能的减少 renderpass 的切换，因为在同一个renderpass内，所有的shading操作都可以在 GPU 的片上内存（Tile Memory）完成，在一个renderpass结束后，再一次性写回System Memory的framebuffer上，并结合render pass上指定RT（render target）的Load/Store Op来进一步降低带宽开销。
 
@@ -118,20 +122,40 @@ Adreno/Mali/PowerVR 三家在处理隐面剔除除的方式是不一样的。
 
 ## 如何提高在Tiled-Based GPU上的渲染性能
 
-实际上现在一个游戏渲染一帧，很大概率并不是只走一次上面的管线。走一遍上面的管线，现在被称作一个 render pass。而一个render pass渲染出来的帧，很有可能作为其他render pass的输入纹理。例如 shadow map，就需要一个 shadow pass 来计算场景到光源的深度图，随后再在主颜色pass中采样深度图，比较深度，决定是否产生阴影。在这个过程中，不同render pass之间，难免也会存在经过显存的写入和读取操作。
+在聊到渲染管线这块之前，有些概念还是希望大家稍微有所了解：
 
-在 Vulkan/DirectX12 这样现代的 Graphics API 以前，是没有 render pass 这样的概念的，一般就是指画在同一个RT的drawcall。
+1. 一次 RenderPass 对于 Tiled-Based GPU 意味者什么？
+   我们可以简单的认为，一个 Render Pass 意味着执行一次渲染管线，所有对 Tile 的操作（几何光栅化、着色、混合等）均在 Tile Memory 中完成，仅在该 Pass 结束时将最终结果写回System Memory（Save Action）。（例如，如果后续的RenderPass需要用到当前 FBO Attachment 的内容，或者需要将结果输出到屏幕，就必须保存。）
+2. Load/Store Action
+   这两个操作直接决定了帧缓冲附件（FBO Attachments）在渲染过程中的内存管理策略，避免不必要的加载和保存，显著减少主存与 Tile Memory 间的数据传输，从而优化渲染性能。
+   - **Load Action** 定义了在开始渲染到某个附件之前，如何初始化该附件的内存内容，例如：CLEAR/LOAD/DONT_CARE。
+   - **Save Action** 决定了在渲染完成后，如何处理附件的内容，例如：STORE/DONT_CARE。
 
-当然这在业界也有解决办法——让应用程序通过 API 层面的 hint，告诉 GPU 硬件这个 render pass 要怎么处理。Vulkan 就存在 subpassLoad（input attachment） 的概念，告诉驱动，这个 render pass 的输出帧是在别的 pass 中有用到。
+如果上面的概念很难理解，则记住核心的两点：
+
+1. 一次 RenderPass = 所有 Tile 操作在 Tile Memory 中完成 + 按需回写 System Memory（Save Action）。
+2. 是否回写取决于后续操作是否需要数据，而优化目标是 最小化回写次数（通过合并 RenderPass 或使用 Subpass）。
+
+实际上现在一个游戏渲染一帧，很大概率并不是只走一次上面的管线。走一遍上面的管线，现在被称作一个 render pass。而一个render pass渲染出来的帧，很有可能作为其他render pass的输入纹理。例如 shadow map，就需要一个 shadow pass 来计算场景到光源的深度图，随后再在主颜色pass中采样深度图，比较深度，决定是否产生阴影。在这个过程中，不同render pass之间，难免也会存在经过显存的写入和读取操作（每个Attachment的Load Action和Save Action）。
+
+![](imgs/14.PNG)
+
+在 Vulkan/DirectX12 这样现代的 Graphics API 以前，是没有 Render Pass 这样的概念的，一般就是指画在同一个RT的 drawcall。
+
+当然这在业界也有解决办法——让应用程序通过 API 层面的 hint，告诉 GPU 硬件这个 Render Pass 要怎么处理。Vulkan 就存在 subpassLoad（input attachment） 的概念，告诉驱动，这个 Render Pass 的输出帧是在别的 pass 中有用到。
 其实类似vulkan的这个subpass概念在其他图形 API 中也有所涉及，在metal中叫programmable blending，在更老的opengl es中也是framebuffer fetch和depth stencil fetch（或者较少人用的 PLS (pixel local storage)）。
 
 苹果 Metal 2/A11 中推出的 Tile Shader 和 ImageBlock，实际上也是一个对 Tile Memory 的抽象。并且通过这两个设计，Metal 将 Tile Memory 的控制权完全交给了 Metal 开发者，不愧是有 IMG 血缘的架构啊。而很可惜，DirectX 12 里有 Render Pass 的概念，可以通过 D3D12_FEATURE_D3D12_OPTIONS5 中的 RenderPassesTier 来检查 GPU 驱动对这个特性的支持。但是很可惜的是，现在绝大多数桌面 GPU 都不支持这个特性。这意味者开发者都不会针对这个特性去优化。（X Elite 的 X1-85 支持这个特性，但是在这上边跑的所有 DirectX 12 游戏，应该都没有在代码层面专门调用 Render Pass 相关 API，更不用说专门为这个特性去优化渲染算法了）。
 
-## Subpass 与 One Pass Single Deferred
+## 应用：Subpass 与 One Pass Single Deferred
 
-通过对vulkan的subpass介绍可以看出，这样一来，我们不就可以借助subpassLoad特性来完成本来需要多个pass才能做的事情了吗？例如在现代的游戏中，延迟渲染（Deferred Shaing）被广泛的使用，通过将几何与光照两个pass进行分离，完整最终的着色。由于lighting pass对gbuffer的读写是在当前着色像素上完成的，这无疑很适合subpass设计渲染管线。
+通过对 vulkan 的 subpass 介绍可以看出，我们不就可以借助 subpassLoad 特性来完成本来需要多个pass才能做的事情了吗？例如在现代的游戏中，延迟渲染（Deferred Shaing）被广泛的使用，通过将几何与光照两个pass进行分离，完整最终的着色。由于lighting pass对gbuffer的读写是在当前着色像素上完成的，这无疑很适合subpass设计渲染管线。
 
-以 UE4 Mobile Renderer 为例，让我们来看看 mobile deferred shading 是如何在tiled based gpu上高效进行的
+![](imgs/v2-c8c8b4bffbbed77ff8445841dad9570e_r.PNG)
+
+> [参考](https://www.saschawillems.de/blog/2018/07/19/vulkan-input-attachments-and-sub-passes/)
+
+以 UE4 Mobile Renderer 为例，让我们来看看 mobile deferred shading 是如何在 tile-based gpu 上高效进行的
 
 ![](imgs/11.PNG)
 
@@ -145,4 +169,56 @@ Mobile deferred shaderer中最后会得到3个subpass：1.Gbuffer，2.Decal（�
 
 OpenGL ES的话则通过extension来实现Mobile Deferred Shading：pixel local storage（Mali和PowervR支持，Adreno不支持，且无法store回system memory），framebufferfetch（Adreno支持，Mali不完全支持，Mali只能读取color0 attachment）。所以UE需要在runtime的时候根据GPU型号改变Shader代码。UE4.27会完全支持PLS和FBFetch。
 
+> 参考：[UOD2020]虚幻引擎4在移动平台上的更新|EpicGames Jack Porter&Dmitriy Dyomin(官方字幕)
+
 这样的好处在于，执行FragmentShader的时候，可以将Tile的Framebuffer数据存储在In-Chip Cache上面，只有当这个Tile所有的subpass都执行完了之后，才会把渲染结果写回dram，这样subpass对于framebuffer的读写带宽开销可以省略很多，有效的利用了tile-based架构节约内存带宽。特别是对于延迟渲染管线而言，将gbufferpass和lightpass以subpass的形式放在同一个renderpass中执行，可以实现one pass defer，能够让Gbuffer完全只存在于Tile Memory中，极大地节省了系统带宽。
+
+### 总结
+
+传统多Pass延迟渲染管线的问题：
+
+**(1) 传统多 Pass 延迟渲染（带宽敏感）**
+
+```mermaid
+graph LR
+A[GBuffer Pass] -->|Store G-Buffer| B(System Memory)
+B -->|Load G-Buffer| C[Lighting Pass]
+```
+
+问题：
+
+- 若 Pass B 依赖 Pass A 的结果（如deferred lighting pass 依赖gbuffer pass的attachment），则 Pass A 的附件必须设为 STORE，Pass B 的附件需设为 LOAD。
+- 带宽代价：在这个例子中，G-Buffer 需通过 STORE 写回主存，Lighting Pass 需通过 LOAD 重新加载到 Tile Memory，造成了两次主存带宽消耗（写 + 读），破坏了 Tiled-Based GPU 的带宽优势。
+
+**(2) Subpass 优化后的延迟渲染（零主存带宽）**
+
+```mermaid
+graph LR
+A[GBuffer Subpass] -->|直接传递| B[Lighting Subpass]
+```
+
+关键操作：
+
+- 不执行 STORE 和 LOAD：G-Buffer 数据全程保留在 Tile Memory 中。
+- 输入附件（Input Attachment）：Lighting Subpass 通过 subpassLoad 直接读取同一 Tile 内的 G-Buffer 数据。
+
+## 实践：通过软件观察桌面端与移动端 GPU 渲染图元的差异
+
+说完了理论的内容，我们来上点实际测试吧！写了一个小程序，这是个渲染顺序的检测器。可以支持在 Windows 和 Android 下面跑。在 Windows 下用 OpenGL 4.x，在 Android 下用 OpenGL ES 3.2。它的原理是在像素着色器的每次调用里都给一个计数器加一，然后超过固定的数量就停止渲染。通过这么一个小程序（在github搜索TriangleBin），我们就可以知道 GPU 是按照什么顺序给画面上的像素着色的了。
+
+设备1：NVIDIA GeForce RTX 4060 Ti
+
+![](imgs/15.PNG)
+
+设备2：Qualcomm Adreno (TM) 650（Qualcomm Snapdragon 865 (SM8250)）（Device: Xiaomi Redmi K40）
+
+![](imgs/QQ图片20250127001105.jpg)
+
+设备3：Qualcomm Adreno (TM) 530（Qualcomm Snapdragon 821 (MSM8996 Pro)）（Device: Xiaomi MI 5s）
+
+![](imgs/QQ图片20250127001046.jpg)
+
+测试可以看出，桌面 GPU 其实仍然很大程度上是 IMR 的流程，但是也可以看到，这个顺序并不像传统意义上的 IMR 那样从上往下、从右往左去着色每个像素。其实这个过程中也有一些分块的现象出现。但是由于渲染顺序还是一个个三角形这样处理，因此并不能把它们划入 TBR 的范畴。
+而移动端 GPU 中，Mali 是典型的 TBR，我们可以很明显的看到整个屏幕被分成很多小块，GPU 先对每个tile分别渲染，而且顺序是按照块状的一个渲染顺序执行的，它是从右到左，再从左到右的这一个渲染顺序，最终完整的呈现在屏幕上。
+
+而高通的 Adreno GPU 则有一些特殊，它似乎在一些几何非常简单的情况下，会直接放弃分块，转而执行类似 IMR 的行为。而即使在几何复杂到出现 TBR 的时候，它也是在每个 Tile 内执行类似 IMR 的渲染操作（逐个图元渲染），而不是像 Mali 那样先算好 visibility 然后再执行每个像素上的着色操作。
