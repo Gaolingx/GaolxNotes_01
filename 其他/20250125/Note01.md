@@ -53,7 +53,7 @@ IMR 的整体流程如下所示:
 
 ### GPU 算力增长的内存带宽需要和不平衡不充分的发展之间的矛盾
 
-![](imgs/03.png)
+![](imgs/03.PNG)
 
 运算芯片的算力在飞速发展的同时，内存（DRAM）的发展速度却像蜗牛爬。如今，CPU 的运算吞吐量已经可以和 DRAM 速度差出数十倍甚至上百倍。CPU 况且如此，GPU 这种生来就是为了高吞吐而生的计算设备，问题就愈发严重了（DDR5 6400 双通道 - 100GB/s，也就是 25GFlops fp32 或者 50GFlops fp16，而 8gen2 GPU 可以有近 2000GFlops fp32 算力，4000GFlops fp16 算力）——不解决内存的问题，就是将许多性能白白的浪费了！
 
@@ -97,7 +97,7 @@ Adreno/Mali/PowerVR 三家在处理隐面剔除除的方式是不一样的。
 3. Mali 实现隐面剔除的技术称为 FPK (Forward Pixel Killing)。其原理是所有经过 Early-Z 之后的 Quad，都会放入一个 FIFO 队列中，记录其位置与深度，等待执行。如果在执行完之前，队列中新进来一个 Quad A，位置与现队列中的某个 Quad B 相同，但是 A 深度更小，那么队列中的 B 就会被 kill 掉，不再执行。 Early-Z 只可以根据历史数据，剔除掉当前的 Quad。而 FPK 可以使用当前的 Quad，在一定程度上剔除掉老的 Quad。 FPK 与 HSR 类似，但是区别是 HSR 是阻塞性的，只有只有完全生成 visibility buffer 之后，才会执行 PS。但 FPK 不会阻塞，只会kill 掉还没来得及执行或者执行到一半的 PS。
 
 ![](imgs/08.png)
-![](imgs/09.avif)
+![](imgs/07.avif)
 
 ## 从 TB(D)R 架构中的发现
 
@@ -181,23 +181,23 @@ Adreno/Mali/PowerVR 三家在处理隐面剔除除的方式是不一样的。
 
 ## 应用：Subpass 与 One Pass Single Deferred
 
-通过对 vulkan 的 subpass 介绍可以看出，我们不就可以借助 subpassLoad 特性来完成本来需要多个pass才能做的事情了吗？例如在现代的游戏中，延迟渲染（Deferred Shaing）被广泛的使用，通过将几何与光照两个pass进行分离，完整最终的着色。由于lighting pass对gbuffer的读写是在当前着色像素上完成的，这无疑很适合subpass设计渲染管线。
+通过对 vulkan 的 subpass 介绍可以看出，我们不就可以借助 subpassLoad 特性来完成本来需要多个pass才能做的事情了吗？例如在现代的游戏中，延迟渲染（Deferred Shaing）被广泛的使用，通过将几何与光照两个pass进行分离，完成最终的着色。由于lighting pass对gbuffer的读写是在当前着色像素上完成的，这无疑很适合subpass设计渲染管线。
 
-![](imgs/v2-c8c8b4bffbbed77ff8445841dad9570e_r.PNG)
+![](imgs/v2-c8c8b4bffbbed77ff8445841dad9570e_r.png)
 
 > [参考](https://www.saschawillems.de/blog/2018/07/19/vulkan-input-attachments-and-sub-passes/)
 
 以 UE4 Mobile Renderer 为例，让我们来看看 mobile deferred shading 是如何在 tile-based gpu 上高效进行的
 
-![](imgs/11.PNG)
+![](imgs/11.png)
 
 Vulkan的做法为：将Render Pass分为多个subpass，每个subpass有自己要执行的任务，将它们放在一个pass可以方便我们表达GBuffer pass和lighting pass之间的依赖关系。这个依赖关系会被GPU driver使用，将多个subpass合并成One single pass。这样我们就不需要把GBuffer store回system memory了。每个subpass都需要声明自己读写的attachment。用于获取input attachment的语法为SubpassLoad，通过它我们就可以在lighting subpass中获取当前像素GBuffer的数据。
 
-![](imgs/12.PNG)
+![](imgs/12.png)
 
 Mobile deferred shaderer中最后会得到3个subpass：1.Gbuffer，2.Decal（写入GBuffer），3.Lighting+Transparent（写入SceneColor）。结束后，只将SceneColor写入system memory即可。
 
-![](imgs/13.PNG)
+![](imgs/13.png)
 
 OpenGL ES的话则通过extension来实现Mobile Deferred Shading：pixel local storage（Mali和PowervR支持，Adreno不支持，且无法store回system memory），framebufferfetch（Adreno支持，Mali不完全支持，Mali只能读取color0 attachment）。所以UE需要在runtime的时候根据GPU型号改变Shader代码。UE4.27会完全支持PLS和FBFetch。
 
@@ -260,3 +260,7 @@ A[GBuffer Subpass] -->|直接传递| B[Lighting Subpass]
 而移动端 GPU 中，Mali 是典型的 TBR，我们可以很明显的看到整个屏幕被分成很多小块，GPU 先对每个tile分别渲染，而且顺序是按照块状的一个渲染顺序执行的，它是从右到左，再从左到右的这一个渲染顺序，最终完整的呈现在屏幕上。
 
 而高通的 Adreno GPU 则有一些特殊，它似乎在一些几何非常简单的情况下，会直接放弃分块，转而执行类似 IMR 的行为。而即使在几何复杂到出现 TBR 的时候，它也是在每个 Tile 内执行类似 IMR 的渲染操作（逐个图元渲染），而不是像 Mali 那样先算好 visibility 然后再执行每个像素上的着色操作。
+
+## 总结
+
+通过对移动端GPU TBR/TBDR 以分块渲染为核心，通过片上缓存与隐面剔除技术，在性能、功耗、带宽间寻求平衡，结合现代图形 API（如 Vulkan Subpass），最大化利用 Tile Memory，可以看出软硬件厂商都在为提高移动端GPU渲染性能出谋划策，为移动端提供了低功耗、高带宽效率的渲染方案，但是仍旧需要开发者针对 Tile-Based GPU 特点对渲染管线做针对性的优化，才能最大限度的提高移动端 GPU 的渲染效率。
