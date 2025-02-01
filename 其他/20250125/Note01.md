@@ -2,7 +2,7 @@
 
 前言：当前，手机游戏对GPU的需求在日益剧增，目前市场上的移动端GPU主要由三家公司主导，分别是ImgTec的PowerVR系列、Qualcomm（高通）的 Adreno 以及 ARM（安谋）的 Mali，以及还有华为的马良（Maleoon）和苹果的Apple Silicon系列，由于移动端的特殊性，相对于桌面gpu单纯追求更高的帧率，移动端的方案则需要同时考虑更低的发热，更小的功耗，更高的性能，并在他们之中寻找平衡点。因此，这也让桌面端和移动端的GPU架构变得截然不同，作为一起科普向杂谈，所以我们今天来聊聊移动端的GPU在架构层面是如何在高效渲染的同时降低能耗的。
 
-![](imgs/00.PNG)
+![](imgs/_00.png)
 
 ## 名词解释
 
@@ -22,13 +22,13 @@ IMR 全称 Immediately Mode Rendering，顾名思义是即时渲染，IMR会将D
 
 IMR渲染流程中的数据流动如下图所示，顶点着色器处理后的数据会进入一个FIFO中并依次处理，可以看出IMR需要多次和FrameBuffer进行存取操作。
 
-![](imgs/16.png)
+![](imgs/_16.png)
 
 IMR 的整体流程如下所示:
 
-![](imgs/02.png)
+![](imgs/_02.png)
 
-![](imgs/01.png)
+![](imgs/_01.png)
 
 这是个IMR GPU大致的执行流程。从左到右，硬件从显存中读取顶点的数据和全局的世界数据（例如摄像机数据等）输入顶点着色器，顶点着色器将顶点从三维空间中变换到屏幕空间的坐标上。然后经过一些高效的固定功能硬件的处理，这些顶点被光栅化成了一个个片元，并在此过程中剔除了一些对最终画面没有影响的片段（早期深度测试，Early-Z Test）。随后，硬件将采样纹理数据、并读取光源等数据作为输入片段着色器。最终这些颜色经过再一轮的测试（透明度测试 Alpha Test 和后期深度测试 Late-Z Test）确定其对最终画面有影响以后，执行透明混合（Alpha Blend），最终写入到帧缓冲中，显示到屏幕上。
 
@@ -53,7 +53,7 @@ IMR 的整体流程如下所示:
 
 ### GPU 算力增长的内存带宽需要和不平衡不充分的发展之间的矛盾
 
-![](imgs/03.PNG)
+![](imgs/_03.png)
 
 运算芯片的算力在飞速发展的同时，内存（DRAM）的发展速度却像蜗牛爬。如今，CPU 的运算吞吐量已经可以和 DRAM 速度差出数十倍甚至上百倍。CPU 况且如此，GPU 这种生来就是为了高吞吐而生的计算设备，问题就愈发严重了（DDR5 6400 双通道 - 100GB/s，也就是 25GFlops fp32 或者 50GFlops fp16，而 8gen2 GPU 可以有近 2000GFlops fp32 算力，4000GFlops fp16 算力）——不解决内存的问题，就是将许多性能白白的浪费了！
 
@@ -63,9 +63,9 @@ PowerVR 第一个发现了这个问题，并在 2001 年的时候提出了 TBR �
 
 TBR 简要流程图:
 
-![](imgs/04.png)
+![](imgs/_04.png)
 
-![](imgs/05.png)
+![](imgs/_05.png)
 
 可以看出，TBR 架构直接把完整的渲染管线中各个阶段，拆分成了顶点阶段和着色阶段这两个相对独立的阶段。TBR架构在GPU很近的位置增加了一片高速缓存，通常被称为Tile Memory（图中也叫On-Chip Buffer）。受限于成本、耗电等原因这块缓存不会很大，大概几十k这个量级。
 
@@ -73,7 +73,7 @@ TBR 简要流程图:
 
 ## TBR 更进一步——TBDR
 
-![](imgs/06.png)
+![](imgs/_06.png)
 
 在TBR对tile进行分组的过程中，这个阶段其实也可以做一些优化：通常 TBR GPU 都会配备叫做隐藏面消除（HSR，Hidden Surface Removal）的功能。其核心思想是：如果一个图元被其他不透明图元完全遮挡的话，这样我们就可以完全不去计算它，减少实际上对最终画面没有影响的计算（overdraw）。隐藏面消除有很多实现，例如 Mali 有两套机制：Early-Z + FPK（Forward Pixel Kill）去分别从正反两个方面去去除无效的图元。
 随后，因为我们已经知道了每个bin中的图元对应在屏幕上的tile，我们只要按照顺序去一个一个光栅化和着色这些图元就可以了。
@@ -96,10 +96,12 @@ Adreno/Mali/PowerVR 三家在处理隐面剔除除的方式是不一样的。
 
 3. Mali 实现隐面剔除的技术称为 FPK (Forward Pixel Killing)。其原理是所有经过 Early-Z 之后的 Quad，都会放入一个 FIFO 队列中，记录其位置与深度，等待执行。如果在执行完之前，队列中新进来一个 Quad A，位置与现队列中的某个 Quad B 相同，但是 A 深度更小，那么队列中的 B 就会被 kill 掉，不再执行。 Early-Z 只可以根据历史数据，剔除掉当前的 Quad。而 FPK 可以使用当前的 Quad，在一定程度上剔除掉老的 Quad。 FPK 与 HSR 类似，但是区别是 HSR 是阻塞性的，只有只有完全生成 visibility buffer 之后，才会执行 PS。但 FPK 不会阻塞，只会kill 掉还没来得及执行或者执行到一半的 PS。
 
-![](imgs/08.png)
-![](imgs/07.avif)
+![](imgs/_08.png)
+![](imgs/_07.avif)
 
 ## 从 TB(D)R 架构中的发现
+
+![](imgs/_17.png)
 
 我们来重点关注一下着色阶段，这才是 TBR 架构真正发挥威力的地方——不到最后一刻，它根本不会去碰显存！注意到 TBR 架构的 GPU 上都有一块专门的 Tile Memory （GMEM），这块空间是和 Cache 一样的 SRAM 打造的，因此有极高的带宽、极低的延迟以及并不需要耗电刷新——也就是功耗低。这块存储空间就像是草稿纸，着色阶段会直接从里面读取之前的数据，也可以往里写入数据去渲染——都是以 Cache 级的极低功耗和延迟、极高带宽来完成的。最后的最后，在所有渲染流程结束的时候，会将GMEM中的内容写入到显存中。请注意，这个箭头是单向的——TBR 架构只会在最终所有工作都完成的时候，才会将这个 tile 写入显存中）这个过程被称之为 Resolve）。随后，GMEM 中的内容可以被完全清空——也不会再需要这些内容了——省去了不少显存带宽的roundtrip、也节省了不少显存容量！
 
@@ -149,8 +151,8 @@ Adreno/Mali/PowerVR 三家在处理隐面剔除除的方式是不一样的。
 
 例如，以《崩坏：星穹铁道》为例，在 SSR（屏幕空间反射）的pass中，其中深度和法线的RT都是以当前屏幕分辨率的一半进行，这样可以有效降低显存带宽的开销和ps的压力，减少显存占用，并提高L1/TEX Cache的命中率。
 
-![](imgs/10.PNG)
-![](imgs/09.PNG)
+![](imgs/_10.png)
+![](imgs/_09.png)
 
 ## 如何提高在Tiled-Based GPU上的渲染性能
 
@@ -170,14 +172,14 @@ Adreno/Mali/PowerVR 三家在处理隐面剔除除的方式是不一样的。
 
 实际上现在一个游戏渲染一帧，很大概率并不是只走一次上面的管线。走一遍上面的管线，现在被称作一个 render pass。而一个render pass渲染出来的帧，很有可能作为其他render pass的输入纹理。例如 shadow map，就需要一个 shadow pass 来计算场景到光源的深度图，随后再在主颜色pass中采样深度图，比较深度，决定是否产生阴影。在这个过程中，不同render pass之间，难免也会存在经过显存的写入和读取操作（每个Attachment的Load Action和Save Action）。
 
-![](imgs/14.PNG)
+![](imgs/_14.png)
 
 在 Vulkan/DirectX12 这样现代的 Graphics API 以前，是没有 Render Pass 这样的概念的，一般就是指画在同一个RT的 drawcall。
 
 当然这在业界也有解决办法——让应用程序通过 API 层面的 hint，告诉 GPU 硬件这个 Render Pass 要怎么处理。Vulkan 就存在 subpassLoad（input attachment） 的概念，告诉驱动，这个 Render Pass 的输出帧是在别的 pass 中有用到。
 其实类似vulkan的这个subpass概念在其他图形 API 中也有所涉及，在metal中叫programmable blending，在更老的opengl es中也是framebuffer fetch和depth stencil fetch（或者较少人用的 PLS (pixel local storage)）。
 
-苹果 Metal 2/A11 中推出的 Tile Shader 和 ImageBlock，实际上也是一个对 Tile Memory 的抽象。并且通过这两个设计，Metal 将 Tile Memory 的控制权完全交给了 Metal 开发者，不愧是有 IMG 血缘的架构啊。而很可惜，DirectX 12 里有 Render Pass 的概念，可以通过 D3D12_FEATURE_D3D12_OPTIONS5 中的 RenderPassesTier 来检查 GPU 驱动对这个特性的支持。但是很可惜的是，现在绝大多数桌面 GPU 都不支持这个特性。这意味者开发者都不会针对这个特性去优化。（X Elite 的 X1-85 支持这个特性，但是在这上边跑的所有 DirectX 12 游戏，应该都没有在代码层面专门调用 Render Pass 相关 API，更不用说专门为这个特性去优化渲染算法了）。
+苹果 Metal 2/A11 中推出的 Tile Shader 和 ImageBlock，实际上也是一个对 Tile Memory 的抽象。并且通过这两个设计，Metal 将 Tile Memory 的控制权完全交给了 Metal 开发者，不愧是有 IMG 血缘的架构啊。值得庆幸的是，DirectX 12 里有 Render Pass 的概念，可以通过 D3D12_FEATURE_D3D12_OPTIONS5 中的 RenderPassesTier 来检查 GPU 驱动对这个特性的支持。但是很可惜的是，现在绝大多数桌面 GPU 都不支持这个特性。这意味者开发者都不会针对这个特性去优化。（X Elite 的 X1-85 支持这个特性，但是在这上边跑的所有 DirectX 12 游戏，应该都没有在代码层面专门调用 Render Pass 相关 API，更不用说专门为这个特性去优化渲染算法了）。
 
 ## 应用：Subpass 与 One Pass Single Deferred
 
@@ -189,15 +191,15 @@ Adreno/Mali/PowerVR 三家在处理隐面剔除除的方式是不一样的。
 
 以 UE4 Mobile Renderer 为例，让我们来看看 mobile deferred shading 是如何在 tile-based gpu 上高效进行的
 
-![](imgs/11.png)
+![](imgs/_11.png)
 
 Vulkan的做法为：将Render Pass分为多个subpass，每个subpass有自己要执行的任务，将它们放在一个pass可以方便我们表达GBuffer pass和lighting pass之间的依赖关系。这个依赖关系会被GPU driver使用，将多个subpass合并成One single pass。这样我们就不需要把GBuffer store回system memory了。每个subpass都需要声明自己读写的attachment。用于获取input attachment的语法为SubpassLoad，通过它我们就可以在lighting subpass中获取当前像素GBuffer的数据。
 
-![](imgs/12.png)
+![](imgs/_12.png)
 
 Mobile deferred shaderer中最后会得到3个subpass：1.Gbuffer，2.Decal（写入GBuffer），3.Lighting+Transparent（写入SceneColor）。结束后，只将SceneColor写入system memory即可。
 
-![](imgs/13.png)
+![](imgs/_13.png)
 
 OpenGL ES的话则通过extension来实现Mobile Deferred Shading：pixel local storage（Mali和PowervR支持，Adreno不支持，且无法store回system memory），framebufferfetch（Adreno支持，Mali不完全支持，Mali只能读取color0 attachment）。所以UE需要在runtime的时候根据GPU型号改变Shader代码。UE4.27会完全支持PLS和FBFetch。
 
@@ -246,7 +248,7 @@ A[GBuffer Subpass] -->|直接传递| B[Lighting Subpass]
 
 设备1：NVIDIA GeForce RTX 4060 Ti
 
-![](imgs/15.PNG)
+![](imgs/_15.png)
 
 设备2：Qualcomm Adreno (TM) 650（Qualcomm Snapdragon 865 (SM8250)）（Device: Xiaomi Redmi K40）
 
@@ -263,4 +265,4 @@ A[GBuffer Subpass] -->|直接传递| B[Lighting Subpass]
 
 ## 总结
 
-通过对移动端GPU TBR/TBDR 以分块渲染为核心，通过片上缓存与隐面剔除技术，在性能、功耗、带宽间寻求平衡，结合现代图形 API（如 Vulkan Subpass），最大化利用 Tile Memory，可以看出软硬件厂商都在为提高移动端GPU渲染性能出谋划策，为移动端提供了低功耗、高带宽效率的渲染方案，但是仍旧需要开发者针对 Tile-Based GPU 特点对渲染管线做针对性的优化，才能最大限度的提高移动端 GPU 的渲染效率。
+通过对移动端 GPU TBR/TBDR 以分块渲染为核心，通过片上缓存与隐面剔除技术，在性能、功耗、带宽间寻求平衡，结合现代图形 API（如 Vulkan Subpass），最大化利用 Tile Memory，可以看出软硬件厂商都在为提高移动端 GPU 渲染性能出谋划策，为移动端提供了低功耗、高带宽效率的渲染方案，但是仍旧需要开发者针对 Tile-Based GPU 特点对渲染管线做针对性的优化，才能最大限度的提高移动端 GPU 的渲染效率。
