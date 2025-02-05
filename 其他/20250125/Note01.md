@@ -105,7 +105,7 @@ Adreno/Mali/PowerVR 三家在处理隐面剔除除的方式是不一样的。
 
 我们来重点关注一下着色阶段，这才是 TBR 架构真正发挥威力的地方——不到最后一刻，它根本不会去碰显存！注意到 TBR 架构的 GPU 上都有一块专门的 Tile Memory （GMEM），这块空间是和 Cache 一样的 SRAM 打造的，因此有极高的带宽、极低的延迟以及并不需要耗电刷新——也就是功耗低。这块存储空间就像是草稿纸，着色阶段会直接从里面读取之前的数据，也可以往里写入数据去渲染——都是以 Cache 级的极低功耗和延迟、极高带宽来完成的。最后的最后，在所有渲染流程结束的时候，会将GMEM中的内容写入到显存中。请注意，这个箭头是单向的——TBR 架构只会在最终所有工作都完成的时候，才会将这个 tile 写入显存中）这个过程被称之为 Resolve）。随后，GMEM 中的内容可以被完全清空——也不会再需要这些内容了——省去了不少显存带宽的roundtrip、也节省了不少显存容量！
 
-这种分块的特性，MSAA 带来的性能消耗将会变得非常小！因为多重采样都只会发生在 GMEM 中，因此不会像普通的 IMR GPU 那样带来非常大的显存的带宽消耗。
+这种分块的特性，使得 MSAA、Alpha Test、Alpha Blend 带来的性能消耗将会变得非常小！例如 MSAA 多重采样、Alpha Test 的片段剔除、Alpha Blend 的混合操作，都只会发生在 Tile Memory 中，因此不会像普通的 IMR GPU 那样带来非常大的显存的带宽消耗。
 
 不仅如此，因为很多 render pass 的并不需要上屏，所以这些 render pass 的帧缓冲区根本不需要写到显存里——直接开始下一个 render pass，并引用已经在 GMEM 中的数据就可以了。
 
@@ -205,7 +205,9 @@ OpenGL ES的话则通过extension来实现Mobile Deferred Shading：pixel local 
 
 > 参考：[UOD2020]虚幻引擎4在移动平台上的更新|EpicGames Jack Porter&Dmitriy Dyomin(官方字幕)
 
-这样的好处在于，执行FragmentShader的时候，可以将Tile的Framebuffer数据存储在In-Chip Cache上面，只有当这个Tile所有的subpass都执行完了之后，才会把渲染结果写回dram，这样subpass对于framebuffer的读写带宽开销可以省略很多，有效的利用了tile-based架构节约内存带宽。特别是对于延迟渲染管线而言，将gbufferpass和lightpass以subpass的形式放在同一个renderpass中执行，可以实现one pass defer，能够让Gbuffer完全只存在于Tile Memory中，极大地节省了系统带宽。
+我们已知，在 Vulkan 中，一个 RenderPass 中包含多个 SubPass，由于 TBDR 架构，在一个 Tile 上的多个 SubPass 都是按顺序执行（顺序需要手动指定）以便可以让当前 SubPass 使用上一个 SubPass 的结果（通过 Input Attachment 实现），只有当这个 Tile 所有的 SubPass 都执行完了之后，才会把渲染结果写回 System Memory。
+
+这样的好处在于，SubPass 对于 FrameBuffer 的读写带宽开销可以省略很多，有效的利用了 Tile-Based 架构特性节约内存带宽。特别是对于延迟渲染管线而言，将 GBuffer Pass 和 Deferred Lighting Pass 以 SubPass 的形式放在同一个 Render Pass 中执行，可以实现 One Pass Defer，能够让GBuffer 在 On-Chip Memory 保存并直接让 LightingPass 使用，计算完毕后，一次性写入 FrameBuffer，从而大大减少内存损耗，极大地节省了系统带宽。此外，Vulkan中还有 Transient Attachments 机制，针对 GBuffer 在 Geometry Pass 被写入，在 LightingPass 计算完毕后便可丢弃的情况，便可以设置为 Transient Attachments 进一步优化内存分配。
 
 ### 总结
 
