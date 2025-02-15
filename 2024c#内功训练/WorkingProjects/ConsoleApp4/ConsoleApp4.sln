@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestGenericCollection", "Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFileStream", "TestFileStream\TestFileStream.csproj", "{1940D28B-6FD1-4FBF-AABC-A5D014660B34}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StudyDelegate", "StudyDelegate\StudyDelegate.csproj", "{8EC04225-4537-4A10-8C29-D0D66CD24112}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestDelegate", "StudyDelegate\TestDelegate.csproj", "{8EC04225-4537-4A10-8C29-D0D66CD24112}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestLinq", "TestLinq\TestLinq.csproj", "{E0CEA32D-02A0-4202-ADD7-D618FFF17F0F}"
 EndProject
