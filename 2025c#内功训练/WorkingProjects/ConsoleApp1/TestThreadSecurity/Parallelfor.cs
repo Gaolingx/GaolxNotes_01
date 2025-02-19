@@ -86,5 +86,62 @@ namespace TestThreadSecurity
             string output = string.Join(", ", values);
             Console.WriteLine(output);
         }
+
+        /// <summary>
+        /// 4. 线程终止
+        /// </summary>
+
+        [Test]
+        public void TestStopThread()
+        {
+            var thread = new Thread((object? obj) =>
+            {
+                DoJobBackground();
+            })
+            {
+                IsBackground = true,
+                Priority = ThreadPriority.Normal,
+            };
+
+            var thread2 = new Thread((object? obj) =>
+            {
+                DoJobBackground();
+            })
+            {
+                IsBackground = true,
+                Priority = ThreadPriority.Normal,
+            };
+
+            thread.Start();
+            Console.WriteLine($"Running in main thread, id: {Thread.CurrentThread.ManagedThreadId}");
+            thread.Join(); // 会导致主线程阻塞，直到子线程的任务完成
+            Console.WriteLine("Job 1 Done!");
+
+            Console.WriteLine("===================");
+            thread2.Start();
+            Console.WriteLine($"Running in main thread, id: {Thread.CurrentThread.ManagedThreadId}");
+            Thread.Sleep(3500);
+            thread2.Interrupt(); // 立即结束线程
+            thread2.Join();
+            Console.WriteLine("Job 2 Done!");
+        }
+
+        private void DoJobBackground()
+        {
+            try
+            {
+                int threadId = Thread.CurrentThread.ManagedThreadId;
+                for (int i = 0; i < 10; i++)
+                {
+                    Thread.Sleep(1000);
+                    Console.WriteLine("Running in sub thread: " + i + ", thread id: " + threadId);
+                }
+                Console.WriteLine("Sub thread task finished !");
+            }
+            catch (ThreadInterruptedException)
+            {
+                Console.WriteLine("Thread has been interrupted !");
+            }
+        }
     }
 }
