@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113 d17.12
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{85D41E37-95E2-4221-A498-672F581E7740}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestThreadSecurity", "TestThreadSecurity\TestThreadSecurity.csproj", "{82E325B7-7B2A-425A-AD95-B92306A2D39C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTaskAndAsync", "TestTaskAndAsync\TestTaskAndAsync.csproj", "{6AA50CEE-C439-4044-A4D1-6B3BF4636736}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{82E325B7-7B2A-425A-AD95-B92306A2D39C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{82E325B7-7B2A-425A-AD95-B92306A2D39C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{82E325B7-7B2A-425A-AD95-B92306A2D39C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6AA50CEE-C439-4044-A4D1-6B3BF4636736}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AA50CEE-C439-4044-A4D1-6B3BF4636736}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AA50CEE-C439-4044-A4D1-6B3BF4636736}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AA50CEE-C439-4044-A4D1-6B3BF4636736}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
