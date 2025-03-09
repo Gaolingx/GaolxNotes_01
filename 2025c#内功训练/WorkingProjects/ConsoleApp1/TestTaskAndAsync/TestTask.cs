@@ -13,6 +13,47 @@ namespace TestTaskAndAsync
             Helper.PrintThreadId("After");
         }
 
+        [Test]
+        public async Task TestCreateTask()
+        {
+            Helper.PrintThreadId("Before");
+            var result = await Task.Run(() => HeavyJob01());
+            Console.WriteLine($"result:{result}");
+            Helper.PrintThreadId("After");
+        }
+
+        private int HeavyJob01()
+        {
+            Helper.PrintThreadId();
+            Thread.Sleep(5000);
+            return 10;
+        }
+
+        [Test]
+        public async Task TestRunTasksAsync()
+        {
+            var inputs = Enumerable.Range(1, 10).ToArray();
+            var sem = new SemaphoreSlim(2, 2);
+            var tasks = inputs.Select(HeavyJob).ToList();
+
+            await Task.WhenAll(tasks);
+
+            var outputs = tasks.Select(x => x.Result).ToArray();
+
+            foreach (var output in outputs)
+            {
+                Console.WriteLine($"result:{output}");
+            }
+
+            async Task<int> HeavyJob(int input)
+            {
+                await sem.WaitAsync();
+                await Task.Delay(1000);
+                sem.Release();
+                return input * input;
+            }
+        }
+
         async Task FooAsync()
         {
             Helper.PrintThreadId("Before");
@@ -32,5 +73,7 @@ namespace TestTaskAndAsync
                 Interlocked.Increment(ref index);
             }
         }
+
+
     }
 }
