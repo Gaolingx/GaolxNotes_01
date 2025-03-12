@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace TestTaskAndAsync
@@ -51,6 +52,87 @@ namespace TestTaskAndAsync
                 await Task.Delay(1000);
                 sem.Release();
                 return input * input;
+            }
+        }
+
+        [Test]
+        public async Task TestCancelTask()
+        {
+            var cts = new CancellationTokenSource();
+            var token = cts.Token;
+            var sw = Stopwatch.StartNew();
+
+            try
+            {
+                var cancelTask = Task.Run(async () =>
+                {
+                    await Task.Delay(2000);
+                    cts.Cancel();
+                });
+                await Task.WhenAll(Task.Delay(5000, token), cancelTask);
+            }
+            catch (TaskCanceledException ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+            finally
+            {
+                cts.Dispose();
+            }
+            Console.WriteLine($"Task completed in {sw.ElapsedMilliseconds}ms");
+        }
+
+        [Test]
+        public async Task TestCancelTask2()
+        {
+            using (var cts = new CancellationTokenSource())
+            {
+                var token = cts.Token;
+                var sw = Stopwatch.StartNew();
+
+                try
+                {
+                    var cancelTask = Task.Run(async () =>
+                    {
+                        await Task.Delay(2000);
+                        cts.Cancel();
+                    });
+                    await Task.WhenAll(Task.Delay(5000, token), cancelTask);
+                }
+                catch (TaskCanceledException ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+                finally
+                {
+                    cts.Dispose();
+                }
+                Console.WriteLine($"Task completed in {sw.ElapsedMilliseconds}ms");
+            }
+        }
+
+        [Test]
+        public async Task TestCancelTask3()
+        {
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3.0)))
+            {
+                //或者用 cts.CancelAfter(3000);
+                var token = cts.Token;
+                var sw = Stopwatch.StartNew();
+
+                try
+                {
+                    await Task.Delay(5000, token);
+                }
+                catch (TaskCanceledException ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+                finally
+                {
+                    cts.Dispose();
+                }
+                Console.WriteLine($"Task completed in {sw.ElapsedMilliseconds}ms");
             }
         }
 
