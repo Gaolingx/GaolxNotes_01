@@ -174,7 +174,37 @@ TimeSpan ts3 = TimeSpan.FromMilliseconds(500); // 500毫秒
 
 ---
 
-说明：
+### 说明
 
 1. CTS 实现了 IDisposable 接口，所以需要释放。
 2. CTS 还可以传入一个 TimeSpan，表示超时后自动取消，或调用 CancelAfter 方法。
+
+### 补充
+
+#### 1. 异步方法中 CancellationToken 重载写法
+
+为了方便的取消异步任务，我们通常会给每个方法都写一个传入CancellationToken的参数，但很多时候，我们并不是总需要传入 CancellationToken 取消，对此我们可以写一个不带CT的方法重载。
+
+```csharp
+class Demo
+{
+    private async Task FooAsync(CancellationToken ct)
+    {
+        await Task.Delay(5000, ct);
+        // ...
+    }
+
+    private async Task FooAsync()
+    {
+        await FooAsync(CancellationToken.None);
+    }
+    //或者：
+    //private async Task FooAsync() => await FooAsync(CancellationToken.None);
+    //private Task FooAsync() => FooAsync(CancellationToken.None);
+
+    private async Task FooAsync2(int delay, CancellationToken ct = default)
+    {
+        await Task.Delay(delay, ct);
+    }
+}
+```
