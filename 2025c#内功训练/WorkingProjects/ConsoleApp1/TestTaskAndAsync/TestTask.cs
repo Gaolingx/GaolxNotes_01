@@ -136,6 +136,61 @@ namespace TestTaskAndAsync
             }
         }
 
+
+        private Task FooAsync3(CancellationToken cancellationToken)
+        {
+            return Task.Run(() =>
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+                //...
+                while (true)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        cancellationToken.ThrowIfCancellationRequested();
+                    //...
+                    Thread.Sleep(1000);
+                    Console.WriteLine("Background Task Running...");
+                }
+            });
+        }
+
+        private Task<string> FooAsync4(CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+                return Task.FromCanceled<string>(cancellationToken);
+            return Task.FromResult("done");
+        }
+
+        [Test]
+        public async Task ComplexOperationAsync()
+        {
+            var cts = new CancellationTokenSource();
+            cts.Token.Register(() => Console.WriteLine("Task Cancelled 1"));
+            cts.Token.Register(() => Console.WriteLine("Task Cancelled 2")); //后注册的先被调用
+            var sw = Stopwatch.StartNew();
+
+            try
+            {
+                var cancelTask = Task.Run(async () =>
+                {
+                    Console.WriteLine("Background Task Running...");
+                    await Task.Delay(2000);
+                    cts.Cancel();
+                });
+                await Task.WhenAll(Task.Delay(5000, cts.Token), cancelTask);
+            }
+            catch (TaskCanceledException ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+            finally
+            {
+                cts.Dispose();
+            }
+            Console.WriteLine($"Task completed in {sw.ElapsedMilliseconds}ms");
+        }
+
         async Task FooAsync()
         {
             Helper.PrintThreadId("Before");

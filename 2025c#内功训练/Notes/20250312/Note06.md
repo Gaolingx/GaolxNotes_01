@@ -178,12 +178,13 @@ TimeSpan ts3 = TimeSpan.FromMilliseconds(500); // 500毫秒
 
 1. CTS 实现了 IDisposable 接口，所以需要释放。
 2. CTS 还可以传入一个 TimeSpan，表示超时后自动取消，或调用 CancelAfter 方法。
+3. 推荐所有异步方法都带上 CancellationToken 这一传参。
 
 ### 补充
 
 #### 1. 异步方法中 CancellationToken 重载写法
 
-为了方便的取消异步任务，我们通常会给每个方法都写一个传入CancellationToken的参数，但很多时候，我们并不是总需要传入 CancellationToken 取消，对此我们可以写一个不带CT的方法重载。
+为了方便的取消异步任务，我们通常会给每个方法都写一个传入CancellationToken的参数，但很多时候，我们并不是总需要传入 CancellationToken 取消，对此我们可以写一个不带CT的方法重载，或者直接传入一个可为空的 CancellationToken。
 
 ```csharp
 class Demo
@@ -202,9 +203,268 @@ class Demo
     //private async Task FooAsync() => await FooAsync(CancellationToken.None);
     //private Task FooAsync() => FooAsync(CancellationToken.None);
 
-    private async Task FooAsync2(int delay, CancellationToken ct = default)
+    private async Task FooAsync2(int delay, CancellationToken? ct = null)
     {
-        await Task.Delay(delay, ct);
+        var token = ct ?? CancellationToken.None;
+        await Task.Delay(delay, token);
     }
 }
 ```
+
+有时候为了保证不阻塞，我们会用await Task.Run去包装一些方法使其变成异步，显然我们无法直接用 CancellationToken 取消他，对于这种情况，可以手动处理。
+我们在运行Task.Run中的任务前以及函数体中一些操作（IO、循环）前都先检查 IsCancellationRequested 字段，检查token是否被取消，如果被取消则抛出 OperationCanceledException异常。（不推荐，建议改写成异步方法）
+
+```csharp
+private Task FooAsync3(CancellationToken cancellationToken)
+{
+    return Task.Run(() =>
+    {
+        if (cancellationToken.IsCancellationRequested)
+            cancellationToken.ThrowIfCancellationRequested();
+        //...
+        while (true)
+        {
+            if (cancellationToken.IsCancellationRequested)
+                cancellationToken.ThrowIfCancellationRequested();
+            //...
+            Thread.Sleep(1000);
+            Console.WriteLine("Background Task Running...");
+        }
+    });
+}
+```
+
+### 4.2 异步任务取消的处理
+
+- 抛出异常
+  - TaskCanceledException
+  - OperationCanceledException
+- 提前返回
+  - Task.FromCancelled
+- 记得售后
+  - try-catch-finally
+  - Token.Register()
+    - Register中注册委托，当异步任务取消会触发的回调
+  - 注意中释放资源、非托管对象
+
+---
+
+抛出异常的处理方式：
+第一种处理方式，前面讲的很清楚了，假如我们实在不希望任务取消抛出异常，可以用 `Task.FromCancelled` 来提前返回。
+
+```csharp
+private Task<string> FooAsync4(CancellationToken cancellationToken)
+{
+    if (cancellationToken.IsCancellationRequested)
+        return Task.FromCanceled<string>(cancellationToken);
+    return Task.FromResult("done");
+}
+```
+
+---
+
+### 1. 抛出异常：显式通知任务被取消
+#### (1) `TaskCanceledException` 和 `OperationCanceledException`
+- **区别**：
+  - `OperationCanceledException` 是基类，表示通用取消操作。
+  - `TaskCanceledException` 继承自前者，专用于 `Task` 相关的取消（如 `Task.Run` 内部）。
+- **使用场景**：
+  ```csharp
+  async Task DoWorkAsync(CancellationToken token)
+  {
+      token.ThrowIfCancellationRequested(); // 手动触发 OperationCanceledException
+      await Task.Delay(1000, token);         // 内部可能抛出 TaskCanceledException
+  }
+  ```
+
+#### (2) 手动触发取消异常
+在长时间运行的循环中定期检查取消标记：
+```csharp
+while (!token.IsCancellationRequested)
+{
+    // 工作代码
+}
+token.ThrowIfCancellationRequested(); // 退出循环后显式抛出
+```
+
+---
+
+### 2. 提前返回：不抛出异常，直接返回取消状态
+#### (1) `Task.FromCanceled`
+直接返回一个已取消的任务，避免后续逻辑执行：
+```csharp
+async Task<int> CalculateAsync(CancellationToken token)
+{
+    if (token.IsCancellationRequested)
+        return await Task.FromCanceled<int>(token); // 提前返回取消状态的任务
+    
+    // 正常逻辑
+    return 42;
+}
+```
+
+---
+
+### 3. 资源释放：确保取消时清理资源
+#### (1) `try-catch-finally` 基础保障
+无论是否取消，`finally` 块始终执行：
+```csharp
+async Task ReadFileAsync(CancellationToken token)
+{
+    FileStream file = null;
+    try
+    {
+        file = File.OpenRead("data.txt");
+        await ProcessDataAsync(file, token);
+    }
+    catch (OperationCanceledException)
+    {
+        Console.WriteLine("任务被取消。");
+    }
+    finally
+    {
+        file?.Dispose(); // 确保文件句柄释放
+    }
+}
+```
+
+#### (2) `CancellationToken.Register` 高级回调
+注册取消时的回调函数，适合非托管资源：
+```csharp
+async Task ConnectToDeviceAsync(CancellationToken token)
+{
+    var device = new ExternalDevice();
+    // 注册取消回调
+    using (token.Register(() => device.SafeShutdown()))
+    {
+        await device.ConnectAsync(token);
+        // 其他操作
+    }
+}
+```
+
+#### 关键注意事项：
+- **回调线程安全性**：`Register` 的回调可能在任意线程触发，需确保线程安全。
+- **及时注销回调**：通过 `using` 或手动调用 `Unregister` 避免内存泄漏。
+- **避免阻塞**：回调中避免耗时操作，防止取消请求被阻塞。
+
+---
+
+### 完整示例
+
+```csharp
+[Test]
+public async Task ComplexOperationAsync()
+{
+    var cts = new CancellationTokenSource();
+    cts.Token.Register(() => Console.WriteLine("Task Cancelled 1"));
+    cts.Token.Register(() => Console.WriteLine("Task Cancelled 2")); //后注册的先被调用
+    var sw = Stopwatch.StartNew();
+
+    try
+    {
+        var cancelTask = Task.Run(async () =>
+        {
+            Console.WriteLine("Background Task Running...");
+            await Task.Delay(2000);
+            cts.Cancel();
+        });
+        await Task.WhenAll(Task.Delay(5000, cts.Token), cancelTask);
+    }
+    catch (TaskCanceledException ex)
+    {
+        Console.WriteLine(ex.ToString());
+    }
+    finally
+    {
+        cts.Dispose();
+    }
+    Console.WriteLine($"Task completed in {sw.ElapsedMilliseconds}ms");
+}
+```
+
+运行结果如下：
+
+![](imgs/03.PNG)
+
+---
+
+### 2. 为Task.Run传入 CancellationToken
+
+在 C# 中，将 `CancellationToken` 传递给 `Task.Run` 的主要意义在于实现**协作式取消**，具体作用如下：
+
+---
+
+### 1. **任务未启动时，阻止执行**
+   - 如果任务**尚未开始执行**（例如线程池资源紧张时排队等待），传递的 `CancellationToken` 可以立即取消任务，使其状态直接变为 `Canceled`，避免无意义的执行。
+   - **示例**：
+     ```csharp
+     var cts = new CancellationTokenSource();
+     var task = Task.Run(() => DoWork(), cts.Token);
+     cts.Cancel(); // 如果任务未启动，会被直接取消
+     ```
+
+---
+
+### 2. **与任务内部逻辑配合，实现协作取消**
+   - `CancellationToken` 本身不会自动终止正在运行的任务，需要任务代码**主动检查**令牌状态：
+     - 通过 `token.ThrowIfCancellationRequested()` 抛出 `OperationCanceledException`。
+     - 检查 `token.IsCancellationRequested` 并手动终止。
+   - **示例**：
+     ```csharp
+     Task.Run(() => {
+         while (true) {
+             token.ThrowIfCancellationRequested(); // 若取消，抛出异常
+             // 或者手动检查：
+             if (token.IsCancellationRequested) break;
+         }
+     }, token); // 传入 CancellationToken
+     ```
+
+---
+
+### 3. **正确传递任务状态**
+   - 当任务因取消而抛出 `OperationCanceledException` 时：
+     - 若 `CancellationToken` 通过 `Task.Run` 传递，任务状态会变为 `Canceled`。
+     - 若未传递，任务状态会变为 `Faulted`（异常状态），而非标准的取消状态。
+   - **这对任务的状态监控和延续处理（如 `ContinueWith`）非常重要**。
+
+---
+
+### 4. **资源优化**
+   - 避免启动不再需要的任务，减少线程池资源的浪费。
+
+---
+
+### 完整示例
+```csharp
+var cts = new CancellationTokenSource();
+CancellationToken token = cts.Token;
+
+// 传递 CancellationToken 给 Task.Run
+var task = Task.Run(() => {
+    for (int i = 0; i < 100; i++) {
+        token.ThrowIfCancellationRequested(); // 协作式取消检查
+        Thread.Sleep(100);
+    }
+}, token); // 传入令牌
+
+cts.CancelAfter(1000); // 1秒后取消
+
+try {
+    await task;
+} catch (OperationCanceledException) {
+    Console.WriteLine("任务已取消。");
+}
+
+Console.WriteLine(task.Status); // 输出: Canceled
+```
+
+---
+
+### 关键总结
+- **仅传递 `CancellationToken` 给 `Task.Run` 是不够的**，任务内部必须主动响应取消请求。
+- 两者的结合使用能实现：
+  - 任务未启动时的快速取消。
+  - 任务执行中的优雅终止。
+  - 正确的任务状态跟踪。
