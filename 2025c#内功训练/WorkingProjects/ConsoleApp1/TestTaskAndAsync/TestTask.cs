@@ -191,6 +191,33 @@ namespace TestTaskAndAsync
             Console.WriteLine($"Task completed in {sw.ElapsedMilliseconds}ms");
         }
 
+        [Test]
+        public void TestTimeoutThreadInterrupt()
+        {
+            var thread = new Thread(FooSync);
+            thread.Start();
+            if (!thread.Join(TimeSpan.FromMilliseconds(2000)))
+            {
+                thread.Interrupt();
+            }
+
+            Console.WriteLine("Task Done.");
+        }
+
+        private void FooSync()
+        {
+            try
+            {
+                Console.WriteLine("Foo start...");
+                Thread.Sleep(5000);
+                Console.WriteLine("Foo end...");
+            }
+            catch (ThreadInterruptedException)
+            {
+                Console.WriteLine("Foo Interrupted");
+            }
+        }
+
         async Task FooAsync()
         {
             Helper.PrintThreadId("Before");
