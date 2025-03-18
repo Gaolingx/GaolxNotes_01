@@ -373,7 +373,7 @@ public async Task ProcessDataAsync()
   - ManualResetEventSlim
 
 - 并发集合
-  - ConcurrentBag/Stack/Queue
+  - ConcurrentBag、ConcurrentStack、ConcurrentQueue、ConcurrentDictionary
   - BlockingCollection
   - **Channel**
 

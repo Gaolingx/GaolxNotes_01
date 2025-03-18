@@ -33,6 +33,8 @@ private void FooSync()
 }
 ```
 
+![](imgs/01.PNG)
+
 在C#中，这段代码通过结合`Thread.Join`的超时检测和`Thread.Interrupt`方法，实现了对线程执行的超时控制。具体机制如下：
 
 ---
@@ -72,3 +74,66 @@ private void FooSync()
 ---
 
 ### 2. async Task中的超时机制
+
+1. 用 `Task.WhenAny(Task, Task.Delay())` 实现异步超时。
+
+```csharp
+[Test]
+public async Task TestTimeoutTaskCanceled()
+{
+    var cts = new CancellationTokenSource();
+    var fooTask = FooAsync2(cts.Token);
+    var completedTask = await Task.WhenAny(fooTask, Task.Delay(2000));  //返回先结束的task
+
+    if (completedTask != fooTask)
+    {
+        cts.Cancel(); //超时后需要Cancel这个异步任务
+        await fooTask;
+        Console.WriteLine("fooTask Timeout.");
+    }
+
+    Console.WriteLine("Task Done.");
+}
+
+private async Task FooAsync2(CancellationToken ct)
+{
+    try
+    {
+        Console.WriteLine("Foo start...");
+        await Task.Delay(5000, ct);
+        Console.WriteLine("Foo end...");
+    }
+    catch (OperationCanceledException)
+    {
+        Console.WriteLine("Foo Canceled.");
+    }
+}
+```
+
+![](imgs/02.PNG)
+
+---
+
+这段C#代码通过`Task.WhenAny`实现异步超时的机制如下：
+
+### 关键步骤解析：
+1. **并发执行任务与超时检测**  
+   使用`Task.WhenAny(fooTask, Task.Delay(2000))`同时等待`fooTask`（实际业务逻辑）和`Task.Delay(2000)`（超时检测）。无论哪个任务先完成，`Task.WhenAny`会立即返回已完成的任务。
+
+2. **判定超时**  
+   若`completedTask`不等于`fooTask`，说明`Task.Delay(2000)`先完成（即超时发生）。此时调用`cts.Cancel()`取消`fooTask`，并通过`await fooTask`等待其终止（确保资源清理或异常处理）。
+
+3. **处理任务取消**  
+   在`FooAsync2`中，`Task.Delay(5000, ct)`绑定取消令牌。取消时，抛出`OperationCanceledException`，触发catch块输出“Foo Canceled.”，确保任务优雅终止。
+
+### 输出顺序示例（超时场景）：
+```text
+Foo start...          // FooAsync2开始执行
+（2秒后）
+Foo Canceled.         // 超时后取消，触发异常处理
+fooTask Timeout.      // 主线程处理超时
+Task Done.            // 最终完成
+```
+
+2. 自定义异步拓展方法 `TimeoutAfter` 实现超时取消
+

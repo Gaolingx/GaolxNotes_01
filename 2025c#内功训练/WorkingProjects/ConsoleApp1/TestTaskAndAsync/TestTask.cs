@@ -218,6 +218,37 @@ namespace TestTaskAndAsync
             }
         }
 
+        [Test]
+        public async Task TestTimeoutTaskCanceled()
+        {
+            var cts = new CancellationTokenSource();
+            var fooTask = FooAsync2(cts.Token);
+            var completedTask = await Task.WhenAny(fooTask, Task.Delay(2000));  //返回先结束的task
+
+            if (completedTask != fooTask)
+            {
+                cts.Cancel(); //超时后需要Cancel这个异步任务
+                await fooTask;
+                Console.WriteLine("fooTask Timeout.");
+            }
+
+            Console.WriteLine("Task Done.");
+        }
+
+        private async Task FooAsync2(CancellationToken ct)
+        {
+            try
+            {
+                Console.WriteLine("Foo start...");
+                await Task.Delay(5000, ct);
+                Console.WriteLine("Foo end...");
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine("Foo Canceled.");
+            }
+        }
+
         async Task FooAsync()
         {
             Helper.PrintThreadId("Before");
