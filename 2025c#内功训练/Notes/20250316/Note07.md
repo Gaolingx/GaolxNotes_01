@@ -137,3 +137,36 @@ Task Done.            // 最终完成
 
 2. 自定义异步拓展方法 `TimeoutAfter` 实现超时取消
 
+```csharp
+static class AsyncExtensions
+{
+    public static async Task<TResult> TimeoutAfter<TResult>(this Task<TResult> task, TimeSpan timeout)
+    {
+        using var cts = new CancellationTokenSource();
+        var completedTask = await Task.WhenAny(task, Task.Delay(timeout, cts.Token));
+        if (completedTask != task)
+        {
+            cts.Cancel();
+            throw new TimeoutException();
+        }
+
+        return await task;
+    }
+}
+```
+
+该C#扩展方法通过结合`Task.WhenAny`和`Task.Delay`实现异步超时机制，其核心逻辑如下：
+
+1. **创建取消令牌源**：  
+   使用`CancellationTokenSource`生成取消令牌，用于控制`Task.Delay`的超时任务。`using`语句确保资源释放。
+
+2. **并行等待任务与超时**：  
+   通过`Task.WhenAny`同时等待原始任务和带有取消令牌的`Task.Delay`。第一个完成的任务（原任务或超时）将返回。
+
+3. **处理超时情况**：  
+   - 若`Task.Delay`先完成（即超时），调用`cts.Cancel()`取消延迟任务（避免资源浪费），并抛出`TimeoutException`。
+   - 若原任务先完成，直接返回其结果。通过再次`await task`确保异常正确传播（如任务已失败，此处会抛出相应异常）。
+
+**总结**：该方法通过竞争执行原任务和超时任务，实现异步超时控制。核心机制依赖`Task.WhenAny`的竞争等待，结合取消令牌管理延迟任务，确保超时后及时中断并抛出异常。
+
+3. 

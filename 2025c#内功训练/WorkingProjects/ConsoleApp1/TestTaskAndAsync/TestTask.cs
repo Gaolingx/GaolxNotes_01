@@ -235,6 +235,22 @@ namespace TestTaskAndAsync
             Console.WriteLine("Task Done.");
         }
 
+        [Test]
+        public async Task TestTimeoutTaskCanceled2()
+        {
+            try
+            {
+                await FooAsync2(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(2));
+                Console.WriteLine("fooTask Completed.");
+            }
+            catch (TimeoutException)
+            {
+
+                Console.WriteLine("fooTask Timeout.");
+            }
+            Console.WriteLine("Task Done.");
+        }
+
         private async Task FooAsync2(CancellationToken ct)
         {
             try
