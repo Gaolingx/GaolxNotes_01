@@ -238,15 +238,20 @@ namespace TestTaskAndAsync
         [Test]
         public async Task TestTimeoutTaskCanceled2()
         {
+            var cts = new CancellationTokenSource();
             try
             {
-                await FooAsync2(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(2));
+                await FooAsync2(cts.Token).WaitAsync(TimeSpan.FromSeconds(2));
                 Console.WriteLine("fooTask Completed.");
             }
             catch (TimeoutException)
             {
-
+                cts.Cancel();
                 Console.WriteLine("fooTask Timeout.");
+            }
+            finally
+            {
+                cts.Dispose();
             }
             Console.WriteLine("Task Done.");
         }

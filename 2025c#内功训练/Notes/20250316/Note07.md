@@ -169,4 +169,74 @@ static class AsyncExtensions
 
 **总结**：该方法通过竞争执行原任务和超时任务，实现异步超时控制。核心机制依赖`Task.WhenAny`的竞争等待，结合取消令牌管理延迟任务，确保超时后及时中断并抛出异常。
 
-3. 
+3. 使用`Task.WaitAsync`实现异步超时
+
+```csharp
+[Test]
+public async Task TestTimeoutTaskCanceled2()
+{
+    var cts = new CancellationTokenSource();
+    try
+    {
+        await FooAsync2(cts.Token).WaitAsync(TimeSpan.FromSeconds(2));
+        Console.WriteLine("fooTask Completed.");
+    }
+    catch (TimeoutException)
+    {
+        cts.Cancel();
+        Console.WriteLine("fooTask Timeout.");
+    }
+    finally
+    {
+        cts.Dispose();
+    }
+    Console.WriteLine("Task Done.");
+}
+
+private async Task FooAsync2(CancellationToken ct)
+{
+    try
+    {
+        Console.WriteLine("Foo start...");
+        await Task.Delay(5000, ct);
+        Console.WriteLine("Foo end...");
+    }
+    catch (OperationCanceledException)
+    {
+        Console.WriteLine("Foo Canceled.");
+    }
+}
+```
+
+![](imgs/03.PNG)
+
+这段C#代码通过`Task.WaitAsync`实现了异步超时机制，具体流程如下：
+
+### 1. **核心逻辑**
+- **`WaitAsync`的作用**：`FooAsync2(cts.Token).WaitAsync(TimeSpan.FromSeconds(2))`会异步等待`FooAsync2`任务的完成，但最多等待2秒。若超时，抛出`TimeoutException`。
+- **超时后的取消**：捕获到`TimeoutException`后，调用`cts.Cancel()`，触发传递给`FooAsync2`的取消令牌，终止其内部操作。
+
+### 2. **代码执行步骤**
+1. **启动`FooAsync2`任务**：
+   - `FooAsync2`开始执行，打印"Foo start..."。
+   - 内部调用`Task.Delay(5000, ct)`，设置5秒延迟，并绑定取消令牌`ct`。
+   
+2. **设置超时等待**：
+   - `WaitAsync(TimeSpan.FromSeconds(2))`开始等待`FooAsync2`任务，最多等待2秒。
+   
+3. **超时触发**：
+   - 2秒后，`FooAsync2`仍未完成，`WaitAsync`抛出`TimeoutException`。
+   
+4. **处理超时**：
+   - 进入`catch`块，调用`cts.Cancel()`，触发取消令牌。
+   - `FooAsync2`内部的`Task.Delay`检测到取消请求，抛出`OperationCanceledException`。
+   - `FooAsync2`捕获该异常，打印"Foo Canceled."，任务终止。
+
+5. **清理资源**：
+   - `finally`块确保释放`cts`资源。
+   - 最终打印"Task Done."。
+
+### 3. **结果输出**
+- 若`FooAsync2`在2秒内完成（本例不可能，因延迟5秒），打印"fooTask Completed."。
+- 超时后，打印"fooTask Timeout."和"Foo Canceled."，最后输出"Task Done."。
+
