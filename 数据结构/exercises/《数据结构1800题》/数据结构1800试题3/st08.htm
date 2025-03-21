@@ -1,0 +1,646 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=gb2312">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 11">
+<meta name=Originator content="Microsoft Word 11">
+<link rel=File-List href="st08.files/filelist.xml">
+<link rel=Edit-Time-Data href="st08.files/editdata.mso">
+<link rel=OLE-Object-Data href="st08.files/oledata.mso">
+<!--[if !mso]>
+<style>
+v\:* {behavior:url(#default#VML);}
+o\:* {behavior:url(#default#VML);}
+w\:* {behavior:url(#default#VML);}
+.shape {behavior:url(#default#VML);}
+</style>
+<![endif]-->
+<title>第八章动态存储管理</title>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>lg</o:Author>
+  <o:LastAuthor>Legend User</o:LastAuthor>
+  <o:Revision>2</o:Revision>
+  <o:TotalTime>163</o:TotalTime>
+  <o:Created>2004-06-27T07:55:00Z</o:Created>
+  <o:LastSaved>2004-06-27T07:55:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>251</o:Words>
+  <o:Characters>1432</o:Characters>
+  <o:Lines>11</o:Lines>
+  <o:Paragraphs>3</o:Paragraphs>
+  <o:CharactersWithSpaces>1680</o:CharactersWithSpaces>
+  <o:Version>11.5606</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:PunctuationKerning/>
+  <w:DrawingGridHorizontalSpacing>5.25 磅</w:DrawingGridHorizontalSpacing>
+  <w:DrawingGridVerticalSpacing>7.55 磅</w:DrawingGridVerticalSpacing>
+  <w:DisplayHorizontalDrawingGridEvery>0</w:DisplayHorizontalDrawingGridEvery>
+  <w:DisplayVerticalDrawingGridEvery>2</w:DisplayVerticalDrawingGridEvery>
+  <w:ValidateAgainstSchemas/>
+  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+  <w:Compatibility>
+   <w:SpaceForUL/>
+   <w:BalanceSingleByteDoubleByteWidth/>
+   <w:DoNotLeaveBackslashAlone/>
+   <w:ULTrailSpace/>
+   <w:DoNotExpandShiftReturn/>
+   <w:AdjustLineHeightInTable/>
+   <w:SelectEntireFieldWithStartOrEnd/>
+   <w:UseWord2002TableStyleRules/>
+   <w:UseFELayout/>
+  </w:Compatibility>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:LatentStyles DefLockedState="false" LatentStyleCount="156">
+ </w:LatentStyles>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:宋体;
+	panose-1:2 1 6 0 3 1 1 1 1 1;
+	mso-font-alt:SimSun;
+	mso-font-charset:134;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+@font-face
+	{font-family:黑体;
+	panose-1:2 1 6 0 3 1 1 1 1 1;
+	mso-font-alt:SimHei;
+	mso-font-charset:134;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:1 135135232 16 0 262144 0;}
+@font-face
+	{font-family:"\@黑体";
+	panose-1:2 1 6 0 3 1 1 1 1 1;
+	mso-font-charset:134;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:1 135135232 16 0 262144 0;}
+@font-face
+	{font-family:"\@宋体";
+	panose-1:2 1 6 0 3 1 1 1 1 1;
+	mso-font-charset:134;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0cm;
+	margin-bottom:.0001pt;
+	text-align:justify;
+	text-justify:inter-ideograph;
+	mso-pagination:none;
+	font-size:10.5pt;
+	mso-bidi-font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:宋体;
+	mso-font-kerning:1.0pt;}
+h1
+	{mso-style-next:正文;
+	margin:0cm;
+	margin-bottom:.0001pt;
+	text-align:justify;
+	text-justify:inter-ideograph;
+	mso-pagination:none;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:14.0pt;
+	mso-bidi-font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-font-kerning:1.0pt;
+	font-weight:normal;}
+p.MsoFooter, li.MsoFooter, div.MsoFooter
+	{margin:0cm;
+	margin-bottom:.0001pt;
+	mso-pagination:none;
+	tab-stops:center 207.65pt right 415.3pt;
+	layout-grid-mode:char;
+	font-size:9.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:宋体;
+	mso-font-kerning:1.0pt;}
+p.MsoPlainText, li.MsoPlainText, div.MsoPlainText
+	{margin:0cm;
+	margin-bottom:.0001pt;
+	text-align:justify;
+	text-justify:inter-ideograph;
+	mso-pagination:none;
+	font-size:10.5pt;
+	font-family:宋体;
+	mso-hansi-font-family:"Courier New";
+	mso-bidi-font-family:"Courier New";
+	mso-font-kerning:1.0pt;}
+ /* Page Definitions */
+ @page
+	{mso-page-border-surround-header:no;
+	mso-page-border-surround-footer:no;
+	mso-footnote-separator:url("st08.files/header.htm") fs;
+	mso-footnote-continuation-separator:url("st08.files/header.htm") fcs;
+	mso-endnote-separator:url("st08.files/header.htm") es;
+	mso-endnote-continuation-separator:url("st08.files/header.htm") ecs;}
+@page Section1
+	{size:595.3pt 841.9pt;
+	margin:42.55pt 2.0cm 1.0cm 2.0cm;
+	mso-header-margin:42.55pt;
+	mso-footer-margin:49.6pt;
+	mso-even-footer:url("st08.files/header.htm") ef1;
+	mso-footer:url("st08.files/header.htm") f1;
+	mso-paper-source:0;
+	layout-grid:15.1pt 0pt;
+	mso-layout-grid-char-alt:-98;}
+div.Section1
+	{page:Section1;}
+ /* List Definitions */
+ @list l0
+	{mso-list-id:69735175;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1503254388 1444429798 67698713 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l0:level1
+	{mso-level-start-at:3;
+	mso-level-text:%1;
+	mso-level-tab-stop:18.0pt;
+	mso-level-number-position:left;
+	margin-left:18.0pt;
+	text-indent:-18.0pt;}
+@list l1
+	{mso-list-id:460804488;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1099853254 -1732746798 408738928 -667393158 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l1:level1
+	{mso-level-number-format:japanese-counting;
+	mso-level-text:%1．;
+	mso-level-tab-stop:36.0pt;
+	mso-level-number-position:left;
+	text-indent:-36.0pt;}
+@list l1:level2
+	{mso-level-text:%2．;
+	mso-level-tab-stop:57.0pt;
+	mso-level-number-position:left;
+	margin-left:57.0pt;
+	text-indent:-36.0pt;}
+@list l1:level3
+	{mso-level-text:（%3）;
+	mso-level-tab-stop:119.25pt;
+	mso-level-number-position:left;
+	margin-left:119.25pt;
+	text-indent:-77.25pt;}
+@list l2
+	{mso-list-id:970131437;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1327340672 330973990 -1510963264 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l2:level1
+	{mso-level-number-format:japanese-counting;
+	mso-level-text:%1．;
+	mso-level-tab-stop:21.0pt;
+	mso-level-number-position:left;
+	margin-left:21.0pt;
+	text-indent:-21.0pt;}
+@list l2:level2
+	{mso-level-tab-stop:39.0pt;
+	mso-level-number-position:left;
+	margin-left:39.0pt;
+	text-indent:-18.0pt;}
+@list l3
+	{mso-list-id:1784768334;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-2047976576 2130059608 67698713 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l3:level1
+	{mso-level-start-at:3;
+	mso-level-text:（%1）;
+	mso-level-tab-stop:78.0pt;
+	mso-level-number-position:left;
+	margin-left:78.0pt;
+	text-indent:-36.0pt;}
+@list l3:level3
+	{mso-level-number-format:roman-lower;
+	mso-level-tab-stop:105.0pt;
+	mso-level-number-position:right;
+	margin-left:105.0pt;
+	text-indent:-21.0pt;}
+@list l4
+	{mso-list-id:1792480257;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1522301186 113029566 67698713 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l4:level1
+	{mso-level-text:（%1）;
+	mso-level-tab-stop:36.0pt;
+	mso-level-number-position:left;
+	text-indent:-36.0pt;}
+@list l5
+	{mso-list-id:1802840496;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1595610314 1015586656 67698713 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l5:level1
+	{mso-level-text:%1．;
+	mso-level-tab-stop:18.0pt;
+	mso-level-number-position:left;
+	margin-left:18.0pt;
+	text-indent:-18.0pt;}
+@list l6
+	{mso-list-id:2090300034;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1510497270 -1491553078 67698713 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l6:level1
+	{mso-level-start-at:3;
+	mso-level-text:%1．;
+	mso-level-tab-stop:18.0pt;
+	mso-level-number-position:left;
+	margin-left:18.0pt;
+	text-indent:-18.0pt;}
+@list l6:level2
+	{mso-level-number-format:alpha-lower;
+	mso-level-text:"%2\)";
+	mso-level-tab-stop:42.0pt;
+	mso-level-number-position:left;
+	margin-left:42.0pt;
+	text-indent:-21.0pt;}
+ol
+	{margin-bottom:0cm;}
+ul
+	{margin-bottom:0cm;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:普通表格;
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0cm 5.4pt 0cm 5.4pt;
+	mso-para-margin:0cm;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-ansi-language:#0400;
+	mso-fareast-language:#0400;
+	mso-bidi-language:#0400;}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="2050"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body lang=ZH-CN style='tab-interval:21.0pt;text-justify-trim:punctuation'>
+
+<div class=Section1 style='layout-grid:15.1pt 0pt;mso-layout-grid-char-alt:
+-98'>
+
+<p class=MsoNormal style='text-indent:138.2pt;mso-char-indent-count:9.89'><span
+style='font-size:14.0pt;mso-bidi-font-size:12.0pt;font-family:黑体;mso-hansi-font-family:
+宋体'>第八章 动态存储管理<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span style='font-family:黑体;mso-hansi-font-family:宋体'>一、选择题</span><b><span
+lang=EN-US style='font-family:宋体'><o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='margin-right:1.55pt'><span lang=EN-US
+style='font-family:宋体'>1. </span><span style='font-family:宋体'>动态存储管理系统中，通常可有（<span
+lang=EN-US><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span></span>）种不同的分配策略。【长沙铁道学院<span
+lang=EN-US> 1998 </span>三、<span lang=EN-US>3 (2</span>分<span lang=EN-US>)</span>】<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-right:1.55pt;text-indent:17.9pt;mso-char-indent-count:
+1.71'><span lang=EN-US style='font-family:宋体'>A</span><span style='font-family:
+宋体'>．<span lang=EN-US> 1<span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>B.<span style='mso-spacerun:yes'>&nbsp; </span>2<span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>C.<span
+style='mso-spacerun:yes'>&nbsp; </span>3<span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>D.<span style='mso-spacerun:yes'>&nbsp; </span>4<span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>E.<span style='mso-spacerun:yes'>&nbsp; </span>5<o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-right:1.55pt;text-indent:17.9pt;mso-char-indent-count:
+1.71'><span lang=EN-US style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:黑体;mso-hansi-font-family:宋体'>二、判断题<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-left:18.0pt;text-indent:-18.0pt;mso-list:l5 level1 lfo6;
+tab-stops:list 18.0pt'><![if !supportLists]><span lang=EN-US style='font-family:
+宋体;mso-bidi-font-family:宋体'><span style='mso-list:Ignore'>1．<span
+style='font:7.0pt "Times New Roman"'>&nbsp; </span></span></span><![endif]><span
+style='font-family:宋体'>在伙伴系统中的伙伴是指任意两块大小相同、位置相邻的内存块。（<span lang=EN-US><span
+style='mso-spacerun:yes'>&nbsp; </span></span>）<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='text-indent:20.95pt;mso-char-indent-count:2.0'><span
+style='font-family:宋体'>【北京邮电大学<span lang=EN-US> 2000 </span>一、<span lang=EN-US>8(1</span>分<span
+lang=EN-US>)</span>】<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-left:18.0pt;text-indent:-18.0pt;mso-list:l5 level1 lfo6;
+tab-stops:list 18.0pt'><![if !supportLists]><span lang=EN-US style='font-family:
+宋体;mso-bidi-font-family:宋体'><span style='mso-list:Ignore'>2．<span
+style='font:7.0pt "Times New Roman"'>&nbsp; </span></span></span><![endif]><span
+style='font-family:宋体'>在动态存储管理系统中做空间分配时，最佳适配法与最先适配法相比，前者容易增加闲置空间的碎片。（<span
+lang=EN-US><span style='mso-spacerun:yes'>&nbsp; </span></span>）【东南大学<span
+lang=EN-US> 2001 </span>一、<span lang=EN-US>1-1 </span>（<span lang=EN-US>1</span>分）】【中山大学<span
+lang=EN-US> 1994<span style='mso-spacerun:yes'>&nbsp; </span><span
+style='mso-field-code:" = 1 \\* CHINESENUM3 "'><span lang=EN-US><span
+lang=EN-US>一</span></span></span></span>、<span lang=EN-US>1</span>（<span
+lang=EN-US>2</span>分）】<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:黑体;mso-hansi-font-family:宋体'>三、填空题<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'>1</span><span
+style='font-family:宋体'>．起始地址为<span lang=EN-US>480,</span>大小为<span lang=EN-US>8</span>的块<span
+lang=EN-US>,</span>其伙伴块的起始地址是<span lang=EN-US>_______;</span>若块大小为<span
+lang=EN-US>32,</span>则其伙伴块的起始地址为<span lang=EN-US>_______</span>。【北方交通大学<span
+lang=EN-US> 1999 </span>二、<span lang=EN-US>1</span>（<span lang=EN-US>4</span>分）】<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'>2</span><span
+style='font-family:宋体'>．二进制地址为<span lang=EN-US>011011110000</span>，大小为（<span
+lang=EN-US>4</span>）</span><span lang=EN-US style='font-size:7.5pt;mso-bidi-font-size:
+12.0pt;font-family:宋体'>10</span><span style='font-family:宋体'>和（<span
+lang=EN-US>16</span>）</span><span lang=EN-US style='font-size:7.5pt;mso-bidi-font-size:
+12.0pt;font-family:宋体'>10</span><span style='font-family:宋体'>块的伙伴地址分别为：<span
+lang=EN-US>________</span>、<span lang=EN-US>_________</span>。<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='text-indent:17.9pt;mso-char-indent-count:1.71'><span
+style='font-family:宋体'>【上海大学<span lang=EN-US> 2002 <span style='mso-field-code:
+" = 2 \\* CHINESENUM3 "'><span lang=EN-US><span lang=EN-US>二</span></span></span></span>、<span
+lang=EN-US>2</span>（<span lang=EN-US>2</span>分）】<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-left:18.0pt;text-indent:-18.0pt;mso-list:l5 level1 lfo6;
+tab-stops:list 18.0pt'><![if !supportLists]><span lang=EN-US style='font-family:
+宋体;mso-bidi-font-family:宋体'><span style='mso-list:Ignore'>3．<span
+style='font:7.0pt "Times New Roman"'>&nbsp; </span></span></span><![endif]><span
+style='font-family:宋体'>无用单元是指<span lang=EN-US>________,</span>例<span
+lang=EN-US>________</span>【北方交通大学<span lang=EN-US> 1999 </span>二、<span
+lang=EN-US>6</span>（<span lang=EN-US>4</span>分）】<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:黑体;mso-hansi-font-family:宋体'>四、应用题</span><b><span
+lang=EN-US style='font-family:宋体'><o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='margin-left:1.7pt;mso-para-margin-left:.16gd'><span
+lang=EN-US style='font-family:宋体'>1</span><span style='font-family:宋体'>．伙伴空间（名词解释）【西北工业大学<span
+lang=EN-US> 1999 </span>一、<span lang=EN-US>4</span>（<span lang=EN-US>3</span>分）】<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='margin-left:1.7pt;mso-para-margin-left:.16gd'><span
+lang=EN-US style='font-family:宋体'>2</span><span style='font-family:宋体'>．设内存中可利用空间已连成一个单链表，对用户的存储空间需求，一般有哪三种分配策略？<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='text-indent:17.9pt;mso-char-indent-count:1.71'><span
+style='font-family:宋体'>【北京科技大学<span lang=EN-US> 1999 <span style='mso-field-code:
+" = 1 \\* CHINESENUM3 "'><span lang=EN-US><span lang=EN-US>一</span></span></span></span>、<span
+lang=EN-US>6</span>（<span lang=EN-US>2</span>分）】<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'>3</span><span
+style='font-family:宋体'>．计算起始二进制地址为<span lang=EN-US>011011110000</span>，长度为<span
+lang=EN-US>4</span>（十进制）的块的伙伴地址是多少？<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='text-indent:20.95pt;mso-char-indent-count:2.0'><span
+style='font-family:宋体'>【中山大学<span lang=EN-US>1999<span style='mso-field-code:
+" = 1 \\* CHINESENUM3 "'><span lang=EN-US><span lang=EN-US>一</span></span></span></span>、<span
+lang=EN-US>2(3</span>分<span lang=EN-US>)</span>】<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'>4</span><span
+style='font-family:宋体'>．在一个伙伴系统中，已知某存储块的始址Ｘ＝（<span lang=EN-US>011011110000</span>）</span><span
+lang=EN-US style='font-size:7.5pt;mso-bidi-font-size:12.0pt;font-family:宋体'>2</span><span
+style='font-family:宋体'>，大小为２<sup><span lang=EN-US>4</span></sup>，则它的伙伴块的始址是多少？【北方交通大学<span
+lang=EN-US> 1996 </span>一、<span lang=EN-US>1</span>（<span lang=EN-US>5</span>分）】<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'>5</span><span
+style='font-family:宋体'>．地址为（<span lang=EN-US>1664</span>）</span><span
+lang=EN-US style='font-size:7.5pt;mso-bidi-font-size:12.0pt;font-family:宋体'>10</span><span
+style='font-family:宋体'>大小为（<span lang=EN-US>128</span>）</span><span lang=EN-US
+style='font-size:7.5pt;mso-bidi-font-size:12.0pt;font-family:宋体'>10</span><span
+style='font-family:宋体'>的存储块的伙伴地址是什么？<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='text-indent:15.7pt;mso-char-indent-count:1.5'><span
+style='font-family:宋体'>地址为（<span lang=EN-US>2816</span>）</span><span
+lang=EN-US style='font-size:7.5pt;mso-bidi-font-size:12.0pt;font-family:宋体'>10</span><span
+style='font-family:宋体'>大小为（<span lang=EN-US>64</span>）</span><span lang=EN-US
+style='font-size:7.5pt;mso-bidi-font-size:12.0pt;font-family:宋体'>10</span><span
+style='font-family:宋体'>的存储块的伙伴地址是什么？【清华大学<span lang=EN-US> 1996 </span>四、】<b><span
+lang=EN-US><o:p></o:p></span></b></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'>6</span><span
+style='font-family:宋体'>． 试叙述动态存储分配伙伴系统的基本思想，它和边界标识法不同点是什么？<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='text-indent:17.9pt;mso-char-indent-count:1.71'><span
+style='font-family:宋体'>【青岛大学<span lang=EN-US> 2000 </span>十、（<span lang=EN-US>10</span>分）】【中国人民大学<span
+lang=EN-US> 2000 <span style='mso-field-code:" = 1 \\* CHINESENUM3 "'><span
+lang=EN-US><span lang=EN-US>一</span></span></span></span>、<span lang=EN-US>1</span>（<span
+lang=EN-US>4</span>分）】</span><span lang=EN-US style='mso-bidi-font-size:10.5pt;
+font-family:宋体;color:black;mso-font-kerning:0pt'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'>7</span><span
+style='font-family:宋体'>．组织成循环链表的可利用空间表附加什么条件时，首次适配策略就转变为最佳适配策略？<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='text-indent:17.9pt;mso-char-indent-count:1.71'><span
+style='font-family:宋体'>【北方交通大学<span lang=EN-US> 1998 </span>四、（<span
+lang=EN-US>8</span>分）】<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'>8</span><span
+style='font-family:宋体'>．已知一个大小为<span lang=EN-US>512</span>个字长的存储，假设先后有<span
+lang=EN-US>6</span>个用户申请大小分别为<span lang=EN-US>23</span>，<span lang=EN-US>45</span>，<span
+lang=EN-US>52</span>，<span lang=EN-US>100</span>，<span lang=EN-US>11</span>和<span
+lang=EN-US>19</span>的存储空间，然后再顺序释放大小为<span lang=EN-US>45</span>，<span
+lang=EN-US>52</span>，<span lang=EN-US>11</span>的占用块。假设以伙伴系统实现动态存储管理。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span style='font-family:宋体'>（<span lang=EN-US>1</span>） 画出可利用空间表的初始状态。<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span style='font-family:宋体'>（<span lang=EN-US>2</span>） 画出为<span
+lang=EN-US>6</span>个用户分配所需要的存储空间后可利用空间表的状态以及每个用户所得到的存储块的起始地址。<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span style='font-family:宋体'>（<span lang=EN-US>3</span>） 画出在回收<span
+lang=EN-US>3</span>个占用块之后可利用空间表的状态。【清华大学<span lang=EN-US>1998</span>三<span
+lang=EN-US>(15</span>分<span lang=EN-US>)</span>】【同济大学<span lang=EN-US> 1999</span>】<b><span
+lang=EN-US><o:p></o:p></span></b></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none'><span lang=EN-US
+style='font-family:宋体'>9</span><span style='font-family:宋体'>．下图所示的伙伴系统中，回收两块首地址分别为<span
+lang=EN-US>768</span>及<span lang=EN-US>128</span>，大小为<span lang=EN-US>2<sup>7</sup></span>的存储块，请画出回收后该伙伴系统的状态图。【北京邮电大学<span
+lang=EN-US> 1996 </span>二、（<span lang=EN-US>10</span>分）】<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none'><!--[if gte vml 1]><v:shapetype
+ id="_x0000_t75" coordsize="21600,21600" o:spt="75" o:preferrelative="t"
+ path="m@4@5l@4@11@9@11@9@5xe" filled="f" stroked="f">
+ <v:stroke joinstyle="miter"/>
+ <v:formulas>
+  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
+  <v:f eqn="sum @0 1 0"/>
+  <v:f eqn="sum 0 0 @1"/>
+  <v:f eqn="prod @2 1 2"/>
+  <v:f eqn="prod @3 21600 pixelWidth"/>
+  <v:f eqn="prod @3 21600 pixelHeight"/>
+  <v:f eqn="sum @0 0 1"/>
+  <v:f eqn="prod @6 1 2"/>
+  <v:f eqn="prod @7 21600 pixelWidth"/>
+  <v:f eqn="sum @8 21600 0"/>
+  <v:f eqn="prod @7 21600 pixelHeight"/>
+  <v:f eqn="sum @10 21600 0"/>
+ </v:formulas>
+ <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
+ <o:lock v:ext="edit" aspectratio="t"/>
+</v:shapetype><v:shape id="_x0000_s1191" type="#_x0000_t75" style='position:absolute;
+ left:0;text-align:left;margin-left:26.25pt;margin-top:4.55pt;width:166.5pt;
+ height:97.5pt;z-index:6'>
+ <v:imagedata src="st08.files/image001.wmz" o:title=""/>
+</v:shape><![if gte mso 9]><o:OLEObject Type="Embed" ProgID="SmartDraw.2"
+ ShapeID="_x0000_s1191" DrawAspect="Content" ObjectID="_1149856898">
+</o:OLEObject>
+<![endif]><![endif]--><![if !vml]><span style='mso-ignore:vglayout'>
+
+<table cellpadding=0 cellspacing=0 align=left>
+ <tr>
+  <td width=35 height=6></td>
+ </tr>
+ <tr>
+  <td></td>
+  <td><img width=222 height=130 src="st08.files/image002.gif" v:shapes="_x0000_s1191"></td>
+ </tr>
+</table>
+
+</span><![endif]><span lang=EN-US style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none'><span lang=EN-US
+style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none'><span lang=EN-US
+style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none'><span lang=EN-US
+style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none'><span lang=EN-US
+style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none'><span lang=EN-US
+style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='mso-layout-grid-align:none'><span lang=EN-US
+style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<br style='mso-ignore:vglayout' clear=ALL>
+
+<p class=MsoNormal><!--[if gte vml 1]><v:shape id="_x0000_s1036" style='position:absolute;
+ left:0;text-align:left;margin-left:186.75pt;margin-top:99.9pt;width:12.75pt;
+ height:16pt;z-index:4' coordsize="255,320" path="m60,hdc156,19,150,16,180,105v-10,72,,147,-75,180c76,298,45,305,15,315,,320,60,300,60,300v155,17,90,15,195,15hae"
+ filled="f">
+ <v:path arrowok="t"/>
+</v:shape><![endif]--><![if !vml]><span style='mso-ignore:vglayout;position:
+absolute;z-index:4;left:0px;margin-left:248px;margin-top:132px;width:19px;
+height:24px'><img width=19 height=24 src="st08.files/image003.gif" v:shapes="_x0000_s1036"></span><![endif]><!--[if gte vml 1]><v:shape
+ id="_x0000_s1035" style='position:absolute;left:0;text-align:left;
+ margin-left:182.05pt;margin-top:100.65pt;width:.95pt;height:18.75pt;z-index:3'
+ coordsize="19,375" path="m19,hdc,265,4,140,4,375hae" filled="f">
+ <v:path arrowok="t"/>
+</v:shape><![endif]--><![if !vml]><span style='mso-ignore:vglayout;position:
+absolute;z-index:3;left:0px;margin-left:242px;margin-top:133px;width:3px;
+height:27px'><img width=3 height=27 src="st08.files/image004.gif" v:shapes="_x0000_s1035"></span><![endif]><!--[if gte vml 1]><v:shape
+ id="_x0000_s1034" style='position:absolute;left:0;text-align:left;
+ margin-left:170.25pt;margin-top:103.95pt;width:6.75pt;height:1.2pt;z-index:2'
+ coordsize="135,24" path="m,24hdc73,,29,9,135,9hae" filled="f">
+ <v:path arrowok="t"/>
+</v:shape><![endif]--><![if !vml]><span style='mso-ignore:vglayout;position:
+absolute;z-index:2;left:0px;margin-left:226px;margin-top:138px;width:11px;
+height:3px'><img width=11 height=3 src="st08.files/image005.gif" v:shapes="_x0000_s1034"></span><![endif]><!--[if gte vml 1]><v:shape
+ id="_x0000_s1033" style='position:absolute;left:0;text-align:left;
+ margin-left:168pt;margin-top:103.65pt;width:6.75pt;height:16pt;z-index:1'
+ coordsize="135,320" path="m60,hdc55,40,29,83,45,120v14,33,90,60,90,60c130,205,133,233,120,255,83,320,39,260,,240hae"
+ filled="f">
+ <v:path arrowok="t"/>
+</v:shape><![endif]--><![if !vml]><span style='mso-ignore:vglayout;position:
+absolute;z-index:1;left:0px;margin-left:223px;margin-top:137px;width:12px;
+height:24px'><img width=12 height=24 src="st08.files/image006.gif" v:shapes="_x0000_s1033"></span><![endif]><span
+lang=EN-US style='font-family:宋体'><span style='mso-spacerun:yes'>&nbsp; </span><span
+style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'>10</span><span
+style='font-family:宋体'>．假设利用边界标识法，并以首次拟合策略分配，已知在某个时刻可利用空间表的状态如下图所示：<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span style='font-family:宋体'>（注：存储块头部<span lang=EN-US>size</span>域的值和申请分配的存储量均包括头部和尾部的存储空间。）<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><span style='font-family:宋体'>请画出：<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='text-indent:17.9pt;mso-char-indent-count:1.71'><span
+style='font-family:宋体'>（<span lang=EN-US>1</span>）当系统回收一个起始地址为<span lang=EN-US>559</span>，大小为<span
+lang=EN-US>45</span>的空闲块之后的链表状态；<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='text-indent:17.9pt;mso-char-indent-count:1.71'><span
+style='font-family:宋体'>（<span lang=EN-US>2</span>）系统继而在接受存储块大小为<span
+lang=EN-US>100</span>的请求后，又回收一个起始地址为<span lang=EN-US>515</span>，大小为<span
+lang=EN-US>44</span>的空闲块之后的链表状态。【上海大学<span lang=EN-US> 2002 <span
+style='mso-field-code:" = 2 \\* CHINESENUM3 "'><span lang=EN-US><span
+lang=EN-US>二</span></span></span></span>、<span lang=EN-US>3</span>（<span
+lang=EN-US>8</span>分）】<span lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal><!--[if gte vml 1]><v:shape id="_x0000_s1189" type="#_x0000_t75"
+ style='position:absolute;left:0;text-align:left;margin-left:33pt;margin-top:0;
+ width:308.25pt;height:70.5pt;z-index:5'>
+ <v:imagedata src="st08.files/image007.wmz" o:title=""/>
+</v:shape><![if gte mso 9]><o:OLEObject Type="Embed" ProgID="SmartDraw.2"
+ ShapeID="_x0000_s1189" DrawAspect="Content" ObjectID="_1149856900">
+</o:OLEObject>
+<![endif]><![endif]--><![if !vml]><span style='mso-ignore:vglayout'>
+
+<table cellpadding=0 cellspacing=0 align=left>
+ <tr>
+  <td width=44 height=0></td>
+ </tr>
+ <tr>
+  <td></td>
+  <td><img width=411 height=94 src="st08.files/image008.gif" v:shapes="_x0000_s1189"></td>
+ </tr>
+</table>
+
+</span><![endif]><span lang=EN-US style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+<br style='mso-ignore:vglayout' clear=ALL>
+
+<p class=MsoNormal style='text-indent:136.2pt;mso-char-indent-count:13.0'><span
+style='font-family:宋体'>第<span lang=EN-US>10</span>题图：可利用空间表的状态图<span
+lang=EN-US><o:p></o:p></span></span></p>
+
+<p class=MsoNormal style='text-indent:136.2pt;mso-char-indent-count:13.0'><span
+lang=EN-US style='font-family:宋体'><o:p>&nbsp;</o:p></span></p>
+
+</div>
+
+</body>
+
+</html>
