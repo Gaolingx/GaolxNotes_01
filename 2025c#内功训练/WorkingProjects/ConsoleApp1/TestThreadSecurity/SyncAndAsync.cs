@@ -76,4 +76,77 @@ namespace TestThreadSecurity
             throw new Exception("FooAsync2 Error!");
         }
     }
+
+    #region Async Call in Ctor
+    internal class SyncAndAsync2
+    {
+        [Test]
+        public async Task RunLoadingDataAsync()
+        {
+            Console.WriteLine("Start...");
+
+            try
+            {
+                var dataModel = new MyDataModel();
+                Console.WriteLine("Loading data...");
+                await Task.Delay(2000);
+                var data = dataModel.Data;
+                Console.WriteLine($"Data is loaded: {dataModel.IsDataLoaded}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error Message: {ex.Message}");
+            }
+
+            Console.WriteLine("Done.");
+        }
+    }
+    internal class MyDataModel
+    {
+        public List<int>? Data { get; private set; }
+
+        public bool IsDataLoaded { get; private set; } = false;
+
+        public MyDataModel()
+        {
+            //LoadDataAsync(); //直接使用Fire-and-forget方式调用无法处理异常，也无法观察任务状态
+            SafeFireAndForget(LoadDataAsync(), () => { IsDataLoaded = true; }, e => throw e);
+        }
+
+        private static async void SafeFireAndForget(Task task, Action? onCompleted = null, Action<Exception>? onError = null)
+        {
+            try
+            {
+                await task;
+                onCompleted?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                onError?.Invoke(ex);
+            }
+        }
+
+        private async Task LoadDataAsync()
+        {
+            await Task.Delay(1000);
+            Data = Enumerable.Range(1, 10).ToList();
+        }
+    }
+
+    static class TaskExtensions
+    {
+        public static async void Forget(this Task task, Action? onCompleted = null, Action<Exception>? onError = null)
+        {
+            try
+            {
+                await task;
+                onCompleted?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                onError?.Invoke(ex);
+            }
+        }
+    }
+    #endregion
 }

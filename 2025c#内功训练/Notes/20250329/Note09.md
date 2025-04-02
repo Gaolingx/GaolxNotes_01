@@ -279,4 +279,171 @@ _ = FooAsync2().ContinueWith(task =>
 - **始终`await`异步调用**：除非明确需要“火并忘记”且接受潜在未处理异常。
 - **避免静默丢弃任务**：丢弃任务（`_ =`）易导致异常丢失，建议仅在明确处理异常时使用。
 
-### 3. 构造函数中调用异步方法
+### 3. 安全的用Fire-and-forget调用异步方法
+
+```csharp
+#region Async Call in Ctor
+internal class SyncAndAsync2
+{
+    [Test]
+    public async Task RunLoadingDataAsync()
+    {
+        Console.WriteLine("Start...");
+
+        try
+        {
+            var dataModel = new MyDataModel();
+            Console.WriteLine("Loading data...");
+            await Task.Delay(2000);
+            var data = dataModel.Data;
+            Console.WriteLine($"Data is loaded: {dataModel.IsDataLoaded}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error Message: {ex.Message}");
+        }
+
+        Console.WriteLine("Done.");
+    }
+}
+internal class MyDataModel
+{
+    public List<int>? Data { get; private set; }
+
+    public bool IsDataLoaded { get; private set; } = false;
+
+    public MyDataModel()
+    {
+        //LoadDataAsync(); //直接使用Fire-and-forget方式调用无法处理异常，也无法观察任务状态
+        SafeFireAndForget(LoadDataAsync(), () => { IsDataLoaded = true; }, e => throw e);
+    }
+
+    private static async void SafeFireAndForget(Task task, Action? onCompleted = null, Action<Exception>? onError = null)
+    {
+        try
+        {
+            await task;
+            onCompleted?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            onError?.Invoke(ex);
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        await Task.Delay(1000);
+        Data = Enumerable.Range(1, 10).ToList();
+    }
+}
+
+static class TaskExtensions
+{
+    public static async void Forget(this Task task, Action? onCompleted = null, Action<Exception>? onError = null)
+    {
+        try
+        {
+            await task;
+            onCompleted?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            onError?.Invoke(ex);
+        }
+    }
+}
+#endregion
+```
+
+运行结果如下：
+
+![](imgs/05.PNG)
+
+---
+
+这段代码通过以下几个关键点安全地实现了“一发即忘”（Fire-and-Forget）并处理异常：
+
+---
+
+### 1. **避免直接使用 `async void` 的裸调用**
+   - 原始问题中直接调用 `LoadDataAsync()`（无包装）会导致未观察的异常（Unobserved Task Exception）。
+   - 代码通过 **`SafeFireAndForget` 方法** 包装异步操作，强制捕获所有异常。
+
+---
+
+### 2. **通过回调传递状态和异常**
+   ```csharp
+   SafeFireAndForget(
+       LoadDataAsync(),
+       onCompleted: () => { IsDataLoaded = true; },
+       onError: e => throw e
+   );
+   ```
+   - **`onCompleted` 回调**：异步操作完成后更新 `IsDataLoaded` 状态。
+   - **`onError` 回调**：将异常传递给调用方（通过 `throw e` 抛出，但需注意下文风险）。
+
+---
+
+### 3. **异常安全封装**
+   `SafeFireAndForget` 方法内部通过 `try-catch` 捕获所有异常：
+   ```csharp
+   private static async void SafeFireAndForget(Task task, Action? onCompleted, Action<Exception>? onError)
+   {
+       try
+       {
+           await task;
+           onCompleted?.Invoke();
+       }
+       catch (Exception ex)
+       {
+           onError?.Invoke(ex); // 触发异常回调
+       }
+   }
+   ```
+   - 确保异步操作中的异常不会“沉默”或导致未处理异常。
+
+---
+
+### 4. **扩展方法支持（可选）**
+   `TaskExtensions.Forget` 提供了类似的封装，使代码更简洁：
+   ```csharp
+   LoadDataAsync().Forget(
+       onCompleted: () => IsDataLoaded = true,
+       onError: e => Console.WriteLine(e.Message)
+   );
+   ```
+
+---
+
+### ⚠️ **潜在风险与改进建议**
+1. **`onError` 中的 `throw e` 问题**  
+   在 `onError` 中直接 `throw e` 会导致异常在异步上下文中重新抛出，但此时已脱离原始调用栈，可能无法被全局异常处理程序捕获（如 ASP.NET 或 GUI 应用的 `AppDomain.UnhandledException`）。  
+   **建议**：改为记录日志或触发全局异常处理器，例如：
+   ```csharp
+   onError: e => Logger.LogError(e)
+   ```
+
+2. **异步操作的完成顺序**  
+   `IsDataLoaded` 可能在数据尚未加载完成时被错误地设置为 `true`（取决于 `onCompleted` 的调用时机）。  
+   **建议**：仅在 `Data` 赋值后更新状态：
+   ```csharp
+   private async Task LoadDataAsync()
+   {
+       await Task.Delay(1000);
+       Data = Enumerable.Range(1, 10).ToList();
+       IsDataLoaded = true; // 直接在异步方法内更新状态
+   }
+   ```
+
+3. **`async void` 的谨慎使用**  
+   `SafeFireAndForget` 是 `async void` 方法，虽然此处通过回调处理异常，但需确保所有代码路径都覆盖异常处理。
+
+---
+
+### 总结
+通过封装 `async void` 方法并在内部处理 `try-catch` 和回调，代码实现了：
+- **异常安全**：所有异常通过回调传递，避免未处理异常。
+- **状态管理**：通过 `onCompleted` 更新业务状态。
+- **可扩展性**：可通过回调灵活处理不同场景。
+
