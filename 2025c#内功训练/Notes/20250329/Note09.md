@@ -279,7 +279,7 @@ _ = FooAsync2().ContinueWith(task =>
 - **始终`await`异步调用**：除非明确需要“火并忘记”且接受潜在未处理异常。
 - **避免静默丢弃任务**：丢弃任务（`_ =`）易导致异常丢失，建议仅在明确处理异常时使用。
 
-### 3. 安全的用Fire-and-forget调用异步方法
+### 3. 安全的用Fire-and-forget调用异步方法（一）SafeFireAndForget方案
 
 ```csharp
 #region Async Call in Ctor
@@ -290,18 +290,11 @@ internal class SyncAndAsync2
     {
         Console.WriteLine("Start...");
 
-        try
-        {
-            var dataModel = new MyDataModel();
-            Console.WriteLine("Loading data...");
-            await Task.Delay(2000);
-            var data = dataModel.Data;
-            Console.WriteLine($"Data is loaded: {dataModel.IsDataLoaded}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error Message: {ex.Message}");
-        }
+        var dataModel = new MyDataModel();
+        Console.WriteLine("Loading data...");
+        await Task.Delay(2000);
+        var data = dataModel.Data;
+        Console.WriteLine($"Data is loaded: {dataModel.IsDataLoaded}");
 
         Console.WriteLine("Done.");
     }
@@ -315,7 +308,7 @@ internal class MyDataModel
     public MyDataModel()
     {
         //LoadDataAsync(); //直接使用Fire-and-forget方式调用无法处理异常，也无法观察任务状态
-        SafeFireAndForget(LoadDataAsync(), () => { IsDataLoaded = true; }, e => throw e);
+        SafeFireAndForget(LoadDataAsync2(), () => { IsDataLoaded = false; }, ex => { Console.WriteLine($"Error Message: {ex.Message}"); });
     }
 
     private static async void SafeFireAndForget(Task task, Action? onCompleted = null, Action<Exception>? onError = null)
@@ -335,6 +328,12 @@ internal class MyDataModel
     {
         await Task.Delay(1000);
         Data = Enumerable.Range(1, 10).ToList();
+    }
+
+    private async Task LoadDataAsync2()
+    {
+        await Task.Delay(1000);
+        throw new Exception("Failed to load data.");
     }
 }
 
@@ -362,88 +361,230 @@ static class TaskExtensions
 
 ---
 
-这段代码通过以下几个关键点安全地实现了“一发即忘”（Fire-and-Forget）并处理异常：
+这段代码通过以下机制安全地实现了一发即忘（Fire-and-forget）并处理异常：
+
+1. **异步异常捕获机制**：
+   - `SafeFireAndForget`方法被标记为`async void`，使其成为可独立运行的异步操作
+   - 内部使用`try-catch`块包裹`await task`语句，确保捕获所有同步和异步异常
+   - 通过`onError`回调参数传递异常信息（示例中输出到控制台）
+
+2. **状态回调机制**：
+   - 提供`onCompleted`回调用于处理成功场景（示例中设置IsDataLoaded = false）
+   - 通过可选参数设计允许选择性处理完成/失败事件
+
+3. **任务生命周期管理**：
+   - 使用`await`确保任务完成前保持对象引用
+   - 避免直接使用`.Result`或`.Wait()`可能造成的死锁
+
+4. **扩展方法支持**：
+   - `TaskExtensions.Forget`提供链式调用语法
+   - 保持统一异常处理逻辑
+
+5. **构造函数安全调用**：
+   - 通过包装异步方法避免直接在构造函数中使用`async void`
+   - 防止未处理异常导致程序崩溃
+
+典型使用场景：
+```csharp
+public MyDataModel()
+{
+    // 安全启动异步初始化
+    this.LoadDataAsync()
+        .Forget(
+            onCompleted: () => IsDataLoaded = true,
+            onError: ex => Logger.LogError(ex)
+        );
+}
+```
+
+这种模式适用于不需要等待结果但需要确保异常处理的场景（如后台初始化、事件通知等），但需注意异步操作的生命周期管理。
+
+### 4. 安全的用Fire-and-forget调用异步方法（二） ContinueWith方案
+
+```csharp
+#region Async Call in Ctor2
+internal class SyncAndAsync3
+{
+    [Test]
+    public async Task RunLoadingDataAsync2()
+    {
+        Console.WriteLine("Start...");
+
+        var dataModel = new MyDataModel2();
+        Console.WriteLine("Loading data...");
+        await Task.Delay(2000);
+        var data = dataModel.Data;
+        Console.WriteLine($"Data is loaded: {dataModel.IsDataLoaded}");
+
+        Console.WriteLine("Done.");
+    }
+}
+internal class MyDataModel2
+{
+    public List<int>? Data { get; private set; }
+
+    public bool IsDataLoaded { get; private set; } = false;
+
+    public MyDataModel2()
+    {
+        //LoadDataAsync(); //直接使用Fire-and-forget方式调用无法处理异常，也无法观察任务状态
+        LoadDataAsync2().ContinueWith(t => { OnDataLoaded(t); }, TaskContinuationOptions.None);
+    }
+
+    private bool OnDataLoaded(Task task)
+    {
+        if (task.IsFaulted)
+        {
+            Console.WriteLine($"Error: {task.Exception.InnerException?.Message}");
+            return false;
+        }
+        return true;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        await Task.Delay(1000);
+        Data = Enumerable.Range(1, 10).ToList();
+    }
+
+    private async Task LoadDataAsync2()
+    {
+        await Task.Delay(1000);
+        throw new Exception("Failed to load data.");
+    }
+}
+#endregion
+```
 
 ---
 
-### 1. **避免直接使用 `async void` 的裸调用**
-   - 原始问题中直接调用 `LoadDataAsync()`（无包装）会导致未观察的异常（Unobserved Task Exception）。
-   - 代码通过 **`SafeFireAndForget` 方法** 包装异步操作，强制捕获所有异常。
+运行结果如下：
+
+![](imgs/06.PNG)
 
 ---
 
-### 2. **通过回调传递状态和异常**
+以下是对该C#代码安全实现一发即忘（Fire-and-Forget）机制的分析，以及使用`ContinueWith`可能引发的问题：
+
+---
+
+### **安全实现一发即忘的关键机制**
+1. **异常捕获与处理**
+   - 通过`ContinueWith`注册回调，在`OnDataLoaded`方法中检查`task.IsFaulted`
+   - 显式访问`task.Exception.InnerException`提取异常信息（示例中输出错误日志）
+   - 避免了未观察异常（Unobserved Exception）导致进程崩溃的风险
+
+2. **异步任务与构造函数的解耦**
+   - 在构造函数中通过`ContinueWith`触发异步操作，不阻塞构造函数执行
+   - 通过回调机制将异步操作结果与对象状态更新分离
+
+3. **可控的任务延续**
+   - 使用`TaskContinuationOptions.None`确保无论任务成功/失败都会执行回调
+   - 在统一入口`OnDataLoaded`中集中处理所有任务完成状态
+
+---
+
+### **ContinueWith的潜在问题**
+1. **上下文丢失（Context Loss）**
+   - **问题**：默认不捕获同步上下文（SynchronizationContext），可能导致：
+     - UI线程应用中回调执行在非UI线程，引发跨线程访问问题
+     - ASP.NET Core中`HttpContext`丢失，访问`HttpContext.Current`为null
+   - **示例**：若在WinForms中更新UI控件，需显式捕获上下文：
+     ```csharp
+     .ContinueWith(t => ..., TaskScheduler.FromCurrentSynchronizationContext())
+     ```
+
+2. **异常处理不完整**
+   - **问题**：若未检查`task.IsFaulted`或忽略`task.Exception`：
+     - 异常可能被静默吞噬（如示例未重新抛出或记录日志）
+     - 违反[异常传播规则](https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/exception-handling-task-parallel-library)
+   - **风险点**：
+     ```csharp
+     if (task.IsFaulted)
+     {
+         // 仅输出InnerException.Message，未处理AggregateException
+         Console.WriteLine(task.Exception.InnerException?.Message); 
+     }
+     ```
+
+3. **状态管理缺陷**
+   - **问题**：回调中未正确更新对象状态
+     - 示例中`OnDataLoaded`返回`bool`但未使用返回值
+     - `IsDataLoaded`属性在任务成功后仍为`false`（逻辑错误）
+   - **后果**：对象状态与实际异步操作结果不一致
+
+4. **未处理的嵌套异常**
+   - **问题**：若回调代码自身抛出异常：
+     ```csharp
+     .ContinueWith(t => { throw new Exception(); }) // 新异常无法被捕获
+     ```
+   - **结果**：导致未观察异常，.NET 4.5+默认触发`TaskScheduler.UnobservedTaskException`
+
+5. **延续任务链失控**
+   - **问题**：未管控延续任务的执行条件和资源释放
+     - 可能引发意外的长任务链（如未使用`CancellationToken`）
+     - 内存泄漏风险（如闭包捕获外部对象导致无法GC回收）
+
+---
+
+### **改进建议**
+1. **显式指定延续选项**
    ```csharp
-   SafeFireAndForget(
-       LoadDataAsync(),
-       onCompleted: () => { IsDataLoaded = true; },
-       onError: e => throw e
-   );
+   .ContinueWith(t => OnDataLoaded(t), 
+       TaskContinuationOptions.ExecuteSynchronously | 
+       TaskContinuationOptions.DenyChildAttach)
    ```
-   - **`onCompleted` 回调**：异步操作完成后更新 `IsDataLoaded` 状态。
-   - **`onError` 回调**：将异常传递给调用方（通过 `throw e` 抛出，但需注意下文风险）。
 
----
-
-### 3. **异常安全封装**
-   `SafeFireAndForget` 方法内部通过 `try-catch` 捕获所有异常：
+2. **完整处理异常**
    ```csharp
-   private static async void SafeFireAndForget(Task task, Action? onCompleted, Action<Exception>? onError)
+   private void OnDataLoaded(Task task)
    {
-       try
+       if (task.Exception != null) 
        {
-           await task;
-           onCompleted?.Invoke();
+           foreach (var ex in task.Exception.Flatten().InnerExceptions)
+           {
+               _logger.LogError(ex, "Loading failed");
+           }
        }
-       catch (Exception ex)
+       else 
        {
-           onError?.Invoke(ex); // 触发异常回调
+           IsDataLoaded = true; // 显式更新状态
        }
    }
    ```
-   - 确保异步操作中的异常不会“沉默”或导致未处理异常。
 
----
-
-### 4. **扩展方法支持（可选）**
-   `TaskExtensions.Forget` 提供了类似的封装，使代码更简洁：
+3. **结合CancellationToken**
    ```csharp
-   LoadDataAsync().Forget(
-       onCompleted: () => IsDataLoaded = true,
-       onError: e => Console.WriteLine(e.Message)
-   );
-   ```
+   private readonly CancellationTokenSource _cts = new();
 
----
-
-### ⚠️ **潜在风险与改进建议**
-1. **`onError` 中的 `throw e` 问题**  
-   在 `onError` 中直接 `throw e` 会导致异常在异步上下文中重新抛出，但此时已脱离原始调用栈，可能无法被全局异常处理程序捕获（如 ASP.NET 或 GUI 应用的 `AppDomain.UnhandledException`）。  
-   **建议**：改为记录日志或触发全局异常处理器，例如：
-   ```csharp
-   onError: e => Logger.LogError(e)
-   ```
-
-2. **异步操作的完成顺序**  
-   `IsDataLoaded` 可能在数据尚未加载完成时被错误地设置为 `true`（取决于 `onCompleted` 的调用时机）。  
-   **建议**：仅在 `Data` 赋值后更新状态：
-   ```csharp
-   private async Task LoadDataAsync()
+   public MyDataModel2()
    {
-       await Task.Delay(1000);
-       Data = Enumerable.Range(1, 10).ToList();
-       IsDataLoaded = true; // 直接在异步方法内更新状态
+       LoadDataAsync2()
+           .ContinueWith(t => OnDataLoaded(t), _cts.Token);
    }
    ```
 
-3. **`async void` 的谨慎使用**  
-   `SafeFireAndForget` 是 `async void` 方法，虽然此处通过回调处理异常，但需确保所有代码路径都覆盖异常处理。
+4. **避免状态污染**
+   ```csharp
+   // 使用Interlocked保证原子操作
+   if (task.IsCompletedSuccessfully)
+   {
+       Interlocked.Exchange(ref _data, loadedData);
+   }
+   ```
 
 ---
 
-### 总结
-通过封装 `async void` 方法并在内部处理 `try-catch` 和回调，代码实现了：
-- **异常安全**：所有异常通过回调传递，避免未处理异常。
-- **状态管理**：通过 `onCompleted` 更新业务状态。
-- **可扩展性**：可通过回调灵活处理不同场景。
+### **与首个方案的对比**
+| 特性               | SafeFireAndForget方案          | ContinueWith方案              |
+|--------------------|-------------------------------|------------------------------|
+| **异常可见性**      | 通过try-catch直接捕获          | 依赖手动检查`task.Exception`  |
+| **上下文保留**      | 默认保留同步上下文（await特性）| 需显式指定`TaskScheduler`     |
+| **代码可读性**      | 更符合async/await模式          | 回调嵌套降低可维护性          |
+| **状态管理**        | 通过回调参数明确区分成功/失败  | 需手动在回调中处理状态        |
+| **资源释放**        | 天然支持using作用域            | 需手动管理CancellationToken   |
 
+---
+
+**结论**：  
+虽然`ContinueWith`能实现一发即忘，但其对上下文、异常和状态的管理成本较高。在现代化C#开发中，更推荐通过`async/await`配合`Task.Run`或专用Fire-and-Forget框架（如[Microsoft.VisualStudio.Threading](https://github.com/microsoft/vs-threading)）来实现安全的一发即忘模式。

@@ -85,18 +85,11 @@ namespace TestThreadSecurity
         {
             Console.WriteLine("Start...");
 
-            try
-            {
-                var dataModel = new MyDataModel();
-                Console.WriteLine("Loading data...");
-                await Task.Delay(2000);
-                var data = dataModel.Data;
-                Console.WriteLine($"Data is loaded: {dataModel.IsDataLoaded}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error Message: {ex.Message}");
-            }
+            var dataModel = new MyDataModel();
+            Console.WriteLine("Loading data...");
+            await Task.Delay(2000);
+            var data = dataModel.Data;
+            Console.WriteLine($"Data is loaded: {dataModel.IsDataLoaded}");
 
             Console.WriteLine("Done.");
         }
@@ -110,7 +103,7 @@ namespace TestThreadSecurity
         public MyDataModel()
         {
             //LoadDataAsync(); //直接使用Fire-and-forget方式调用无法处理异常，也无法观察任务状态
-            SafeFireAndForget(LoadDataAsync(), () => { IsDataLoaded = true; }, e => throw e);
+            SafeFireAndForget(LoadDataAsync2(), () => { IsDataLoaded = false; }, ex => { Console.WriteLine($"Error Message: {ex.Message}"); });
         }
 
         private static async void SafeFireAndForget(Task task, Action? onCompleted = null, Action<Exception>? onError = null)
@@ -131,6 +124,12 @@ namespace TestThreadSecurity
             await Task.Delay(1000);
             Data = Enumerable.Range(1, 10).ToList();
         }
+
+        private async Task LoadDataAsync2()
+        {
+            await Task.Delay(1000);
+            throw new Exception("Failed to load data.");
+        }
     }
 
     static class TaskExtensions
@@ -146,6 +145,59 @@ namespace TestThreadSecurity
             {
                 onError?.Invoke(ex);
             }
+        }
+    }
+    #endregion
+
+    #region Async Call in Ctor2
+    internal class SyncAndAsync3
+    {
+        [Test]
+        public async Task RunLoadingDataAsync2()
+        {
+            Console.WriteLine("Start...");
+
+            var dataModel = new MyDataModel2();
+            Console.WriteLine("Loading data...");
+            await Task.Delay(2000);
+            var data = dataModel.Data;
+            Console.WriteLine($"Data is loaded: {dataModel.IsDataLoaded}");
+
+            Console.WriteLine("Done.");
+        }
+    }
+    internal class MyDataModel2
+    {
+        public List<int>? Data { get; private set; }
+
+        public bool IsDataLoaded { get; private set; } = false;
+
+        public MyDataModel2()
+        {
+            //LoadDataAsync(); //直接使用Fire-and-forget方式调用无法处理异常，也无法观察任务状态
+            LoadDataAsync2().ContinueWith(t => { OnDataLoaded(t); }, TaskContinuationOptions.None);
+        }
+
+        private bool OnDataLoaded(Task task)
+        {
+            if (task.IsFaulted)
+            {
+                Console.WriteLine($"Error: {task.Exception.InnerException?.Message}");
+                return false;
+            }
+            return true;
+        }
+
+        private async Task LoadDataAsync()
+        {
+            await Task.Delay(1000);
+            Data = Enumerable.Range(1, 10).ToList();
+        }
+
+        private async Task LoadDataAsync2()
+        {
+            await Task.Delay(1000);
+            throw new Exception("Failed to load data.");
         }
     }
     #endregion
