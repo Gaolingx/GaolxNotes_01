@@ -198,6 +198,10 @@ private async Task FooAsync2()
 ### 2. 一发即忘（Fire-and-forget）
 
 ```csharp
+/// <summary>
+/// 不安全的Fire-and-forget（一）
+/// </summary>
+/// <returns></returns>
 [Test]
 public async Task RunGetMessageAsync3()
 {
@@ -216,41 +220,18 @@ public async Task RunGetMessageAsync3()
     Console.WriteLine("Done.");
 }
 
-private async Task FooAsync2()
-{
-    await Task.Delay(1000);
-    throw new Exception("FooAsync2 Error!");
-}
-```
-
-运行结果如下，可以看出异常未被正确捕获，我们无法捕获到FooAsync2抛出的异常，也无法判断任务执行的状态
-
-![](imgs/04.PNG)
-
----
-
-在C#中，调用异步方法时若未使用`await`关键字，异常将无法被常规的`try-catch`捕获，因为此时任务（`Task`）会被“火并忘记”（fire-and-forget）。未等待的任务异常会被静默封装在返回的`Task`对象中，而非传播到当前上下文。以下是关键原因及解决方案：
-
-### 问题原因
-1. **未观察任务状态**：  
-   `_ = FooAsync2()`丢弃了返回的`Task`，导致该任务的异常未被任何代码观察（如`await`、`.Wait()`或访问`.Exception`属性）。
-
-2. **异步异常传播机制**：  
-   C#中，异步方法的异常仅在通过`await`等待任务时才会抛出到当前上下文。若未等待，异常会被保留在任务中，直到被显式处理或成为未观察异常（可能触发`TaskScheduler.UnobservedTaskException`）。
-
-### 解决方案
-**使用`await`等待任务**：  
-在`try`块内`await`异步调用，使异常能正确传播到`catch`块：
-
-```csharp
+/// <summary>
+/// 不安全的Fire-and-forget（二）
+/// </summary>
+/// <returns></returns>
 [Test]
-public async Task RunGetMessageAsync3()
+public async Task RunGetMessageAsync4()
 {
     Console.WriteLine("Start...");
 
     try
     {
-        await FooAsync2(); // 使用await等待任务，异常会被捕获
+       VoidFooAsync2(); //无法捕获异常
         await Task.Delay(2000);
     }
     catch (Exception ex)
@@ -260,29 +241,125 @@ public async Task RunGetMessageAsync3()
 
     Console.WriteLine("Done.");
 }
-```
 
-### 其他场景：需后台执行任务但仍需处理异常
-若需让任务在后台运行，但需单独处理其异常，可显式捕获任务异常：
-
-```csharp
-_ = FooAsync2().ContinueWith(task => 
+private async Task FooAsync2()
 {
-    if (task.Exception != null)
-    {
-        Console.WriteLine($"后台任务异常: {task.Exception.Message}");
-    }
-}, TaskScheduler.Default);
+    await Task.Delay(1000);
+    throw new Exception("FooAsync2 Error!");
+}
+
+private async void VoidFooAsync2()
+{
+    await Task.Delay(1000);
+    throw new Exception("FooAsync2 Error!");
+}
 ```
 
-### 关键结论
-- **始终`await`异步调用**：除非明确需要“火并忘记”且接受潜在未处理异常。
-- **避免静默丢弃任务**：丢弃任务（`_ =`）易导致异常丢失，建议仅在明确处理异常时使用。
+运行结果如下，可以看出异常未被正确捕获，`RunGetMessageAsync3`方法无法捕获到FooAsync2抛出的异常，也无法判断任务执行的状态，而`RunGetMessageAsync4`则直接导致进程崩溃。
+
+![](imgs/04.PNG)
+
+![](imgs/07.PNG)
+
+---
+
+在C#中，Fire-and-forget模式的两个示例存在以下问题：
+
+---
+
+### **1. 不安全的Fire-and-forget（一）`_ = FooAsync2()`**
+#### 问题分析：
+- **任务被丢弃**：通过`_ =`忽略返回的`Task`，导致异常无法被观察。
+- **未处理的Task异常**：当`FooAsync2`抛出异常时，异常会存储在返回的`Task`中。但由于没有`await`或显式检查该`Task`，异常成为“未观察的异常”（Unobserved Exception）。此类异常不会触发调用方的`catch`块，而是在垃圾回收时可能触发`TaskScheduler.UnobservedTaskException`事件（默认不崩溃，但不可靠）。
+
+#### 示例代码的缺陷：
+```csharp
+_ = FooAsync2(); // 异常被存储在丢弃的Task中，无法被catch捕获
+```
+
+---
+
+### **2. 不安全的Fire-and-forget（二）`VoidFooAsync2()`**
+#### 问题分析：
+- **`async void`的致命缺陷**：`async void`方法没有返回`Task`，因此异常无法通过任务传播。当`VoidFooAsync2`抛出异常时，异常会直接传播到同步上下文（如`SynchronizationContext`），导致：
+  - 在UI应用程序中，可能引发全局未处理异常，导致进程崩溃。
+  - 在非UI环境（如控制台或测试框架）中，异常可能被静默吞没或触发`AppDomain.UnhandledException`，但**永远不会进入调用方的`catch`块**。
+
+#### 示例代码的缺陷：
+```csharp
+private async void VoidFooAsync2() // async void 无法被安全捕获异常！
+{
+    await Task.Delay(1000);
+    throw new Exception("Error!"); // 异常直接传播到同步上下文
+}
+```
+
+---
+
+### **为什么无法捕获异常？**
+1. **Fire-and-forget（一）的异常路径**：
+   ```text
+   FooAsync2 → Task（异常存储于Task） → 未观察的Task → 未被catch捕获
+   ```
+2. **Fire-and-forget（二）的异常路径**：
+   ```text
+   VoidFooAsync2 → 异常直接抛出到同步上下文 → 未被catch捕获
+   ```
+
+---
+
+### **解决方案**
+#### 1. 对返回`Task`的方法：
+- **显式处理异常**（推荐）：
+  ```csharp
+  _ = FooAsync2().ContinueWith(task =>
+  {
+      if (task.Exception != null)
+      {
+          Console.WriteLine($"Error: {task.Exception.Message}");
+      }
+  }, TaskScheduler.Default);
+  ```
+- **全局处理未观察到的异常**（需谨慎）：
+  ```csharp
+  TaskScheduler.UnobservedTaskException += (sender, e) =>
+  {
+      Console.WriteLine($"Unobserved error: {e.Exception.Message}");
+      e.SetObserved(); // 标记为已处理，避免进程崩溃
+  };
+  ```
+
+#### 2. 避免使用`async void`：
+- **始终优先使用`async Task`**：
+  ```csharp
+  private async Task VoidFooAsync2() // 改为返回Task
+  {
+      await Task.Delay(1000);
+      throw new Exception("Error!");
+  }
+  ```
+- **强制调用方处理Task**：
+  ```csharp
+  await VoidFooAsync2(); // 需要await，不再是Fire-and-forget
+  ```
+  若必须Fire-and-forget：
+  ```csharp
+  _ = VoidFooAsync2().ConfigureAwait(false); // 至少保留Task
+  ```
+
+---
+
+### **总结**
+- **永远不要忽略`Task`**：使用`_ =`丢弃`Task`会导致异常丢失。
+- **永远避免`async void`**：除非在事件处理程序（如UI按钮点击）中，且内部已用`try-catch`包裹所有代码。
+- **Fire-and-forget需谨慎**：确保异常有明确的处理路径（如日志记录）。
+
+---
 
 ### 3. 安全的用Fire-and-forget调用异步方法（一）SafeFireAndForget方案
 
 ```csharp
-#region Async Call in Ctor
+#region Async Call in Ctor 1
 internal class SyncAndAsync2
 {
     [Test]
@@ -308,6 +385,8 @@ internal class MyDataModel
     public MyDataModel()
     {
         //LoadDataAsync(); //直接使用Fire-and-forget方式调用无法处理异常，也无法观察任务状态
+        //SafeFireAndForget(LoadDataAsync(), () => { IsDataLoaded = false; }, ex => { Console.WriteLine($"Error Message: {ex.Message}"); });
+        LoadDataAsync2().Forget(() => { IsDataLoaded = false; }, ex => { Console.WriteLine($"Error Message: {ex.Message}"); });
         SafeFireAndForget(LoadDataAsync2(), () => { IsDataLoaded = false; }, ex => { Console.WriteLine($"Error Message: {ex.Message}"); });
     }
 
@@ -402,7 +481,7 @@ public MyDataModel()
 ### 4. 安全的用Fire-and-forget调用异步方法（二） ContinueWith方案
 
 ```csharp
-#region Async Call in Ctor2
+#region Async Call in Ctor 2
 internal class SyncAndAsync3
 {
     [Test]
@@ -428,6 +507,7 @@ internal class MyDataModel2
     public MyDataModel2()
     {
         //LoadDataAsync(); //直接使用Fire-and-forget方式调用无法处理异常，也无法观察任务状态
+        //LoadDataAsync().ContinueWith(t => { OnDataLoaded(t); }, TaskContinuationOptions.None);
         LoadDataAsync2().ContinueWith(t => { OnDataLoaded(t); }, TaskContinuationOptions.None);
     }
 

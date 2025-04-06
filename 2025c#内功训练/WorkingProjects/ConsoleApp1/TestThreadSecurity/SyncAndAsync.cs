@@ -41,6 +41,10 @@ namespace TestThreadSecurity
             Console.WriteLine("Done.");
         }
 
+        /// <summary>
+        /// 不安全的Fire-and-forget（一）
+        /// </summary>
+        /// <returns></returns>
         [Test]
         public async Task RunGetMessageAsync3()
         {
@@ -49,6 +53,28 @@ namespace TestThreadSecurity
             try
             {
                 _ = FooAsync2(); //无法捕获异常
+                await Task.Delay(2000);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error Type:{ex.GetType()}, Error Message:{ex.Message}");
+            }
+
+            Console.WriteLine("Done.");
+        }
+
+        /// <summary>
+        /// 不安全的Fire-and-forget（二）
+        /// </summary>
+        /// <returns></returns>
+        [Test]
+        public async Task RunGetMessageAsync4()
+        {
+            Console.WriteLine("Start...");
+
+            try
+            {
+                VoidFooAsync2(); //无法捕获异常
                 await Task.Delay(2000);
             }
             catch (Exception ex)
@@ -75,9 +101,15 @@ namespace TestThreadSecurity
             await Task.Delay(1000);
             throw new Exception("FooAsync2 Error!");
         }
+
+        private async void VoidFooAsync2()
+        {
+            await Task.Delay(1000);
+            throw new Exception("FooAsync2 Error!");
+        }
     }
 
-    #region Async Call in Ctor
+    #region Async Call in Ctor 1
     internal class SyncAndAsync2
     {
         [Test]
@@ -103,6 +135,8 @@ namespace TestThreadSecurity
         public MyDataModel()
         {
             //LoadDataAsync(); //直接使用Fire-and-forget方式调用无法处理异常，也无法观察任务状态
+            //SafeFireAndForget(LoadDataAsync(), () => { IsDataLoaded = false; }, ex => { Console.WriteLine($"Error Message: {ex.Message}"); });
+            LoadDataAsync2().Forget(() => { IsDataLoaded = false; }, ex => { Console.WriteLine($"Error Message: {ex.Message}"); });
             SafeFireAndForget(LoadDataAsync2(), () => { IsDataLoaded = false; }, ex => { Console.WriteLine($"Error Message: {ex.Message}"); });
         }
 
@@ -149,7 +183,7 @@ namespace TestThreadSecurity
     }
     #endregion
 
-    #region Async Call in Ctor2
+    #region Async Call in Ctor 2
     internal class SyncAndAsync3
     {
         [Test]
@@ -175,6 +209,7 @@ namespace TestThreadSecurity
         public MyDataModel2()
         {
             //LoadDataAsync(); //直接使用Fire-and-forget方式调用无法处理异常，也无法观察任务状态
+            //LoadDataAsync().ContinueWith(t => { OnDataLoaded(t); }, TaskContinuationOptions.None);
             LoadDataAsync2().ContinueWith(t => { OnDataLoaded(t); }, TaskContinuationOptions.None);
         }
 
