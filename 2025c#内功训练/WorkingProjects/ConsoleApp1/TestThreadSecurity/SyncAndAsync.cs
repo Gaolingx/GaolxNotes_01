@@ -236,4 +236,59 @@ namespace TestThreadSecurity
         }
     }
     #endregion
+
+    #region Fire-and-forget Later
+    internal class SyncAndAsync4
+    {
+        [Test]
+        public async Task RunLoadingDataAsync3()
+        {
+            Console.WriteLine("Start...");
+
+            var dataModel = new MyDataModel3();
+            Console.WriteLine("Loading data...");
+            await Task.Delay(2000);
+            await dataModel.DisplayDataAsync();
+
+            Console.WriteLine("Done.");
+        }
+    }
+    internal class MyDataModel3
+    {
+        public List<int>? Data { get; private set; }
+
+        public bool IsDataLoaded { get; private set; } = false;
+
+        private readonly Task loadDataTask;
+
+        public MyDataModel3()
+        {
+            // 把异步任务存储成类中的一个私有字段，任务状态（是否失败、完成等）可被观察
+            loadDataTask = LoadDataAsync();
+        }
+
+        public async Task DisplayDataAsync()
+        {
+            await loadDataTask;
+            if (Data != null)
+            {
+                foreach (var data in Data)
+                {
+                    Console.WriteLine(data);
+                }
+            }
+        }
+
+        private async Task LoadDataAsync()
+        {
+            await Task.Delay(1000);
+            Data = Enumerable.Range(1, 10).ToList();
+        }
+    }
+    #endregion
+
+    #region Async Factory
+
+
+    #endregion
 }

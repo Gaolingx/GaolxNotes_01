@@ -231,7 +231,7 @@ public async Task RunGetMessageAsync4()
 
     try
     {
-       VoidFooAsync2(); //无法捕获异常
+        VoidFooAsync2(); //无法捕获异常
         await Task.Delay(2000);
     }
     catch (Exception ex)
@@ -255,7 +255,7 @@ private async void VoidFooAsync2()
 }
 ```
 
-运行结果如下，可以看出异常未被正确捕获，`RunGetMessageAsync3`方法无法捕获到FooAsync2抛出的异常，也无法判断任务执行的状态，而`RunGetMessageAsync4`则直接导致进程崩溃。
+运行结果如下，可以看出`RunGetMessageAsync3`方法无法捕获到FooAsync2抛出的异常，也无法判断任务执行的状态，而`RunGetMessageAsync4`因为出现未经处理的异常（异常没有被捕获或处理），直接导致进程崩溃。
 
 ![](imgs/04.PNG)
 
@@ -624,3 +624,82 @@ internal class MyDataModel2
 
 ---
 
+### 5. 安全的用Fire-and-forget调用异步方法（三） Fire-and-forget Later方案
+
+我们可以先用Task的字段包装一个异步任务，在构造方法里面给Task赋值，然后直到该异步任务被完成（IsCompleted为true）后，才能后续的操作。即我们可以在每个需要访问异步结果的方法前都await这个Task确保任务完成。
+
+```csharp
+#region Fire-and-forget Later
+internal class SyncAndAsync4
+{
+    [Test]
+    public async Task RunLoadingDataAsync3()
+    {
+        Console.WriteLine("Start...");
+
+        var dataModel = new MyDataModel3();
+        Console.WriteLine("Loading data...");
+        await Task.Delay(2000);
+        await dataModel.DisplayDataAsync();
+
+        Console.WriteLine("Done.");
+    }
+}
+internal class MyDataModel3
+{
+    public List<int>? Data { get; private set; }
+
+    public bool IsDataLoaded { get; private set; } = false;
+
+    private readonly Task loadDataTask;
+
+    public MyDataModel3()
+    {
+        // 把异步任务存储成类中的一个私有字段，任务状态（是否失败、完成等）可被观察
+        loadDataTask = LoadDataAsync();
+    }
+
+    public async Task DisplayDataAsync()
+    {
+        await loadDataTask;
+        if (Data != null)
+        {
+            foreach (var data in Data)
+            {
+                Console.WriteLine(data);
+            }
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        await Task.Delay(1000);
+        Data = Enumerable.Range(1, 10).ToList();
+    }
+}
+#endregion
+```
+
+在C#中，构造函数无法直接使用`async/await`，但可以通过以下方式在构造函数中启动异步任务，并在后续方法中等待其完成：
+
+### 实现原理：
+1. **启动任务并存储引用**：在构造函数中调用异步方法，将返回的`Task`保存为类的私有字段。
+2. **后续方法等待任务**：在需要访问异步结果的方法中，通过`await`该`Task`确保任务完成。
+
+### 关键点：
+- **构造函数中的任务启动**：`LoadDataAsync()`在构造函数中被调用，任务立即开始执行。
+- **非阻塞构造**：构造函数不等待任务完成，避免阻塞。
+- **确保数据就绪**：任何需要数据的方法（如`DisplayDataAsync`）必须先`await loadDataTask`，确保数据加载完成。
+
+### 使用示例：
+```csharp
+var dataModel = new MyDataModel3();  // 开始加载数据
+// ...其他操作...
+await dataModel.DisplayDataAsync();  // 等待数据加载完成后显示
+```
+
+这种方式通过分离任务启动与等待，实现了构造时异步初始化，是C#中处理异步初始化的常见模式。
+
+### 6. 安全的用Fire-and-forget调用异步方法（四） Async Factory方案
+
+在异步工厂模式中，我们可以将这个类包装成只暴露工厂方法的类（Create、Build等），并将这个类本身的构造方法隐藏起来，不能显式的构造这个类，实现异步构造的方法。
