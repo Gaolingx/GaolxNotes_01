@@ -1,3 +1,7 @@
-.vs
-bin
-obj
+.DS_Store
+.idea/
+.vs/
+.vscode/
+.obsidian/
+bin/
+obj/
