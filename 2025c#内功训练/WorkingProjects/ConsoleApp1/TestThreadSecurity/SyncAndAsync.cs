@@ -288,7 +288,36 @@ namespace TestThreadSecurity
     #endregion
 
     #region Async Factory
+    internal class SyncAndAsync5
+    {
+        [Test]
+        public async Task RunMyService()
+        {
+            var service = await MyService.CreateMyService();
+            Console.WriteLine("MyService is created.");
+        }
+    }
+    internal class MyService
+    {
+        private MyService()
+        {
+            Console.WriteLine("This is MyService.");
+        }
 
+        private async Task InitSvcAsync()
+        {
+            Console.WriteLine("Init MyService...");
+            await Task.Delay(1000);
+        }
+
+        // 异步工厂方法，在这里调用初始化的构造函数，但无法注册给ioc容器，且对单例模式不友好。
+        public static async Task<MyService> CreateMyService()
+        {
+            var service = new MyService();
+            await service.InitSvcAsync();
+            return service;
+        }
+    }
 
     #endregion
 }

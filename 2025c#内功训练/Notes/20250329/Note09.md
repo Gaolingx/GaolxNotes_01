@@ -358,6 +358,8 @@ private async void VoidFooAsync2() // async void 无法被安全捕获异常！
 
 ### 3. 安全的用Fire-and-forget调用异步方法（一）SafeFireAndForget方案
 
+在C#中，构造函数无法直接使用`async/await`，我们需要通过一发即忘的方式在构造函数中启动异步任务，同时要能观察异步任务的状态。
+
 ```csharp
 #region Async Call in Ctor 1
 internal class SyncAndAsync2
@@ -626,7 +628,7 @@ internal class MyDataModel2
 
 ### 5. 安全的用Fire-and-forget调用异步方法（三） Fire-and-forget Later方案
 
-我们可以先用Task的字段包装一个异步任务，在构造方法里面给Task赋值，然后直到该异步任务被完成（IsCompleted为true）后，才能后续的操作。即我们可以在每个需要访问异步结果的方法前都await这个Task确保任务完成。
+我们可以先声明一个Task的字段包装异步任务，在构造方法里面给Task赋值，然后就可以在每个需要访问异步结果的方法前都await这个Task，直到该异步任务被完成（IsCompleted为true）后，才能执行后续的操作，确保任务完成。
 
 ```csharp
 #region Fire-and-forget Later
@@ -680,8 +682,6 @@ internal class MyDataModel3
 #endregion
 ```
 
-在C#中，构造函数无法直接使用`async/await`，但可以通过以下方式在构造函数中启动异步任务，并在后续方法中等待其完成：
-
 ### 实现原理：
 1. **启动任务并存储引用**：在构造函数中调用异步方法，将返回的`Task`保存为类的私有字段。
 2. **后续方法等待任务**：在需要访问异步结果的方法中，通过`await`该`Task`确保任务完成。
@@ -702,4 +702,176 @@ await dataModel.DisplayDataAsync();  // 等待数据加载完成后显示
 
 ### 6. 安全的用Fire-and-forget调用异步方法（四） Async Factory方案
 
-在异步工厂模式中，我们可以将这个类包装成只暴露工厂方法的类（Create、Build等），并将这个类本身的构造方法隐藏起来，不能显式的构造这个类，实现异步构造的方法。
+```csharp
+#region Async Factory
+internal class SyncAndAsync5
+{
+    [Test]
+    public async Task RunMyService()
+    {
+        var service = await MyService.CreateMyService();
+        Console.WriteLine("MyService is created.");
+    }
+}
+internal class MyService
+{
+    private MyService()
+    {
+        Console.WriteLine("This is MyService.");
+    }
+
+    private async Task InitSvcAsync()
+    {
+        Console.WriteLine("Init MyService...");
+        await Task.Delay(1000);
+    }
+
+    // 异步工厂方法，在这里调用初始化的构造函数，但无法注册给ioc容器，且对单例模式不友好。
+    public static async Task<MyService> CreateMyService()
+    {
+        var service = new MyService();
+        await service.InitSvcAsync();
+        return service;
+    }
+}
+
+#endregion
+```
+
+---
+
+运行结果如下：
+
+![](imgs/08.PNG)
+
+---
+
+在异步工厂模式中，C#通过静态工厂方法调用异步初始化逻辑，绕过构造函数无法异步的限制。以下是对实现方式、缺点及改进的分析：
+
+### 实现原理
+1. **私有构造函数**：禁止直接实例化，强制通过工厂方法创建。
+2. **异步工厂方法**：静态方法`CreateMyService`创建实例后，调用异步初始化方法`InitSvcAsync`，确保对象完成异步初始化后返回。
+
+### 缺点
+1. **依赖注入（IOC）不友好**  
+   多数IOC容器默认通过同步构造函数创建实例，无法直接注册需异步初始化的类。
+   
+2. **单例管理复杂**  
+   工厂方法每次返回新实例，需额外机制（如`Lazy<Task<T>>`）实现线程安全的单例。
+
+3. **初始化可能被绕过**  
+   若通过反射调用私有构造函数，会跳过异步初始化，导致对象状态不完整。
+
+4. **异常处理风险**  
+   异步初始化中的异常需在工厂方法或调用者处处理，增加复杂度。
+
+### 改进方案
+#### 1. 实现线程安全的单例
+使用`Lazy<Task<MyService>>`确保异步初始化仅执行一次：
+```csharp
+public class MyService
+{
+    private static readonly Lazy<Task<MyService>> _instance = 
+        new Lazy<Task<MyService>>(CreateMyServiceAsync);
+
+    private MyService() { }
+
+    private async Task InitAsync()
+    {
+        Console.WriteLine("Init MyService...");
+        await Task.Delay(1000);
+    }
+
+    public static Task<MyService> GetInstanceAsync() => _instance.Value;
+
+    private static async Task<MyService> CreateMyServiceAsync()
+    {
+        var service = new MyService();
+        await service.InitAsync();
+        return service;
+    }
+}
+```
+
+#### 2. 支持依赖注入
+- **自定义工厂接口**：定义`IAsyncFactory<T>`，在容器中注册工厂实现。
+- **异步初始化接口**：如`IAsyncInitializable`，容器创建实例后显式调用初始化方法。
+
+```csharp
+public interface IAsyncInitializable
+{
+    Task InitializeAsync();
+}
+
+public class MyService : IAsyncInitializable
+{
+    public MyService() { }
+
+    public async Task InitializeAsync()
+    {
+        Console.WriteLine("Init MyService...");
+        await Task.Delay(1000);
+    }
+}
+
+// 注册时结合工厂或容器扩展（伪代码）
+container.Register<MyService>(async () => {
+    var service = new MyService();
+    await service.InitializeAsync();
+    return service;
+});
+```
+
+#### 3. 强制初始化检查
+在方法中验证是否完成初始化，防止未初始化的使用：
+```csharp
+public class MyService
+{
+    private bool _isInitialized;
+
+    private MyService() { }
+
+    private async Task InitAsync() { /*...*/ }
+
+    public async Task DoWorkAsync()
+    {
+        if (!_isInitialized)
+            throw new InvalidOperationException("Not initialized.");
+        // 业务逻辑
+    }
+
+    public static async Task<MyService> CreateAsync()
+    {
+        var service = new MyService();
+        await service.InitAsync();
+        service._isInitialized = true;
+        return service;
+    }
+}
+```
+
+### 总结
+**优点**：通过工厂分离构造与初始化，解决异步构造难题。  
+**改进方向**：  
+- 使用`Lazy<Task<T>>`实现单例。  
+- 结合接口与IOC容器扩展支持异步初始化。  
+- 强制初始化检查提升健壮性。  
+- 在工厂方法中妥善处理异常，确保资源释放。
+
+### 7. 拓展
+
+第三方拓展：
+
+1. AsyncLazy：Nito.AsyncEx、Microsoft.VisualStudio.Threading
+2. JoinableTaskFactory：Microsoft.VisualStudio.Threading
+3. Ioc Container：Microsoft.Extensions.DependencyInjection
+4. Unit Test：Microsoft.VisualStudio.TestTools.UnitTesting
+
+冷知识 async方法：
+
+1. async Task Main：异步入口函数
+2. async void：注册事件/委托
+3. AsyncLazy：异步单例
+4. IAsyncEnumerable：异步迭代
+5. IAsyncDisposable：资源释放
+6. AsyncRelayCommand：给按钮绑定Command（WPF）
