@@ -127,9 +127,9 @@ internal class Demo3
 
 ![](imgs/03.PNG)
 
-### 3. 借助 SemaphoreSlim 实现 WaitAsync
+### 3. 借助 SemaphoreSlim 实现 WaitAsync（推荐）
 
-`lock(obj)`替代方案：使用异步友好的同步机制
+`lock(obj)`替代方案：使用异步友好的同步机制，dotnet原生提供的可在异步编程中使用的信号量，功能强大
 
 若需要在异步代码中实现临界区保护，应使用专为异步设计的同步原语，例如 `SemaphoreSlim` 的 `WaitAsync` 方法：
 
@@ -154,3 +154,101 @@ public async Task DoJobAsync()
   - `SemaphoreSlim.WaitAsync` 是异步的，不会阻塞线程。
   - 支持异步上下文中的线程安全操作。
 
+- **例子**
+
+```csharp
+internal class Demo4
+{
+    [Test]
+    public async Task RunDemo()
+    {
+        var semaphore = new SemaphoreSlim(1);
+        var start = DateTime.Now;
+        var tasks = Enumerable.Range(0, 10).Select(x => ComputeAsync(x, semaphore)).ToList();
+        var results = await Task.WhenAll(tasks);
+        Console.WriteLine(string.Join(", ", results));
+
+        var end = DateTime.Now;
+        Console.WriteLine($"Elapsed Time: {(end - start).TotalMilliseconds:F4} ms");
+    }
+
+
+    private async Task<int> ComputeAsync(int x, SemaphoreSlim semaphore)
+    {
+        await semaphore.WaitAsync();
+        await Task.Delay(200);
+        semaphore.Release();
+        return x * x;
+    }
+}
+```
+
+运行结果如下：
+
+![](imgs/04.PNG)
+
+### 4. 借助 AsyncAutoResetEvent 实现 WaitAsync
+
+注意：需引入`Nito.AsyncEx`命名空间。
+
+```csharp
+internal class Demo5
+{
+    [Test]
+    public async Task RunDemo()
+    {
+        var signal = new AsyncAutoResetEvent(false);
+
+        var setter = Task.Run(() =>
+        {
+            Thread.Sleep(1000);
+            signal.Set();
+        });
+
+        var waiter = Task.Run(async () =>
+        {
+            await signal.WaitAsync();
+            Console.WriteLine("Signal received !");
+        });
+
+        await Task.WhenAll(setter, waiter);
+    }
+}
+```
+
+运行结果如下：
+
+![](imgs/05.PNG)
+
+### 5. 借助 TaskCompletionSource 实现 WaitAsync（推荐）
+
+特点：可以设置Task结束的各种状态和返回值，不能重复使用，不能多次设置Task状态，，可作为一次性的信号量可通过`TrySetResult`检查
+
+```csharp
+internal class Demo6
+{
+    [Test]
+    public async Task RunDemo()
+    {
+        var tcs = new TaskCompletionSource();
+
+        var setter = Task.Run(() =>
+        {
+            Thread.Sleep(1000);
+            tcs.SetResult();
+        });
+
+        var waiter = Task.Run(async () =>
+        {
+            await tcs.Task;
+            Console.WriteLine("Signal received !");
+        });
+
+        await Task.WhenAll(setter, waiter);
+    }
+}
+```
+
+运行结果如下：
+
+![](imgs/06.PNG)
