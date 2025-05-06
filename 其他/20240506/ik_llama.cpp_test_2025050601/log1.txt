@@ -1,0 +1,166 @@
+PS C:\Users\Gaolingxiang> cd "D:\soft\ik_llama.cpp\llama-b3667-bin-win-avx512-x64"
+PS D:\soft\ik_llama.cpp\llama-b3667-bin-win-avx512-x64> ./llama-sweep-bench -m "D:\Models\download\unsloth\Qwen3-235B-A22B-128K-GGUF\files\Qwen3-235B-A22B-128K-Q8_0-00001-of-00006.gguf" -c 16384 -t 20 -ngl 0 -fa
+warning: not compiled with GPU offload support, --gpu-layers option will be ignored
+warning: see main README.md for information on enabling GPU BLAS support
+llama_model_loader: additional 5 GGUFs metadata loaded.
+llama_model_loader: loaded meta data with 42 key-value pairs and 1131 tensors from D:\Models\download\unsloth\Qwen3-235B-A22B-128K-GGUF\files\Qwen3-235B-A22B-128K-Q8_0-00001-of-00006.gguf (version GGUF V3 (latest))
+llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+llama_model_loader: - kv   0:                       general.architecture str              = qwen3moe
+llama_model_loader: - kv   1:                               general.type str              = model
+llama_model_loader: - kv   2:                               general.name str              = Qwen3-235B-A22B-128K
+llama_model_loader: - kv   3:                           general.finetune str              = 128k
+llama_model_loader: - kv   4:                           general.basename str              = Qwen3-235B-A22B-128K
+llama_model_loader: - kv   5:                       general.quantized_by str              = Unsloth
+llama_model_loader: - kv   6:                         general.size_label str              = 235B-A22B
+llama_model_loader: - kv   7:                            general.license str              = apache-2.0
+llama_model_loader: - kv   8:                           general.repo_url str              = https://huggingface.co/unsloth
+llama_model_loader: - kv   9:                   general.base_model.count u32              = 1
+llama_model_loader: - kv  10:                  general.base_model.0.name str              = Qwen3 235B A22B
+llama_model_loader: - kv  11:          general.base_model.0.organization str              = Qwen
+llama_model_loader: - kv  12:              general.base_model.0.repo_url str              = https://huggingface.co/Qwen/Qwen3-235...
+llama_model_loader: - kv  13:                               general.tags arr[str,4]       = ["qwen3_moe", "qwen3", "qwen", "unslo...
+llama_model_loader: - kv  14:                       qwen3moe.block_count u32              = 94
+llama_model_loader: - kv  15:                    qwen3moe.context_length u32              = 131072
+llama_model_loader: - kv  16:                  qwen3moe.embedding_length u32              = 4096
+llama_model_loader: - kv  17:               qwen3moe.feed_forward_length u32              = 8192
+llama_model_loader: - kv  18:              qwen3moe.attention.head_count u32              = 64
+llama_model_loader: - kv  19:           qwen3moe.attention.head_count_kv u32              = 4
+llama_model_loader: - kv  20:                    qwen3moe.rope.freq_base f32              = 1000000.000000
+llama_model_loader: - kv  21:  qwen3moe.attention.layer_norm_rms_epsilon f32              = 0.000001
+llama_model_loader: - kv  22:                 qwen3moe.expert_used_count u32              = 8
+llama_model_loader: - kv  23:              qwen3moe.attention.key_length u32              = 128
+llama_model_loader: - kv  24:            qwen3moe.attention.value_length u32              = 128
+llama_model_loader: - kv  25:                          general.file_type u32              = 7
+llama_model_loader: - kv  26:                      qwen3moe.expert_count u32              = 128
+llama_model_loader: - kv  27:        qwen3moe.expert_feed_forward_length u32              = 1536
+llama_model_loader: - kv  28:               general.quantization_version u32              = 2
+llama_model_loader: - kv  29:                       tokenizer.ggml.model str              = gpt2
+llama_model_loader: - kv  30:                         tokenizer.ggml.pre str              = qwen2
+llama_model_loader: - kv  31:                      tokenizer.ggml.tokens arr[str,151936]  = ["!", "\"", "#", "$", "%", "&", "'", ...
+llama_model_loader: - kv  32:                  tokenizer.ggml.token_type arr[i32,151936]  = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+llama_model_loader: - kv  33:                      tokenizer.ggml.merges arr[str,151387]  = ["臓 臓", "臓臓 臓臓", "i n", "臓 t",...
+llama_model_loader: - kv  34:                tokenizer.ggml.eos_token_id u32              = 151645
+llama_model_loader: - kv  35:            tokenizer.ggml.padding_token_id u32              = 151643
+llama_model_loader: - kv  36:                tokenizer.ggml.bos_token_id u32              = 151643
+llama_model_loader: - kv  37:               tokenizer.ggml.add_bos_token bool             = false
+llama_model_loader: - kv  38:                    tokenizer.chat_template str              = {%- if tools %}\n    {{- '<|im_start|>...
+llama_model_loader: - kv  39:                                   split.no u16              = 0
+llama_model_loader: - kv  40:                                split.count u16              = 6
+llama_model_loader: - kv  41:                        split.tensors.count i32              = 1131
+llama_model_loader: - type  f32:  471 tensors
+llama_model_loader: - type q8_0:  660 tensors
+llm_load_vocab: special tokens cache size = 26
+llm_load_vocab: token to piece cache size = 0.9311 MB
+llm_load_print_meta: format           = GGUF V3 (latest)
+llm_load_print_meta: arch             = qwen3moe
+llm_load_print_meta: vocab type       = BPE
+llm_load_print_meta: n_vocab          = 151936
+llm_load_print_meta: n_merges         = 151387
+llm_load_print_meta: vocab_only       = 0
+llm_load_print_meta: n_ctx_train      = 131072
+llm_load_print_meta: n_embd           = 4096
+llm_load_print_meta: n_layer          = 94
+llm_load_print_meta: n_head           = 64
+llm_load_print_meta: n_head_kv        = 4
+llm_load_print_meta: n_rot            = 128
+llm_load_print_meta: n_swa            = 0
+llm_load_print_meta: n_swa_pattern    = 1
+llm_load_print_meta: n_embd_head_k    = 128
+llm_load_print_meta: n_embd_head_v    = 128
+llm_load_print_meta: n_gqa            = 16
+llm_load_print_meta: n_embd_k_gqa     = 512
+llm_load_print_meta: n_embd_v_gqa     = 512
+llm_load_print_meta: f_norm_eps       = 0.0e+00
+llm_load_print_meta: f_norm_rms_eps   = 1.0e-06
+llm_load_print_meta: f_clamp_kqv      = 0.0e+00
+llm_load_print_meta: f_max_alibi_bias = 0.0e+00
+llm_load_print_meta: f_logit_scale    = 0.0e+00
+llm_load_print_meta: n_ff             = 8192
+llm_load_print_meta: n_expert         = 128
+llm_load_print_meta: n_expert_used    = 8
+llm_load_print_meta: causal attn      = 1
+llm_load_print_meta: pooling type     = 0
+llm_load_print_meta: rope type        = 2
+llm_load_print_meta: rope scaling     = linear
+llm_load_print_meta: freq_base_train  = 1000000.0
+llm_load_print_meta: freq_scale_train = 1
+llm_load_print_meta: n_ctx_orig_yarn  = 131072
+llm_load_print_meta: rope_finetuned   = unknown
+llm_load_print_meta: ssm_d_conv       = 0
+llm_load_print_meta: ssm_d_inner      = 0
+llm_load_print_meta: ssm_d_state      = 0
+llm_load_print_meta: ssm_dt_rank      = 0
+llm_load_print_meta: model type       = ?B
+llm_load_print_meta: model ftype      = Q8_0
+llm_load_print_meta: model params     = 235.094 B
+llm_load_print_meta: model size       = 232.769 GiB (8.505 BPW)
+llm_load_print_meta: repeating layers = 231.538 GiB (8.505 BPW, 233.849 B parameters)
+llm_load_print_meta: general.name     = Qwen3-235B-A22B-128K
+llm_load_print_meta: BOS token        = 151643 '<|endoftext|>'
+llm_load_print_meta: EOS token        = 151645 '<|im_end|>'
+llm_load_print_meta: PAD token        = 151643 '<|endoftext|>'
+llm_load_print_meta: LF token         = 148848 '脛默'
+llm_load_print_meta: EOT token        = 151645 '<|im_end|>'
+llm_load_print_meta: max token length = 256
+llm_load_print_meta: n_ff_exp         = 1536
+llm_load_tensors: ggml ctx size =    0.50 MiB
+llm_load_tensors:        CPU buffer size = 46921.94 MiB
+llm_load_tensors:        CPU buffer size = 47107.36 MiB
+llm_load_tensors:        CPU buffer size = 47033.08 MiB
+llm_load_tensors:        CPU buffer size = 47107.36 MiB
+llm_load_tensors:        CPU buffer size = 47107.35 MiB
+llm_load_tensors:        CPU buffer size =  3078.64 MiB
+....................................................................................................
+llama_new_context_with_model: n_ctx      = 16384
+llama_new_context_with_model: n_batch    = 2048
+llama_new_context_with_model: n_ubatch   = 512
+llama_new_context_with_model: flash_attn = 1
+llama_new_context_with_model: mla_attn   = 0
+llama_new_context_with_model: attn_max_b = 0
+llama_new_context_with_model: fused_moe  = 0
+llama_new_context_with_model: ser        = -1, 0
+llama_new_context_with_model: freq_base  = 1000000.0
+llama_new_context_with_model: freq_scale = 1
+llama_kv_cache_init:        CPU KV buffer size =  3008.00 MiB
+llama_new_context_with_model: KV self size  = 3008.00 MiB, K (f16): 1504.00 MiB, V (f16): 1504.00 MiB
+llama_new_context_with_model:        CPU  output buffer size =     0.58 MiB
+llama_new_context_with_model:        CPU compute buffer size =   312.75 MiB
+llama_new_context_with_model: graph nodes  = 3860
+llama_new_context_with_model: graph splits = 1
+
+main: n_kv_max = 16384, n_batch = 2048, n_ubatch = 512, flash_attn = 1, n_gpu_layers = 0, n_threads = 20, n_threads_batch = 20
+
+|    PP |     TG |   N_KV |   T_PP s | S_PP t/s |   T_TG s | S_TG t/s |
+|-------|--------|--------|----------|----------|----------|----------|
+|   512 |    128 |      0 |   67.198 |     7.62 |   53.220 |     2.41 |
+|   512 |    128 |    512 |   65.739 |     7.79 |   51.455 |     2.49 |
+|   512 |    128 |   1024 |   67.660 |     7.57 |   51.890 |     2.47 |
+|   512 |    128 |   1536 |   68.719 |     7.45 |   52.238 |     2.45 |
+|   512 |    128 |   2048 |   70.073 |     7.31 |   53.222 |     2.41 |
+|   512 |    128 |   2560 |   71.726 |     7.14 |   53.961 |     2.37 |
+|   512 |    128 |   3072 |   73.097 |     7.00 |   54.397 |     2.35 |
+|   512 |    128 |   3584 |   74.688 |     6.86 |   54.247 |     2.36 |
+|   512 |    128 |   4096 |   76.166 |     6.72 |   56.074 |     2.28 |
+|   512 |    128 |   4608 |   78.441 |     6.53 |   55.985 |     2.29 |
+|   512 |    128 |   5120 |   85.400 |     6.00 |   56.714 |     2.26 |
+|   512 |    128 |   5632 |   80.910 |     6.33 |   58.679 |     2.18 |
+|   512 |    128 |   6144 |   82.747 |     6.19 |   56.730 |     2.26 |
+|   512 |    128 |   6656 |   83.653 |     6.12 |   57.644 |     2.22 |
+|   512 |    128 |   7168 |   85.044 |     6.02 |   57.860 |     2.21 |
+|   512 |    128 |   7680 |   86.687 |     5.91 |   59.510 |     2.15 |
+|   512 |    128 |   8192 |   88.306 |     5.80 |   59.983 |     2.13 |
+|   512 |    128 |   8704 |   95.135 |     5.38 |   58.736 |     2.18 |
+|   512 |    128 |   9216 |   91.348 |     5.60 |   60.733 |     2.11 |
+|   512 |    128 |   9728 |   97.391 |     5.26 |   60.376 |     2.12 |
+|   512 |    128 |  10240 |   95.785 |     5.35 |   64.163 |     1.99 |
+|   512 |    128 |  10752 |   98.549 |     5.20 |   63.393 |     2.02 |
+|   512 |    128 |  11264 |   98.616 |     5.19 |   61.447 |     2.08 |
+|   512 |    128 |  11776 |  105.775 |     4.84 |   65.116 |     1.97 |
+|   512 |    128 |  12288 |  102.959 |     4.97 |   67.291 |     1.90 |
+|   512 |    128 |  12800 |  105.210 |     4.87 |   65.661 |     1.95 |
+|   512 |    128 |  13312 |  107.702 |     4.75 |   66.114 |     1.94 |
+|   512 |    128 |  13824 |  109.233 |     4.69 |   64.225 |     1.99 |
+|   512 |    128 |  14336 |  111.032 |     4.61 |   67.671 |     1.89 |
+|   512 |    128 |  14848 |  114.479 |     4.47 |   66.681 |     1.92 |
+|   512 |    128 |  15360 |  117.857 |     4.34 |   73.044 |     1.75 |
+|   512 |    128 |  15872 |  120.052 |     4.26 |   71.046 |     1.80 |
