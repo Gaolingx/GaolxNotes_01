@@ -15,5 +15,9 @@
         <ProgressBar Name="progressBar"
                      Height="20"
                      d:Value="10"/>
+        <ProgressBar x:Name="progressBar2"
+             Height="20"
+                     Margin="0,0,0,-50"
+             d:Value="10"/>
     </StackPanel>
 </Window>
