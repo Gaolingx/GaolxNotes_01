@@ -313,3 +313,194 @@ MLP 里的 activation：
 
 如果你感兴趣，我可以继续下一层讲一个更偏你风格的视角：
 **activation 如何影响“Jacobian 的秩结构”和信息瓶颈特性**。
+
+
+---
+
+### 🧑‍💻 User
+
+up/down proj 参数量往往占整个模型的相当一部分（约 1/3 到 2/3 的 FFN 参数）。在像 LLaMA、Qwen、OPT 这样的模型中，d_ff ≈ 4×d_model 为什么是常见设计（如 d_model=4096, d_ff=11008）？
+
+---
+
+### 🤖 Assistant
+
+下面我从体系化的角度，严格解释为什么 LLaMA、Qwen、OPT 等现代 LLM 会普遍采用：
+
+[
+d_{ff} \approx 3.5\text{–}4.5 \times d_{model}
+]
+
+以及为什么 MLP（FFN）参数量占 30%–70% 是合理且必要的设计，而不是“太大了”。
+
+---
+
+# 1. FFN 是 Transformer 中主要的“非线性容量来源”
+
+Transformer 的分工机制：
+
+| 模块        | 主要功能                      |
+| --------- | ------------------------- |
+| Attention | token-to-token 信息路由（多头加权） |
+| FFN（MLP）  | token 内的表达变换与非线性混合        |
+
+Attention 层其实高度结构化（rank 受限），它主要负责从上下文“选择并组合信息”
+但解释与变换语义结构的主要能力来自 FFN：
+
+[
+\text{FFN}(x)=W_{down},\sigma(W_{up}x)
+]
+
+因此：
+
+**提高 FFN 的 width（即 d_ff）才能显著提高模型表达能力（capacity）。**
+
+---
+
+# 2. 线性网络理论的关键结论：宽度决定“可实现函数族”的复杂度
+
+对结构如下的网络：
+
+[
+x \to W_{up} \to \sigma \to W_{down}
+]
+
+其表达能力强弱主要由：
+
+* 隐层维度（width = d_ff）
+* 激活函数
+* 权重矩阵秩（rank）
+
+构成的“分段线性区域”（piecewise regions）数量决定了模型能拟合的非线性模式数量。
+
+研究表明（Montúfar 等）：
+
+* 隐维度 W 越大 → 分段线性区域呈指数增长
+* 层数增加的收益次于 width 的增加（在单层 FFN 中尤甚）
+
+因此：
+
+> 增大 d_ff 是大模型最经济且最有效的提高非线性容量的方法。
+
+---
+
+# 3. 为什么不是 2×？也不是 8×？
+
+### ——原因来自“计算-表达-稳定性”的三角平衡点
+
+## (1) 如果 d_ff 太小（例如 2×）
+
+* 非线性表达能力不足
+* MLP 得不到足够的“折叠空间”
+* 对语言建模任务尤其弱（语义变换空间不足）
+
+实验证据：
+
+* GPT-2 family 小模型试过更小 FFN，表现显著下降
+
+---
+
+## (2) 如果 d_ff 太大（例如 8×–16×）
+
+会遇到三个问题：
+
+### A. 计算量爆炸（FFN FLOPs 占比本来就是大头）
+
+对于 LLaMA 类结构：
+
+* Attention FLOPs ≈ 20–40%
+* FFN FLOPs ≈ 60–80%
+
+若把 d_ff 从 4× 推到 8×：
+
+* 整模型 FLOPs 增加接近 **40%–50%**（对推理和训练都巨痛）
+
+### B. 训练不稳定（激活尺度和梯度爆炸风险上升）
+
+非常宽的 FFN 会让中间激活值和梯度的方差放大，引入优化不稳定，需要特殊初始化和正则。
+
+### C. 参数效率下降
+
+增加 d_ff 的边际收益呈“次线性”，4×附近是收益/成本的最佳点。
+
+---
+
+# 4. 为什么 LLaMA 用 11008 而不是 16384（纯 4×）？
+
+LLaMA 的设计是：
+
+[
+d_{ff} = \text{round_up_to_multiple_of_256}(4 \cdot d_{model} \cdot \frac{2}{3})
+]
+
+因为 LLaMA 是 SwiGLU（不是 ReLU/GELU），SwiGLU 的有效宽度是 2/3：
+
+[
+\text{effective width} = \frac{2}{3} d_{ff}
+]
+
+例如 LLaMA-7B：
+
+* d_model = 4096
+* 4× = 16384
+* 2/3 = 10922
+* 向上对齐 256 → **11008**
+
+为什么要×2/3？
+因为 SwiGLU 有两路（up_proj 和 gate_proj）：
+
+[
+\text{SwiGLU}(x) = (W_1 x) \odot \sigma(W_2 x)
+]
+
+但有效输出通道只有一路，因此需要系数校正。
+
+---
+
+# 5. 经验规律和系统性研究都指向这个结论：
+
+### 在 Transformer LM 中：
+
+[
+d_{ff}/d_{model} \approx 3.5\text{–}4.5
+]
+
+是性能–成本–稳定性的全局最优点。
+
+证据来自：
+
+* GPT-3 ablations（FFN width 对 perplexity 敏感）
+* T5 scaling law（大部分 compute 预算应给 FFN）
+* LLaMA/Qwen ablations（cut width hurts more than cut heads）
+* DeepMind Chinchilla 系列（在 compute-optimal 框架下依然维持 ~4×）
+
+---
+
+# 6. 参数占比 1/3~2/3 不仅合理，还“必要”
+
+MLP（FFN）承担了模型的主要表达能力：
+
+* Attention 参数随 d_model 线性增长（并不多）
+* FFN 参数随 d_ff 增长，很快成为大头
+
+但是：
+
+* Attention 负责信息路由
+* FFN 负责语义变换
+
+语义复杂度远超路由复杂度，因此 FFN 参数占比高是合理的。
+
+---
+
+# 总结（非常关键）
+
+1. **FFN 是 Transformer 的主要非线性表达引擎**
+2. **width（d_ff）决定了模型的函数逼近能力**
+3. **≈4× d_model 是 compute / expressivity / stability 的三平衡点**
+4. **LLM 在 SwiGLU 情况下额外乘以 2/3**
+5. **参数主要集中在 FFN 反而是优化后的结构，而不是缺陷**
+
+---
+
+如果你需要，我可以往下讲针对你熟悉的方向：
+**如何从矩阵秩、低秩近似、奇异值分布的角度解释 d_ff ≈ 4× 的合理性**。
