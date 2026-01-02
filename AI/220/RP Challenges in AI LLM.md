@@ -4,7 +4,7 @@
 
 It has been quite surprising to see how other labs often dismiss RP as a valid or significant use case for AI LLM.
 
-​This does make me wonder: what were the primary setbacks or challenges in catering to this specific demographic? Specifically, how does the lab balance the need for safety guidelines regarding sensitive materials with the community's desire for creative freedom? Many roleplayers find that over-active filtering can break immersion, so I am curious about your specific approach to handling these edge cases without compromising the user's narrative experience.
+​This does make me wonder: what were the primary setbacks or challenges in catering to this specific demographic? Specifically, how does the lab balance the need for safety guidelines regarding sensitive materials with the community's desire for creative freedom? Many roleplayers find that over-active filtering can break immersion, so I am curious about the specific approach to handling these edge cases without compromising the user's narrative experience.
 
 ---
 
