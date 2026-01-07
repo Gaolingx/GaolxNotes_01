@@ -119,7 +119,7 @@ TBR 简要流程图:
 
 **「隐面剔除」** 技术这一术语来自于 PowerVR 的 HSR (Hidden Surface Removal)，通常用来指代 GPU 对最终被遮挡的 Primitive/Fragment 做剔除，避免执行其 PS，以达到减少 Overdraw 的效果。
 
-尽管类似诸如 Depth Prepass （在一个render pass中，首先渲染物体的深度信息到depth buffer中，然后再渲染物体的颜色。在渲染颜色时，使用深度测试来确保只着色那些可见的像素。）这样的技术已经实现了通过预渲染深度的方式降低fragment overdraw，HSR 算的上是基于硬件实现的discard fragment(由于binning 阶段已经有了深度信息)。
+尽管类似诸如 Depth Prepass （在第一个 pass 中，只渲染物体的深度信息到depth buffer，后续的着色 pass 使用深度测试剔除被遮挡的 fragment）这样的技术已经实现了通过预渲染深度的方式降低fragment overdraw，HSR 算的上是基于硬件实现的discard fragment(由于binning 阶段已经有了深度信息)。
 
 Adreno/Mali/PowerVR 三家在处理隐面剔除除的方式是不一样的。
 
