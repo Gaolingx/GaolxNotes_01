@@ -274,3 +274,236 @@
 * “能不能跑完”比“峰值 TFLOPs”更重要
 
 如果你愿意，下一步我可以帮你拆解某一家（如 Meta / Google / 字节 / DeepSeek）在**万卡训练 HA 上的具体工程取舍**，或者聚焦某一层（如 Elastic Training 的实现细节）。
+
+
+---
+
+### 🧑‍💻 User
+
+掉卡肯定意味着task会挂，我看有方案是按照时间轮次进行保存，监控节点状态，掉了就重新按照存活的节点进行任务分配加载之前保存的参数进行再训练 ，现在都是这么干的还是有更高级的用法？
+
+---
+
+### 🤖 Assistant
+
+你的理解**基本等同于当前工业界的“基线方案”**：
+
+> **周期性 checkpoint + 失败后整体重启 + 在存活节点上恢复训练**。
+
+但在**万卡级规模**下，这个方案只是 **Tier-1（可用，但效率不最优）**。真实生产系统通常是**分层使用多种手段**，目标是**减少“全量重启”的次数、范围和损失步数**。下面我按**成熟度层级（Baseline → Advanced → Frontier）**来讲清楚。
+
+---
+
+## 一、你描述的方案是什么层级？
+
+你说的方案，本质是：
+
+1. 固定时间轮次（step / time-based）做 checkpoint
+2. 监控 GPU / node 状态
+3. 任一掉卡 → kill job
+4. 用**剩余健康节点**重新调度
+5. 从最近 checkpoint **全量恢复训练**
+
+这是典型的：
+
+> **Synchronous data-parallel + global restart**
+
+**结论**：
+
+* **现在仍然大量在用**
+* 但在 **10k+ GPU** 下，如果 *只* 用这一套，**有效 GPU 利用率会明显偏低**
+
+---
+
+## 二、为什么“全量重启”在万卡下代价巨大？
+
+简单算一笔账（工业里非常真实）：
+
+* 平均每 2~4 小时掉一次卡
+* checkpoint 间隔 10 min
+* restart + NCCL init + data warmup ≈ 2~5 min
+
+那么：
+
+* 每次故障损失：
+
+  * 5~10 min（回滚）
+  * * 2~5 min（恢复）
+* 8 小时训练：
+
+  * 有效训练时间可能只有 **60~70%**
+
+**所以问题不是“能不能恢复”，而是：**
+
+> **能否把 failure 的影响范围从“全 job”缩小到“局部”？**
+
+---
+
+## 三、工业界更高级的 4 类做法
+
+下面是**现在真实在用、而且已经比较成熟的方案**。
+
+---
+
+### Tier 2：Elastic / Shrink-Resume（部分重启）
+
+#### 核心思想
+
+> **不要求 world size 恒定**
+
+当掉卡发生：
+
+* 不一定 kill 全 job
+* 而是：
+
+  * world_size ↓
+  * rank 重排
+  * 继续训练
+
+#### 代表方案
+
+* Torch Elastic / Elastic DDP
+* 内部 FSDP + elastic wrapper
+* 参数服务器风格（少见于 LLM）
+
+#### 难点（不是宣传里说得那么美）
+
+* Optimizer state reshape
+* Global batch size 改变
+* LR schedule 修正
+* RNG state 重对齐
+
+#### 实际应用结论
+
+* **已被广泛使用**
+* 但通常只允许：
+
+  * 小幅 shrink（比如 1024 → 1000）
+  * 不能频繁抖动
+
+---
+
+### Tier 3：Failure-domain-aware 并行（最关键）
+
+这是你问题里**没有提到，但极其重要的一层**。
+
+#### 思路
+
+> **在模型并行层面，把“掉卡影响”限制在一个子域内**
+
+#### 典型手段
+
+1. **MoE + EP**
+
+   * expert 天然是 failure domain
+   * 掉一个 expert ≠ 掉整个模型
+
+2. **Pipeline 并行 + 微批重路由**
+
+   * 局部 stage 重启
+   * 非严格同步（部分系统）
+
+3. **FSDP shard 重分配**
+
+   * 参数分片丢失 → 从冗余 shard 恢复
+
+> 注意：
+> **这是模型结构 + 系统设计的联合结果**，不是靠 scheduler 能解决的。
+
+---
+
+### Tier 4：局部恢复（Partial Restart / Hot Swap）
+
+已经开始在**头部公司内部落地**，但你很少能在开源框架看到。
+
+#### 核心能力
+
+* rank-level failure detection
+* 子 communicator 重建
+* 参数子集恢复
+* 不 kill 全 job
+
+#### 技术特征
+
+* 自定义 collective（绕开 NCCL 限制）
+* communicator tree 动态裁剪
+* 强依赖拓扑感知
+
+#### 现实情况
+
+* **非常难**
+* 实现成本极高
+* 调试地狱
+
+但收益是：
+
+> **掉卡 ≈ 几秒的吞吐下降，而不是分钟级重启**
+
+---
+
+## 四、Checkpoint 本身也在“进化”
+
+你提到“按时间轮次保存”，这是第一代做法。
+
+### 更高级的 checkpoint 设计包括：
+
+1. **分层 checkpoint**
+
+   * L0：GPU / HBM（超快，易失）
+   * L1：Host NVMe
+   * L2：共享存储 / 对象存储
+
+2. **异步 checkpoint**
+
+   * 不阻塞训练 step
+   * 写失败可重试
+
+3. **Shard-aware checkpoint**
+
+   * 只保存本 rank 的 shard
+   * 恢复时重新映射
+
+4. **增量 checkpoint**
+
+   * 只写 delta（optimizer state 非常大）
+
+> 在万卡下，checkpoint 本身也是系统瓶颈。
+
+---
+
+## 五、现实中的“组合拳”
+
+**几乎没有人只用一种方案**。
+
+典型组合是：
+
+* **必选**
+
+  * 快速 checkpoint
+  * 全量 restart 兜底
+
+* **常见增强**
+
+  * Elastic shrink-resume
+  * MoE / shard-aware 并行
+
+* **头部公司**
+
+  * 局部 communicator 修复
+  * 局部参数热恢复
+
+---
+
+## 六、一句非常工程化的总结
+
+> 现在的趋势不是“避免 task 挂”，
+> 而是 **把 task 挂这件事变得“廉价、可预测、自动化”**。
+
+你描述的方法仍是**主流底座**，
+但在万卡规模上，**真正拉开差距的不是“会不会 checkpoint”，而是：**
+
+* failure domain 划分是否合理
+* 是否允许 world size 波动
+* 掉卡影响是否能局部化
+
+如果你愿意，我可以进一步**对比「全量重启 vs elastic vs 局部恢复」在真实万卡训练中的吞吐曲线差异**，或者从你熟悉的 **FSDP / MoE / PP** 角度拆实现细节。
