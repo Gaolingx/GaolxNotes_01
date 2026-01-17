@@ -8,283 +8,262 @@ llm推理采样阶段，结合python代码说说 `top_k_top_p_sampling_from_logi
 
 ### 🤖 Assistant
 
-我来详细解释一下LLM推理中top-k和top-p采样的实现方法，并提供完整的Python代码。
+# LLM 推理采样：Top-K + Top-P 采样实现详解
 
-## 基本概念
+## 📊 采样流程概览
 
-- **top-k采样**：只从概率最高的k个token中采样
-- **top-p采样（核采样）**：从累积概率达到p的最小token集合中采样
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Logits (原始输出)                         │
+│                    [batch_size, vocab_size]                      │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │  Temperature Scaling  │  ← 控制分布平滑度
+                    │   logits / temp       │
+                    └───────────────────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │     Top-K Filter      │  ← 保留概率最高的K个
+                    │  过滤掉低概率token      │
+                    └───────────────────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │     Top-P Filter      │  ← 保留累积概率达P的
+                    │   (Nucleus Sampling)   │
+                    └───────────────────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │   Softmax + Sample    │  ← 多项式采样
+                    │    multinomial        │
+                    └───────────────────────┘
+                                │
+                                ▼
+                        Token ID 输出
+```
 
-## 完整实现代码
+## 🔧 完整实现代码
 
 ```python
 import torch
 import torch.nn.functional as F
 from typing import Optional, Tuple
-import numpy as np
 
 def top_k_top_p_sampling_from_logits(
     logits: torch.Tensor,
-    top_k: Optional[int] = None,
-    top_p: Optional[float] = None,
+    top_k: int = 50,
+    top_p: float = 0.9,
     temperature: float = 1.0,
-    return_probs: bool = False
-) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+    min_tokens_to_keep: int = 1
+) -> torch.Tensor:
     """
-    Top-k和top-p采样实现
+    从logits中进行Top-K和Top-P联合采样
     
     Args:
-        logits: 原始logits张量 [batch_size, vocab_size] 或 [vocab_size]
-        top_k: 保留的最高概率token数量
-        top_p: 累积概率阈值 (0-1)
-        temperature: 温度参数，控制随机性
-        return_probs: 是否返回处理后的概率分布
+        logits: 模型输出 [batch_size, vocab_size]
+        top_k: 保留概率最高的K个token (0表示不使用)
+        top_p: 累积概率阈值 (1.0表示不使用)
+        temperature: 温度参数，越大分布越平滑
+        min_tokens_to_keep: 最少保留的token数
     
     Returns:
-        sampled_tokens: 采样的token [batch_size] 或 scalar
-        probs: 处理后的概率分布 (可选)
+        采样的token ids [batch_size]
     """
+    # 保存原始形状
+    batch_size, vocab_size = logits.shape
     
-    # 确保输入是2D的 [batch_size, vocab_size]
-    if logits.dim() == 1:
-        logits = logits.unsqueeze(0)
-    
-    # 应用温度参数
+    # ═══════════════════════════════════════════════════
+    # Step 1: Temperature Scaling (温度缩放)
+    # ═══════════════════════════════════════════════════
+    # 温度越高 → logits差异越小 → 分布越平滑 → 采样越随机
+    # 温度越低 → logits差异越大 → 分布越尖锐 → 采样越确定
     if temperature != 1.0:
         logits = logits / temperature
     
-    # 转换为概率
-    probs = F.softmax(logits, dim=-1)
-    
-    # 应用top-k过滤
-    if top_k is not None and top_k > 0:
-        # 获取top-k的值和索引
-        top_k_probs, top_k_indices = torch.topk(probs, top_k, dim=-1)
-        
-        # 创建新的概率分布，非top-k的位置设为0
-        new_probs = torch.zeros_like(probs)
-        new_probs.scatter_(-1, top_k_indices, top_k_probs)
-        probs = new_probs
-    
-    # 应用top-p过滤
-    if top_p is not None and top_p < 1.0:
-        # 对概率进行排序
-        sorted_probs, sorted_indices = torch.sort(probs, descending=True, dim=-1)
-        
-        # 计算累积概率
-        cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
-        
-        # 找到累积概率超过top_p的第一个位置
-        # 我们需要移除累积概率超过top_p的token
-        sorted_indices_to_remove = cumulative_probs > top_p
-        
-        # 确保至少保留一个token
-        sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
-        sorted_indices_to_remove[..., 0] = 0
-        
-        # 将需要移除的位置设为0
-        for i in range(probs.size(0)):
-            indices_to_remove = sorted_indices[i][sorted_indices_to_remove[i]]
-            probs[i].scatter_(-1, indices_to_remove, 0.0)
-    
-    # 重新归一化概率分布
-    probs = probs / torch.sum(probs, dim=-1, keepdim=True)
-    
-    # 从处理后的分布中采样
-    if probs.size(0) == 1:
-        # 单样本情况
-        sampled_token = torch.multinomial(probs[0], num_samples=1).item()
-        result = sampled_token
-    else:
-        # 批量采样
-        sampled_tokens = torch.multinomial(probs, num_samples=1).squeeze(-1)
-        result = sampled_tokens
-    
-    if return_probs:
-        return result, probs
-    else:
-        return result
-
-# 更简洁的版本（单样本）
-def sample_from_logits_simple(
-    logits: torch.Tensor,
-    top_k: int = 50,
-    top_p: float = 0.9,
-    temperature: float = 1.0
-) -> int:
-    """简化版的top-k top-p采样"""
-    
-    # 应用温度
-    logits = logits / temperature
-    
-    # top-k过滤
+    # ═══════════════════════════════════════════════════
+    # Step 2: Top-K Filtering (Top-K过滤)
+    # ═══════════════════════════════════════════════════
     if top_k > 0:
-        indices_to_remove = logits < torch.topk(logits, top_k)[0][..., -1, None]
-        logits[indices_to_remove] = -float('Inf')
+        # 确保top_k不超过词表大小
+        top_k = min(top_k, vocab_size)
+        
+        # 方法1: 使用torch.topk找阈值
+        # topk返回 (values, indices), 取最后一个值作为阈值
+        top_k_values, _ = torch.topk(logits, top_k, dim=-1)
+        threshold = top_k_values[:, -1:]  # [batch, 1]
+        
+        # 将低于阈值的位置设为-inf
+        logits = torch.where(
+            logits < threshold,
+            torch.full_like(logits, float('-inf')),
+            logits
+        )
     
-    # 转换为概率
-    probs = F.softmax(logits, dim=-1)
-    
-    # top-p过滤
+    # ═══════════════════════════════════════════════════
+    # Step 3: Top-P Filtering (Nucleus Sampling)
+    # ═══════════════════════════════════════════════════
     if top_p < 1.0:
-        sorted_probs, sorted_indices = torch.sort(probs, descending=True)
+        # 3.1 按概率降序排序
+        sorted_logits, sorted_indices = torch.sort(logits, descending=True, dim=-1)
+        
+        # 3.2 计算累积概率
+        sorted_probs = F.softmax(sorted_logits, dim=-1)
         cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
         
-        # 移除累积概率超过p的token
+        # 3.3 找到需要移除的位置（累积概率超过top_p的）
+        # 注意：我们要保留第一个使累积概率超过top_p的token
         sorted_indices_to_remove = cumulative_probs > top_p
-        sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
-        sorted_indices_to_remove[..., 0] = False
         
-        indices_to_remove = sorted_indices[sorted_indices_to_remove]
-        probs[indices_to_remove] = 0
+        # 右移一位：确保刚好超过top_p的那个token被保留
+        sorted_indices_to_remove[:, 1:] = sorted_indices_to_remove[:, :-1].clone()
+        sorted_indices_to_remove[:, 0] = False  # 始终保留最高概率的token
         
-        # 重新归一化
-        if torch.sum(probs) > 0:
-            probs = probs / torch.sum(probs)
+        # 3.4 将mask映射回原始顺序
+        indices_to_remove = torch.zeros_like(logits, dtype=torch.bool)
+        indices_to_remove.scatter_(
+            dim=-1, 
+            index=sorted_indices, 
+            src=sorted_indices_to_remove
+        )
+        
+        # 3.5 应用mask
+        logits = logits.masked_fill(indices_to_remove, float('-inf'))
+    
+    # ═══════════════════════════════════════════════════
+    # Step 4: Sampling (采样)
+    # ═══════════════════════════════════════════════════
+    # 4.1 转换为概率分布
+    probs = F.softmax(logits, dim=-1)
+    
+    # 4.2 多项式采样
+    next_tokens = torch.multinomial(probs, num_samples=1)
+    
+    return next_tokens.squeeze(-1)  # [batch_size]
+```
+
+## 📈 图解 Top-P 过滤过程
+
+```
+原始概率分布 (已排序):
+┌────────────────────────────────────────────────────────┐
+│ Token:    A      B      C      D      E      F    ... │
+│ Prob:   0.35   0.25   0.15   0.10   0.08   0.04   ... │
+│ CumP:   0.35   0.60   0.75   0.85   0.93   0.97   ... │
+│                                      ↑                 │
+│                              top_p=0.9 截断点          │
+└────────────────────────────────────────────────────────┘
+
+保留 token: A, B, C, D, E (累积概率 ≤ 0.9)
+过滤 token: F, ... (累积概率 > 0.9)
+```
+
+## 🚀 优化版本（支持批处理 + 性能优化）
+
+```python
+def top_k_top_p_sampling_optimized(
+    logits: torch.Tensor,
+    top_k: int = 0,
+    top_p: float = 1.0,
+    temperature: float = 1.0,
+    repetition_penalty: float = 1.0,
+    generated_tokens: Optional[torch.Tensor] = None
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    优化版采样函数，支持重复惩罚
+    
+    Returns:
+        (sampled_tokens, probs) - 采样的token和对应概率
+    """
+    logits = logits.clone()
+    
+    # ═══════════════════════════════════════════════════
+    # 可选: 重复惩罚 (Repetition Penalty)
+    # ═══════════════════════════════════════════════════
+    if repetition_penalty != 1.0 and generated_tokens is not None:
+        for batch_idx in range(logits.size(0)):
+            for token_id in set(generated_tokens[batch_idx].tolist()):
+                if logits[batch_idx, token_id] > 0:
+                    logits[batch_idx, token_id] /= repetition_penalty
+                else:
+                    logits[batch_idx, token_id] *= repetition_penalty
+    
+    # Temperature
+    if temperature != 1.0:
+        logits = logits / temperature
+    
+    # Top-K (向量化优化)
+    if top_k > 0:
+        top_k = min(top_k, logits.size(-1))
+        values, _ = logits.topk(top_k, dim=-1)
+        min_values = values[:, -1].unsqueeze(-1)
+        logits = torch.where(logits < min_values, float('-inf'), logits)
+    
+    # Top-P (向量化优化)
+    if top_p < 1.0:
+        sorted_logits, sorted_indices = torch.sort(logits, descending=True)
+        sorted_probs = F.softmax(sorted_logits, dim=-1)
+        cumsum_probs = sorted_probs.cumsum(dim=-1)
+        
+        # 创建mask
+        mask = cumsum_probs - sorted_probs > top_p
+        sorted_logits[mask] = float('-inf')
+        
+        # 恢复原始顺序
+        logits = sorted_logits.gather(-1, sorted_indices.argsort(-1))
     
     # 采样
-    return torch.multinomial(probs, num_samples=1).item()
+    probs = F.softmax(logits, dim=-1)
+    tokens = torch.multinomial(probs, num_samples=1).squeeze(-1)
+    
+    # 返回token和对应的概率
+    token_probs = probs.gather(-1, tokens.unsqueeze(-1)).squeeze(-1)
+    
+    return tokens, token_probs
 ```
 
-## 使用示例
+## 🎯 使用示例
 
 ```python
-# 示例1：基本使用
-def demonstrate_sampling():
-    # 模拟LLM输出的logits
-    vocab_size = 10000
-    logits = torch.randn(vocab_size)
-    
-    print("=== 不同采样策略对比 ===")
-    
-    # 1. 贪婪采样（temperature=0）
-    greedy_token = top_k_top_p_sampling_from_logits(
-        logits, temperature=0.0
-    )
-    print(f"贪婪采样: {greedy_token}")
-    
-    # 2. 仅使用temperature
-    temp_token = top_k_top_p_sampling_from_logits(
-        logits, temperature=0.8
-    )
-    print(f"温度采样(0.8): {temp_token}")
-    
-    # 3. top-k采样
-    topk_token = top_k_top_p_sampling_from_logits(
-        logits, top_k=50, temperature=1.0
-    )
-    print(f"Top-k采样(k=50): {topk_token}")
-    
-    # 4. top-p采样
-    topp_token = top_k_top_p_sampling_from_logits(
-        logits, top_p=0.9, temperature=1.0
-    )
-    print(f"Top-p采样(p=0.9): {topp_token}")
-    
-    # 5. 结合使用
-    combined_token = top_k_top_p_sampling_from_logits(
-        logits, top_k=50, top_p=0.9, temperature=0.8
-    )
-    print(f"组合采样: {combined_token}")
+# 模拟场景
+batch_size = 2
+vocab_size = 50000
 
-# 示例2：批量采样
-def batch_sampling_example():
-    batch_size = 3
-    vocab_size = 1000
-    batch_logits = torch.randn(batch_size, vocab_size)
-    
-    print("\n=== 批量采样 ===")
-    sampled_tokens = top_k_top_p_sampling_from_logits(
-        batch_logits, top_k=40, top_p=0.95, temperature=0.7
-    )
-    print(f"批量采样结果: {sampled_tokens}")
+# 模拟模型输出的logits
+logits = torch.randn(batch_size, vocab_size)
 
-# 示例3：查看概率分布
-def probability_analysis():
-    logits = torch.tensor([3.0, 1.0, 0.5, 0.1, -1.0, -2.0])
-    
-    print("\n=== 概率分布分析 ===")
-    sampled_token, processed_probs = top_k_top_p_sampling_from_logits(
-        logits, top_k=3, top_p=0.9, return_probs=True
-    )
-    
-    original_probs = F.softmax(logits, dim=-1)
-    
-    print("原始概率:", [f"{p:.3f}" for p in original_probs.tolist()])
-    print("处理后概率:", [f"{p:.3f}" for p in processed_probs[0].tolist()])
-    print(f"采样token: {sampled_token}")
+# 采样参数
+sampling_params = {
+    'top_k': 50,           # 只考虑top 50个token
+    'top_p': 0.9,          # 累积概率90%截断
+    'temperature': 0.8,    # 稍微降低随机性
+}
 
-if __name__ == "__main__":
-    demonstrate_sampling()
-    batch_sampling_example()
-    probability_analysis()
+# 执行采样
+next_tokens = top_k_top_p_sampling_from_logits(logits, **sampling_params)
+print(f"Sampled tokens: {next_tokens}")
+# 输出: Sampled tokens: tensor([12345, 6789])
 ```
 
-## 实际应用中的注意事项
+## ⚖️ 参数效果对比
 
-```python
-class TextGenerator:
-    def __init__(self, model, tokenizer):
-        self.model = model
-        self.tokenizer = tokenizer
-    
-    def generate_text(
-        self,
-        prompt: str,
-        max_length: int = 100,
-        top_k: int = 50,
-        top_p: float = 0.9,
-        temperature: float = 1.0,
-        repetition_penalty: float = 1.0
-    ) -> str:
-        """完整的文本生成函数"""
-        
-        input_ids = self.tokenizer.encode(prompt, return_tensors="pt")
-        
-        for _ in range(max_length):
-            # 获取模型输出
-            with torch.no_grad():
-                outputs = self.model(input_ids)
-                next_token_logits = outputs.logits[:, -1, :]
-            
-            # 重复惩罚
-            if repetition_penalty != 1.0:
-                self.apply_repetition_penalty(next_token_logits, input_ids, repetition_penalty)
-            
-            # 采样下一个token
-            next_token = top_k_top_p_sampling_from_logits(
-                next_token_logits[0],
-                top_k=top_k,
-                top_p=top_p,
-                temperature=temperature
-            )
-            
-            # 添加到序列中
-            input_ids = torch.cat([input_ids, torch.tensor([[next_token]])], dim=-1)
-            
-            # 检查结束条件
-            if next_token == self.tokenizer.eos_token_id:
-                break
-        
-        return self.tokenizer.decode(input_ids[0])
-    
-    def apply_repetition_penalty(self, logits, input_ids, penalty):
-        """应用重复惩罚"""
-        for token_id in set(input_ids[0].tolist()):
-            if logits[0, token_id] < 0:
-                logits[0, token_id] *= penalty
-            else:
-                logits[0, token_id] /= penalty
+| 参数 | 低值效果 | 高值效果 |
+|------|---------|---------|
+| **temperature** | 更确定性、更保守 | 更随机、更多样 |
+| **top_k** | 候选更少、更聚焦 | 候选更多、更多样 |
+| **top_p** | 只选高概率token | 允许更多低概率token |
+
+```
+temperature=0.1        temperature=1.0        temperature=2.0
+    ▲                      ▲                      ▲
+    │█                     │▓                     │░░
+    │█                     │▓▓                    │░░░
+    │█                     │▓▓▓                   │░░░░░
+    └────────────          └────────────          └────────────
+    (尖锐分布)              (正常分布)              (平滑分布)
 ```
 
-## 关键要点
-
-1. **执行顺序**：通常先应用temperature，然后top-k，最后top-p
-2. **数值稳定性**：注意处理概率为0的情况
-3. **批量处理**：支持批量采样提高效率
-4. **参数调优**：
-   - temperature↑ → 随机性↑
-   - top-k↓ → 多样性↓
-   - top-p↓ → 确定性↑
-
-这种采样策略在保持生成质量的同时，提供了对输出多样性的精细控制。
+这就是 LLM 推理中 Top-K/Top-P 采样的核心实现！
