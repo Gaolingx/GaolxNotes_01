@@ -2,8 +2,9 @@
 
 ### 🧑‍💻 User
 
-![](imgs/72c690bc-7e12-48a4-bdc0-a400a2f78c74.png)
-![](imgs/f56db137-4906-41d3-a8bb-7b5e151fcc6b.png)
+$G(x) = \mathrm{softmax}(W_g x + b) \in \mathbb{R}^N$
+
+$G(x) = \mathrm{sigmoid}(W_g x + b) \in \mathbb{R}^N$
 
 一般来说，在选取 top-K 专家时，我们会对 gating layer 的输出进行归一化，通常我们会使用 softmax function，但是，在 deepseek 的 Loss-Free Balancing 中，作者通过实验发现，使用sigmoid作为激活函数效果更好，实验结果显示，sigmoid function 对于超参数更加 robust，且表现也更好一些。两者作为moe router的activation function有什么区别，有哪些moe模型分别使用softmax or sigmoid？
 
@@ -11,208 +12,91 @@
 
 ### 🤖 Assistant
 
-你的问题可以拆成三个层次来看：**（1）softmax vs sigmoid 作为 MoE router 激活在“数学与优化层面”的根本差异；（2）这种差异为什么会直接影响 load balance / 超参数敏感性；（3）主流 MoE 模型在工程上各自的选择与取舍。**
-下面我按这个逻辑系统性回答。
+这是一个非常深刻且前沿的问题。在 Mixture of Experts (MoE) 的架构演进中，Gating Network (Router) 的激活函数选择确实经历了从 Softmax 到 Sigmoid 的探索。
+
+以下是关于两者在 MoE Router 中的本质区别、为何 DeepSeek 倾向于 Sigmoid，以及代表性模型的详细对比。
+
+### 1. 核心区别：竞争性 vs. 独立性
+
+从数学性质上来看，两者最大的区别在于专家之间是否存在“耦合（Coupling）”或“竞争（Competition）”关系。
+
+#### Softmax: 零和博弈 (Zero-Sum Game)
+$$G(x)_i = \frac{e^{h_i}}{\sum_{j} e^{h_j}}$$
+
+*   **性质：** 所有专家的权重之和必须为 1 ($\sum G(x)_i = 1$)。
+*   **机制：** 这是一种**竞争机制**。如果 Router 想要提高专家 A 的权重，根据定义，它**必须**降低其他专家的权重。
+*   **缺点：**
+    *   **梯度耦合：** 当反向传播时，一个专家的梯度会影响所有其他专家的 Logits。这在负载均衡（Load Balancing）时可能导致问题：为了满足负载均衡损失（Auxiliary Loss），模型可能会被迫压低“最强专家”的分数，从而牺牲模型性能。
+    *   **Winner-takes-all：** 在训练初期，容易出现少数专家垄断的情况（Collapse），需要较强的 Auxiliary Loss 来纠正。
+
+#### Sigmoid: 独立打分 (Independent Scoring)
+$$G(x)_i = \mathrm{sigmoid}(h_i) = \frac{1}{1 + e^{-h_i}}$$
+
+*   **性质：** 每个专家的打分都在 $(0, 1)$ 之间，但**互不影响**，总和不限制为 1。
+*   **机制：** 这是一种**独立阈值机制**。Router 独立地询问每个专家：“你对处理这个 token 有多大信心？”
+*   **优点：**
+    *   **解耦：** 提高专家 A 的分数不需要压低专家 B。这给予了 Router 更大的灵活性。
+    *   **负载均衡更友好：** 也就是 DeepSeek 提到的点。在使用 Bias 进行负载均衡时，调整专家 $i$ 的 Bias ($b_i$) 只会改变该专家的激活阈值，不会直接通过分母挤压其他专家的概率分布。
 
 ---
 
-## 1. softmax vs sigmoid：路由建模假设的根本不同
+### 2. 为什么 DeepSeek (DeepSeek-V2/V3) 选择 Sigmoid？
 
-### 1.1 softmax：**“单分布 + 竞争式分配”**
+DeepSeek 在其论文（特别是 DeepSeek-V2 关于 **DeepSeekMoE** 架构和 **Loss-Free Balancing** 的部分）中详细阐述了这一点。
 
-[
-G(x) = \text{softmax}(W_g x + b),\quad \sum_i G_i(x)=1
-]
+#### A. Loss-Free Balancing 的实现基础
+DeepSeek 提出了一种不依赖梯度惩罚（Auxiliary Loss）的负载均衡方法，而是通过动态调整 Bias 来实现。
+*   **Softmax 的问题：** 如果使用 Softmax，调整 Bias $b_i$ 会通过分母 $\sum e^{h_j}$ 影响全局分布，难以精确控制单个专家的负载而不产生副作用。
+*   **Sigmoid 的优势：** 使用 Sigmoid 时，Router 的输出是解耦的。如果要增加专家 $i$ 的负载，只需减小其 Bias；如果要减少负载，只需增加其 Bias。这种调整是局部的、可控的，不会干扰模型对 Top-K 的核心判断逻辑（Logits 的相对大小）。
 
-softmax router 隐含的建模假设是：
+#### B. 归一化步骤的后置
+值得注意的是，虽然 DeepSeek 使用 Sigmoid 进行**打分（Scoring）**和**选择（Routing）**，但在选中 Top-K 专家后，通常还是会进行一次归一化，以保证后续计算数值的稳定性：
 
-> **所有专家在同一个概率 simplex 中竞争 token 的解释权**
+$$
+\begin{aligned}
+s_i &= \mathrm{sigmoid}(W_g x + b)_i \\
+\mathcal{I} &= \mathrm{TopK}(s) \\
+p_i &= \frac{s_i}{\sum_{j \in \mathcal{I}} s_j} \quad (\text{对被选中的专家进行归一化})
+\end{aligned}
+$$
 
-其核心特征：
-
-* **强耦合（coupled）**
-  任意一个 expert 的 logit 变化，都会影响所有其他 expert 的分配概率。
-* **相对排序驱动**
-  只关心“谁更大”，而不关心绝对尺度。
-* **归一化约束**
-  token 的“专家质量”被强制压缩为总和 1 的分布。
-
-这在理论上非常优雅，但在 MoE 场景中会带来几个后果：
-
-* 路由退化到 **winner-takes-most**
-* 极易出现 **expert collapse / routing imbalance**
-* load balance 对 temperature、aux loss 权重极其敏感
+DeepSeek 发现这种 setup 在超参数调整上更加 Robust，且收敛效果更好。
 
 ---
 
-### 1.2 sigmoid：**“独立 Bernoulli gate + 非竞争式选择”**
+### 3. 代表性模型分类
 
-[
-G(x) = \sigma(W_g x + b),\quad G_i(x)\in(0,1)
-]
+根据 Router 激活函数的不同，我们可以将主流 MoE 模型分类如下：
 
-sigmoid router 的隐含假设完全不同：
+#### 使用 Softmax 的模型 (传统/主流流派)
+大多数基于 Google **Switch Transformer** 范式的模型都使用 Softmax。这是最经典的设计，认为 Router 的输出应当是一个概率分布。
 
-> **每个 expert 独立判断“我是否适合这个 token”**
+*   **Switch Transformer (Google):** 开创性的 Top-1 模型，使用 Softmax。
+*   **GShard (Google):** Top-2 MoE，使用 Softmax。
+*   **GLaM (Google):** 使用 Softmax。
+*   **Mixtral 8x7B (Mistral AI):** 著名的开源 MoE，使用 Softmax Top-2 路由。
+*   **Qwen1.5-MoE (Alibaba):** 沿用了主流的 Softmax 路由机制。
+*   **Grok-1 (xAI):** 使用 Softmax。
 
-核心差异：
+#### 使用 Sigmoid 的模型 (新锐/专门优化流派)
+这一流派认为专家之间应当解耦，或者为了配合特殊的负载均衡策略。
 
-* **解耦（decoupled）**
-  每个 expert 的 gate 是独立 Bernoulli 变量
-* **绝对尺度有意义**
-  logit 绝对大小决定激活概率
-* **不要求归一化**
-  总 gate mass 可以变化（稀疏性自然出现）
+*   **DeepSeek-V2 / DeepSeek-V3:**
+    *   明确使用了 Sigmoid 作为 Router 激活函数。
+    *   配合其独有的 **Expert Isolation**（Shared Experts + Routed Experts）和 **Grouped-Query Attention** 风格的 Latent Vector 路由机制。
+*   **NLLB (No Language Left Behind, Meta):**
+    *   虽然主要使用 Top-K Softmax，但在某些由稀疏性研究衍生的变体中，Meta 的研究员探索过 Sigmoid-based routing (例如在 Sparsely Gated Mixture of Experts 的某些改进版实验中)。
+*   **Megablocks (Stanford/Databricks):**
+    *   Megablocks 是一个高效推理框架，它支持多种路由机制。虽然它不强制模型结构，但在此框架下进行的一些关于 **Dropless MoE** 的研究倾向于非归一化的路由分数或 Sigmoid，以避免强制的概率竞争。
 
-这在 MoE 中非常重要：
-**token-to-expert 是多对多的“匹配问题”，而不是单分布分类问题。**
+### 总结
 
----
+| 特性 | Softmax Routing | Sigmoid Routing |
+| :--- | :--- | :--- |
+| **数学含义** | 概率分布 (和为1) | 独立置信度 (和不固定) |
+| **专家关系** | 强竞争 (Coupled) | 独立 (Decoupled) |
+| **负载均衡** | 较难，Aux Loss 容易影响性能 | 容易，适合通过 Bias 调整 |
+| **代表模型** | **Mixtral 8x7B, Switch Transformer, Grok-1** | **DeepSeek-V2/V3** |
+| **DeepSeek 观点** | 容易导致 Collapse，超参敏感 | **Robust，配合 Loss-Free Balancing 效果极佳** |
 
-## 2. 为什么 sigmoid 在 DeepSeek 的 Loss-Free Balancing 中更稳？
-
-你提到的 **Loss-Free Balancing** 是关键，这里 sigmoid 的优势是“结构性”的，而不是调参技巧。
-
----
-
-### 2.1 softmax 的不稳定性来自“全局耦合梯度”
-
-softmax 的梯度形式（对 logit (z_i)）：
-
-[
-\frac{\partial G_i}{\partial z_j} = G_i(\delta_{ij} - G_j)
-]
-
-意味着：
-
-* 提升一个 expert ⇒ **必然压制其他 expert**
-* imbalance 会形成 **正反馈回路**
-* 需要 **显式的 load balancing loss** 来抵消
-
-这也是为什么经典 MoE（GShard / Switch / GLaM）都需要：
-
-* importance loss
-* load loss
-* entropy regularization
-* careful temperature tuning
-
----
-
-### 2.2 sigmoid 的梯度是“局部 + 可饱和”的
-
-sigmoid 梯度：
-
-[
-\frac{\partial G_i}{\partial z_i} = G_i(1 - G_i)
-]
-
-性质非常关键：
-
-* **不影响其他 expert**
-* 高置信度后自动饱和（梯度变小）
-* 自然抑制极端 routing
-
-这意味着：
-
-* expert 不会通过“压制别人”来获得更多 token
-* load 分布更接近 **Poisson-like 独立采样**
-* 不需要额外 balancing loss 也能稳定
-
-👉 **这正是 DeepSeek 能“Loss-Free Balancing”的根本原因**
-
----
-
-### 2.3 对超参数更 robust 的本质原因
-
-sigmoid 的鲁棒性来自三点：
-
-1. **无 temperature 依赖**
-
-   * softmax 温度 = routing sharpness
-   * sigmoid 本身已是 bounded gate
-2. **top-K 是后处理，不影响 gate 学习**
-
-   * 先学“是否适合”
-   * 再选 K 个最大的
-3. **极端 logit 不会破坏全局分布**
-
-   * 不会把所有 token 吸走
-
----
-
-## 3. Top-K 行为：softmax vs sigmoid 的本质差异
-
-| 维度           | softmax + top-K | sigmoid + top-K |
-| ------------ | --------------- | --------------- |
-| 排序依据         | 相对大小            | 绝对置信度           |
-| K 变化影响       | 改变概率分布          | 只改变激活数量         |
-| expert 竞争    | 强               | 弱               |
-| collapse 风险  | 高               | 低               |
-| balancing 需求 | 显式              | 可隐式             |
-
-一句话总结：
-
-> **softmax 是“选最好的 K 个”；sigmoid 是“所有觉得自己行的 expert 中选 K 个最自信的”。**
-
----
-
-## 4. 典型 MoE 模型的选择对比
-
-### 4.1 使用 softmax router 的代表
-
-**第一代 / 经典 MoE：**
-
-* **GShard (Google)**
-* **Switch Transformer**
-* **GLaM**
-* **PaLM-MoE**
-* **Mixtral（变体仍然是 softmax + aux loss）**
-
-特征：
-
-* 强依赖 load balancing loss
-* 对 temperature / loss 权重非常敏感
-* 工程复杂度高，但理论清晰
-
----
-
-### 4.2 使用 sigmoid / 非 softmax router 的代表
-
-**新一代 / 工程驱动 MoE：**
-
-* **DeepSeek-MoE / DeepSeek-V2/V3**
-
-  * sigmoid + loss-free balancing
-* **Qwen2-MoE（后期实验分支）**
-* **一些 Routing-as-Matching / Independent Gate MoE**
-* **部分多标签 / sparse activation MoE（研究模型）**
-
-趋势非常明显：
-
-> **越大的模型、越长的训练、越追求稳定性 → 越倾向 sigmoid / 独立 gate**
-
----
-
-## 5. 更深一层的理解（关键结论）
-
-### 5.1 softmax router 本质上在做“单标签分类”
-
-* token → expert 是 mutually exclusive 的假设
-* 这与实际语义不匹配（一个 token 可以适合多个 expert）
-
-### 5.2 sigmoid router 更像“多标签匹配 + 稀疏激活”
-
-* expert 表达的是能力子空间
-* token 激活的是能力集合
-
-这在 scale-up 时明显更合理。
-
----
-
-## 6. 一句话总结
-
-> **softmax router 把 MoE 当成“竞争分类问题”，sigmoid router 把 MoE 当成“独立匹配问题”。**
-> 在大规模训练下，后者天然更稳定，也更符合 loss-free balancing 的目标。
-
-如果你愿意，下一步我们可以进一步讨论：
-**sigmoid router + capacity constraint + dispatch kernel 实现细节**，以及它对 fused MoE kernel（如你之前关心的 up/gate 融合）的影响。
+简单来说，**Softmax 是在做“选择题”（在N个里选最好的K个），而 Sigmoid 是在做“判断题”（对N个专家分别判断是否合格）**。DeepSeek 的成功证明了在 MoE 规模极大时，解耦的“判断题”模式配合 Bias 调整可能是更优的解法。

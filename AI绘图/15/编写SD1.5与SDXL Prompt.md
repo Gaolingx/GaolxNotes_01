@@ -8,209 +8,154 @@
 
 ### 🤖 Assistant
 
-下面我把 **Stable Diffusion WebUI（AUTOMATIC1111）** 中编写 **SD1.5** 与 **SDXL** 的 Prompt / Negative Prompt 的方式做一个 *实战级*、*经验型* 说明。
-两者 **不是同一套 prompt 习惯**，尤其是 SDXL 的“短、高语义权重”风格与 SD1.5 的“堆标签”风格差异巨大。
+在 Stable Diffusion WebUI (通常指 Automatic1111 或 Forge) 中，**SD1.5** 和 **SDXL** 的 Prompt（提示词）编写逻辑有显著的区别。SD1.5 更依赖“标签堆叠”，而 SDXL 对自然语言的理解能力更强。
+
+以下是针对这两种模型的详细编写指南：
 
 ---
 
-# ✅ 总体规则：SD1.5 和 SDXL Prompt 的核心区别
+### 一、 核心区别概览
 
-| 项目              | SD1.5               | SDXL                      |
-| --------------- | ------------------- | ------------------------- |
-| 模型结构            | 传统 latent diffusion | 双编码器（base+refiner），语义理解更强 |
-| Prompt 风格       | 关键词罗列、堆标签、类似“标签语言”  | 类自然语言、短句即可写出复杂意图          |
-| Prompt 长度       | 通常 **长，堆很多关键词**     | **短、精炼、类句子结构**            |
-| Negative Prompt | 很重要，需要堆长列表          | 也重要，但比 1.5 要“轻一些”         |
-| 适合              | ACG、插画、LoRA 驱动强     | 写实、摄影、真实人像更强              |
-
----
-
-# 🚀 一、SD1.5 Prompt 书写方式（关键词堆叠型）
-
-SD1.5 的 prompt 更像写 **标签列表/tag list**，越具体越好。
-
-### ✨ 正面 Prompt 模板
-
-```
-(masterpiece, best quality, 8k), 
-extremely detailed, 
-1girl, solo, 
-long hair, blue eyes,
-detailed face, soft lighting,
-cinematic composition
-```
-
-### SD1.5 Prompt 技巧
-
-* `masterpiece, best quality` 基本固定提升画质。
-* 主体标签（1girl、solo）
-* 外观（hair, eyes, clothes…）
-* 场景（forest, room, street…）
-* 光照（soft light, rim light, hdr）
-* 风格（anime style, digital illustration）
-
-“标签式”写法越多越好，SD1.5 不会觉得啰嗦。
+| 特性 | SD 1.5 | SDXL 1.0 / SDXL Turbo / Lightning |
+| :--- | :--- | :--- |
+| **语言风格** | **标签化 (Tag-based)**<br>依赖逗号分隔的单词，类似 Danbooru 标签。 | **自然语言 (Natural Language)**<br>可以使用完整的句子，但也兼容标签写法。 |
+| **质量词** | **非常依赖**<br>必须加 `masterpiece, best quality` 等来保证画质。 | **依赖度较低**<br>模型原生画质较好，少量质量词即可。 |
+| **负面提示** | **必须很长**<br>需要排除各种畸形、低画质，常用 Embedding (如 EasyNegative)。 | **简短即可**<br>SDXL 原生不容易崩坏，过长的负面词反而可能影响效果。 |
+| **分辨率** | 基础训练分辨率 $512 \times 512$ | 基础训练分辨率 $1024 \times 1024$ |
 
 ---
 
-### ✋ Negative Prompt（很关键）
+### 二、 SD 1.5 提示词编写策略
 
-SD1.5 的负面提示几乎必须使用 **全面的缺陷描述表**：
+SD1.5 的模型（尤其是二次元模型如 Counterfeit, Anything 等，或写实模型如 Realistic Vision）通常遵循**“画质词 + 主体 + 细节 + 风格”**的公式。
 
-```
-low quality, worst quality, blurry,
-extra fingers, extra limbs, bad hands, bad anatomy,
-text, watermark, signature,
-nsfw, (if needed)
+#### 1. 正向提示词 (Prompt) 结构
+```text
+(质量词), (主体描述), (环境背景), (构图与光影), (艺术风格/LoRA)
 ```
 
-SD1.5 本身容易出现手部错误、文字、水印，所以这些 negative prompt 非常必要。
+*   **质量词 (必填):**
+    `masterpiece, best quality, highly detailed, 8k, ultra-detailed`
+*   **主体描述:**
+    `1girl, solo, long hair, white dress, blue eyes, looking at viewer`
+*   **环境/光影:**
+    `garden, flowers, sunlight, cinematic lighting, depth of field`
+*   **风格:**
+    `oil painting, anime style, realistic`
+
+**SD1.5 示例:**
+```text
+masterpiece, best quality, ultra-detailed, 1girl, solo, sitting in a cafe, drinking coffee, rainy window, soft lighting, cinematic composition, intricate details, (hyperrealistic:1.2)
+```
+
+#### 2. 负面提示词 (Negative Prompt)
+SD1.5 非常容易画崩（多手指、肢体扭曲），所以负面提示词通常很长，或者直接使用 **Textual Inversion (Embeddings)**。
+
+**通用模板:**
+```text
+(worst quality, low quality:1.4), lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, watermark, username, blurry
+```
+*   **推荐技巧:** 下载 `EasyNegative` 或 `DeepNegative` 等嵌入模型，放入 `embeddings` 文件夹，然后在负面提示词中只写 `EasyNegative` 即可。
 
 ---
 
-# 🚀 二、SDXL Prompt 书写方式（自然语言型）
+### 三、 SDXL 提示词编写策略
 
-SDXL 采用双文本编码器（CLIP-ViT-L + OpenCLIP bigG），**语义理解明显强于 SD1.5**。
-因此它不需要大量标签，更倾向于自然语言描述。
+SDXL 的文本编码器更强大（使用了两个 CLIP 模型），它能理解简短的句子和语法关系。
 
-### ✨ 正面 Prompt 模板
+#### 1. 正向提示词 (Prompt) 结构
+你可以使用自然语言句子，也可以混合使用标签。
 
-```
-A beautiful woman standing near a window, soft morning light.
-Ultra-detailed photography, natural skin texture, 85mm lens.
-```
+*   **自然语言法 (推荐用于写实):**
+    `A cinematic shot of a futuristic cyberpunk city with neon lights, highly detailed, 8k resolution.`
+*   **主体 + 艺术风格:**
+    SDXL 对艺术风格词（如 "van gogh style", "photographic", "anime artwork"）非常敏感。
 
-或更短：
-
-```
-A cinematic portrait of a woman in warm lighting, shallow depth of field.
-```
-
-### SDXL Prompt 技巧
-
-* 类似 **摄影师会说的句子**
-* 不需要 masterpiece/best quality（已经是默认高质量）
-* 避免堆太多 “标签式关键词” → 反而会 **降低质量**
-
-### SDXL 适合用摄影语言：
-
-* 相机：`35mm/85mm lens, f1.8`
-* 光圈：`shallow depth of field`
-* 光照：`soft ambient light`
-* 风格：`cinematic realism`
-
----
-
-### ✋ SDXL Negative Prompt（比 1.5 简洁）
-
-SDXL 的 negative prompt 不需要列到非常长，一般只处理解剖和噪声即可：
-
-```
-blurry, low resolution, bad anatomy, extra fingers, distorted hands, watermark, text
+**SDXL 示例 (句子结构):**
+```text
+A close-up portrait of a young woman with freckles, wearing a red scarf, standing in a snowy forest, soft natural lighting, 50mm lens, photography style, 8k uhd.
 ```
 
-不建议堆太多 “风格型 negative prompt”，否则会破坏 SDXL 的语义理解。
-
----
-
-# 🥊 SD1.5 vs SDXL Prompt 示例对比
-
-### 🎨 目标：生成一个“阳光下的女孩肖像”
-
----
-
-## 👉 SD1.5 写法（标签堆叠）
-
-```
-(masterpiece, best quality), 
-1girl, solo, sunny day, outdoor,
-long brown hair, smile, detailed eyes,
-photorealistic, hdr, 8k, soft lighting,
-upper body, looking at viewer,
+**SDXL 示例 (标签结构 - 依然有效):**
+```text
+woman, red scarf, snow, forest, close up, realistic, photograph, 8k, high quality
 ```
 
-#### Negative:
+#### 2. 负面提示词 (Negative Prompt)
+SDXL 不需要像 SD1.5 那样写几百个单词的“咒语”。写多了反而会劣化画面。
 
-```
-low quality, blurry, bad hands, extra fingers, bad anatomy,
-text, watermark, logo
+**通用模板:**
+```text
+blurry, low quality, bad anatomy, text, watermark, ugly, distorted
 ```
 
 ---
 
-## 👉 SDXL 写法（自然语言）
+### 四、 WebUI 通用语法 (权重与控制)
 
-```
-A young woman smiling under warm sunlight, soft golden hour lighting.
-Medium shot portrait, natural skin texture, cinematic look.
+无论使用 SD1.5 还是 SDXL，WebUI 的语法是通用的。
+
+#### 1. 调整权重 (Attention/Emphasis)
+通过括号增加或减少某个词的权重。
+*   `(keyword)`: 权重 $\times 1.1$
+*   `((keyword))`: 权重 $\times 1.1 \times 1.1 = 1.21$
+*   `(keyword:1.5)`: 权重设为 $1.5$ (增强)
+*   `(keyword:0.8)`: 权重设为 $0.8$ (减弱)
+
+**示例:** 想让“蓝眼睛”更明显：
+```text
+1girl, (blue eyes:1.3), white hair
 ```
 
-#### Negative:
+#### 2. 分步渲染 (Prompt Editing)
+控制某个词在生成的哪个阶段生效。
+*   `[from:to:steps]`
+*   `[cow:horse:0.5]`: 前 50% 的步数画牛，后 50% 的步数变成马（产生混合物种）。
+*   `[keyword:10]`: 从第 10 步开始才加入这个词。
 
-```
-bad anatomy, extra fingers, watermark, text
-```
+#### 3. 交替渲染 (Alternating)
+*   `[cat|dog]`: 第一步画猫，第二步画狗，第三步画猫……（用于融合特征）。
 
 ---
 
-# 📌 三、Stable Diffusion WebUI 的 Prompt 格式建议
+### 五、 实战对比总结
 
-## 1. 使用权重控制
+假设我们想画一个“赛博朋克风格的女孩”。
 
-```
-(masterpiece:1.2), (best quality:1.1)
-(golden hour light:1.3)
-```
+#### 场景 A: 使用 SD 1.5 (例如 Realistic Vision)
+*   **Prompt:**
+    ```text
+    (masterpiece, best quality:1.2), 1girl, solo, cyberpunk jacket, neon lights, futuristic city background, rain, glowing eyes, intricate details, realistic texture, 8k, ray tracing, (cyberpunk:1.1)
+    ```
+*   **Negative:**
+    ```text
+    (worst quality, low quality:1.4), bad anatomy, bad hands, missing fingers, extra digit, cartoon, 3d, painting, sketch
+    ```
+*   **分辨率:** 设置为 $512 \times 768$ (再通过 Hires. fix 高清修复放大)。
 
-## 2. 使用 () 提升权重，[] 降低权重
+#### 场景 B: 使用 SDXL (例如 Juggernaut XL)
+*   **Prompt:**
+    ```text
+    Cinematic photography of a cyberpunk girl standing in a neon city, rain dripping from jacket, glowing cybernetic eyes, futuristic atmosphere, highly detailed, 8k, photorealistic.
+    ```
+*   **Negative:**
+    ```text
+    blurry, drawing, illustration, low quality, distorted
+    ```
+*   **分辨率:** 设置为 $832 \times 1216$ 或 $1024 \times 1024$。
 
-```
-(golden light)
-[harsh shadows]
-```
+### 六、 常见问题提示
 
----
+1.  **关于 LoRA:**
+    *   **SD1.5:** 需要在 Prompt 中加入 `<lora:name:0.8>`，并且通常需要配合 LoRA 作者指定的触发词 (Trigger Words)。
+    *   **SDXL:** 同样使用 `<lora:name:0.8>`，但 SDXL 的 LoRA 通常不需要那么多触发词就能生效。
 
-# 🧪 四、如果要用 LoRA（特别是 SD1.5）
+2.  **CLIP Skip:**
+    *   **SD1.5 (二次元):** 通常设置 **Clip skip = 2**。
+    *   **SD1.5 (写实) / SDXL:** 通常设置 **Clip skip = 1**。
 
-一般要把 LoRA 放在 prompt 最前面：
-
-```
-<lora:animeFace_v2:0.8>,
-(masterpiece),
-```
-
-SDXL LoRA 比较少见，但写法类似。
-
----
-
-# 📘 五、总结表
-
-## SD1.5 Prompt 样式：
-
-* 标签式：`1girl, blue hair, anime, ornate details`
-* 长 prompt
-* 强 negative prompt
-* 对 LoRA 响应良好
-
-## SDXL Prompt 样式：
-
-* 自然语言：`A dramatic portrait of a woman in warm light`
-* 简短 prompt
-* 不需要 masterpiece/best quality
-* 语义强，摄影语言效果好
-
----
-
-# 如果你想，我可以进一步提供：
-
-✔ 你给目标 → 我写一套 SD1.5 + SDXL Prompt
-✔ 插画 / 写实 / 二次元 / 写真不同风格模板
-✔ Negative prompt 专业表（按场景：人像/风景/插画）
-✔ SDXL Base + Refiner 的完美 prompt 示例（含 2-stage workflow）
-
-你想要哪一种？
-
+3.  **Refiner (仅 SDXL):**
+    *   在 WebUI 中，SDXL 有时会配合 Refiner 模型使用。你可以在 Prompt 中不改变任何内容，只需在 "Refiner" 选项卡中加载 `sd_xl_refiner_1.0`，并在最后 20% 的步数介入，以提升细节。
 
 ---
 
@@ -222,292 +167,74 @@ Negative Prompt有没有特别的注意事项？
 
 ### 🤖 Assistant
 
-下面给你一个 **Stable Diffusion（尤其是 SD1.5 & SDXL）Negative Prompt 的深度指南**，涵盖：
+编写 Negative Prompt（负面提示词）时，很多新手容易陷入“写得越多越好”的误区。实际上，负面提示词不仅决定了画面中**不出现什么**，还会深刻影响画面的**构图、色彩和风格**。
 
-* ❗ 常见误区（大部分人都踩）
-* 🚫 哪些词会产生反效果
-* ⚙ 权重和长度原则
-* 🧠 SDXL 与 SD1.5 的差异
-* 📌 实战模板
+以下是编写和使用 Negative Prompt 的特别注意事项：
 
----
+### 1. 警惕“副作用”：画质劣化与风格偏移
 
-# 🟥 1. Negative Prompt 的本质是什么？
+Negative Prompt 的本质是告诉模型“远离这些特征”。如果你填入了过多的单词，模型的可选空间就会被大幅压缩。
 
-**Negative prompt 不是禁止词表，而是 “优化方向的反面梯度”**。
+*   **画面变灰/变平：** 如果你使用了通用的超长负面词（几百个单词），或者叠加了多个 Embedding（如 `EasyNegative` + `DeepNegative` + `BadHand`），画面往往会失去对比度，变得发灰、平淡。
+*   **风格锁定：** 很多通用的负面词（如 `3d, render, cgi`）不仅去除了 3D 感，可能会顺带把画面的“立体光影”也去掉了，导致二次元画面变得过于扁平。
+*   **解决方案：**
+    *   **SDXL：** 尽量简短。通常 3-5 个词（如 `blur, low quality`）就够了。
+    *   **SD 1.5：** 优先使用单个优质的 Embedding（如 `EasyNegativeV2`），而不是手动写一堆乱七八糟的单词。
 
-➡ 不是黑名单
-➡ 不是排除动作
-➡ 是“模型不会朝这个方向强化特征”
+### 2. SDXL 和 Pony 模型的特殊性
 
-**所以写错负面提示，会直接拉低画质。**
+现在的模型生态中，SDXL 和基于 SDXL 训练的 **Pony Diffusion (Pony V6)** 非常流行，它们的负面提示词逻辑完全不同。
 
----
+*   **SDXL 原生模型：** 不需要 `bad hands, missing fingers` 这种解剖学术语，写了效果也不大。它更听得懂美学描述，如 `ugly, blurry, low resolution`。
+*   **Pony Diffusion (二次元/福瑞神器)：**
+    *   **切记：** Pony 模型对负面提示词极其敏感。
+    *   **推荐写法：** Pony 作者通常建议负面词**越少越好**，甚至可以**留空**。
+    *   **通用 Pony 负面：** `score_6, score_5, score_4, source_pony, 3d, realistic`（用来压制低分图片和写实风格，仅此而已）。不要在 Pony 模型里用 `EasyNegative`，会导致画风崩坏。
 
-# 🟦 2. Negative Prompt 的几个致命误区（千万避免）
+### 3. “正负抵消”原则
 
----
+如果你的正向提示词（Prompt）和负面提示词（Negative Prompt）中有冲突的内容，模型会感到困惑，通常会导致奇怪的伪影。
 
-## ❌ 误区1：堆太多 negative prompt
+*   **错误示例：**
+    *   Prompt: `vintage style, 1920s photo` (复古风格)
+    *   Negative: `noise, grain, monochrome, blurry` (去噪点、去颗粒、去单色)
+    *   **后果：** 复古照片本身就需要颗粒感和单色，你在负面里禁止了这些，模型可能会生成一张“高清的假复古图”，看起来非常违和。
+*   **正确做法：** 检查负面提示词模板，把与你想要风格冲突的词删掉。想画黑白漫，就必须从负面里删掉 `monochrome, greyscale`。
 
-（特别影响 SDXL）
+### 4. 权重控制 (Weighting)
 
-一些人会抄一大串：
+在负面提示词中也可以使用权重语法 `(keyword:1.5)`，但要非常小心。
 
-```
-bad quality, worst quality, lowres, out of frame, jpeg artifacts,
-bad anatomy, deformed, mutation, ugly, disfigured, watermark, ...
-```
+*   **高权重的风险：** 如果你在负面里写 `(bad hands:1.5)`，模型会极力避免像手的东西。这有时会导致手直接消失，或者变成一团无法辨认的色块，甚至导致画面出现高频噪声（炸图）。
+*   **建议：** 负面提示词的权重一般保持默认（1.0），最高不要超过 1.2 或 1.3。
 
-但实际上，**过多 negative prompt 会导致：**
+### 5. 针对性移除 (逻辑清晰)
 
-* 画面灰暗 / 去饱和
-* 细节变糊
-* 表情僵硬
-* 风格丢失
-* SDXL 模型语义混乱
+将负面提示词分为三类，按需添加，而不是混在一起：
 
-特别 SDXL，对 negative 非常敏感。
+1.  **画质类 (常驻)：** `low quality, worst quality, blurry, jpeg artifacts`。
+2.  **内容类 (按需)：**
+    *   如果不想要文字：`text, watermark, signature, username`。
+    *   如果不想要边框：`border, frame, letterbox`。
+    *   如果不想要 NSFW：`nsfw, nude`。
+3.  **解剖类 (SD1.5 必需)：** `bad anatomy, bad hands, extra digits`。
 
-### ✔ 原则：
+### 6. 嵌入模型 (Embeddings/Textual Inversion) 的陷阱
 
-* **SD1.5：中等长度（20～40词）合理**
-* **SDXL：尽量短（10词以内）更优**
+很多用户喜欢下载 `EasyNegative.pt`, `ng_deepnegative_v1_75t.pt` 等文件。
 
----
+*   **版本不通：** SD 1.5 的 Embedding **绝对不能** 用在 SDXL 模型上，反之亦然。用了会直接报错或者生成纯噪声图。
+*   **触发词：** 有些 Embedding 不需要你在框里写文件名，它是自动生效的（较少见）；绝大多数需要你在负面提示词框里输入文件名，如 `EasyNegative`。
+*   **推荐组合 (SD 1.5)：**
+    *   二次元：`EasyNegative` 或 `badhandv4`。
+    *   写实：`ng_deepnegative_v1_75t` (非常强力，有时会改变构图，建议配合 `(ng_deepnegative_v1_75t:0.8)` 降权使用)。
 
-## ❌ 误区2：使用贬义词（ugly、disgusting…）
+### 总结：一份安全的检查清单
 
-很多博客推荐写：
+在点击 Generate 之前，快速检查一下 Negative Prompt：
 
-```
-ugly, disgusting, deformed face
-```
+1.  **模型匹配吗？** (是 SD1.5 还是 SDXL？Pony 不要在负面堆砌垃圾词)。
+2.  **有逻辑冲突吗？** (我想画恐怖片，负面里却有 `darkness` 吗？)。
+3.  **有没有多余的？** (如果画半身像，写 `bad legs` 其实没意义，反而占权重)。
 
-但这是 **最反效果** 的东西，因为模型学习到：
-
-> ugly = “人形、脸部、强对比、粗糙线条”
-
-➡ 写 ugly，反而生成粗糙、线条硬、噪声重的画面。
-（因为它会把“不是 ugly”理解成“远离人形特征”，不是“变漂亮”）
-
-✔ 正确的写法应该是描述“结构错误或物理错误”，而不是美学评价：
-
-```
-bad anatomy, distorted face, asymmetrical eyes
-```
-
----
-
-## ❌ 误区3：在 SDXL 使用太多质量型负面提示
-
-在 SDXL 写：
-
-```
-low quality, worst quality, lowres, jpeg artifacts
-```
-
-会破坏 SDXL 的高语义 embedding，让画面看起来：
-
-* 色彩低饱和
-* 高光丢失
-* 面部自然度下降
-
-**SDXL 不需要这些**，因为默认输出就很高质量。
-
-✔ SDXL 推荐：
-
-```
-bad anatomy, extra fingers, watermark, text
-```
-
----
-
-## ❌ 误区4：权重写得太强
-
-例如：
-
-```
-(bad hands:1.5)
-```
-
-会导致：
-
-* 手部细节被“抹掉”
-* 画质变得像涂抹式降噪
-* SDXL 面部细节也会跟着消失
-
-✔ 建议权重范围：
-
-* SD1.5：负面权重一般 0.8～1.2
-* SDXL：负面权重 ≤ 1.0，建议不写显式权重
-
----
-
-## ❌ 误区5：使用“风格类 negative”（反向影响画风）
-
-例如：
-
-```
-anime, 3d, illustration, painting, oversaturated
-```
-
-SD 会认为你想远离这些风格 → 结果画面变灰、噪声增加。
-
-**绝不要在 negative prompt 里写风格。**
-
----
-
-# 🟩 3. SD1.5 & SDXL Negative Prompt の差异
-
----
-
-## SD1.5 → 负面提示非常重要
-
-因为 SD1.5 常见问题：
-
-* 多手指、错误解剖
-* 水印、logo
-* 图片有杂点、噪声
-* 场景理解弱
-
-**所以 SD1.5 使用“全面型负面提示”是合理的。**
-
-示例：
-
-```
-bad anatomy, extra hands, extra fingers, bad proportions,
-lowres, blurry, watermark, text, jpeg artifacts
-```
-
----
-
-## SDXL → 负面提示越少越好
-
-SDXL 本身质量就非常高，过度 negative 会让模型“拘束性增长”，限制可表达空间。
-
-推荐最小集：
-
-```
-bad anatomy, extra fingers, watermark, text
-```
-
-（尤其拍照风格 SDXL，负面越少越真实）
-
----
-
-# 🟧 4. 如何正确写 Negative Prompt
-
-## ☑ 原则 1：只描述“结构性错误”
-
-例如：
-
-**对人：**
-
-```
-bad anatomy, distorted hands, extra fingers, asymmetrical eyes
-```
-
-**对画质：**
-
-```
-blurry, noise, low contrast
-```
-
-**对干扰元素：**
-
-```
-watermark, signature, text
-```
-
----
-
-## ☑ 原则 2：不要写感性词、贬义词
-
-* ugly
-* disgusting
-* weird
-* creepy
-* fat / thin（容易引发身体结构崩溃）
-
----
-
-## ☑ 原则 3：不要写风格词
-
-* anime
-* 3d
-* painting
-* lineart
-  （会导致模型退化到低细节区域）
-
----
-
-## ☑ 原则 4：权重不要过强
-
-推荐直接不用权重。
-
----
-
-# 🟪 5. 实战用 Negative Prompt 模板
-
----
-
-## ✔ **SD1.5 标准 Negative Prompt（通用）**
-
-```
-low quality, blurry, bad anatomy, bad proportions, 
-extra fingers, extra limbs, duplicated limbs, 
-distorted hands, broken fingers, missing limbs,
-text, watermark, signature, logo
-```
-
----
-
-## ✔ **SDXL 标准 Negative（极简版本）**
-
-```
-bad anatomy, extra fingers, watermark, text
-```
-
-如果你想画得更清晰：
-
-```
-blurry, low contrast
-```
-
----
-
-## ✔ 插画风 Negative
-
-```
-bad anatomy, extra fingers, extra limbs, navel, nsfw,
-distorted hands, wrong perspective, watermark, text
-```
-
----
-
-## ✔ 写实摄影 Negative
-
-```
-bad anatomy, asymmetrical eyes, extra fingers,
-watermark, text, blurry, distorted face
-```
-
----
-
-# 🎯 6. 什么时候需要“强 Negative Prompt”？
-
-* 画 **多人**（容易多手）
-* **动作复杂**（容易骨骼扭曲）
-* **LoRA 强度高**（容易改变解剖）
-* **面部 close-up**（容易眼睛畸形）
-
----
-
-# 如果你愿意，我可以帮你：
-
-✔ 根据你的画风输出一套最佳 Prompt/Negative Prompt
-✔ 给 SD1.5 / SDXL / AnimeXL / RealVisXL 的完整负面词表
-✔ 自动生成 prompt 模板（可复制到 webui）
-
-你想生成什么题材？我可以直接帮你写 Prompt。
+**黄金法则：** 如果画面出现问题，**先尝试减少负面提示词**，而不是增加更多。

@@ -8,144 +8,114 @@
 
 ### 🤖 Assistant
 
-下面整理了 **目前在 *Hugging Face* Hub 上比较常用、适合 LLM（大型语言模型）训练的数据集**（包括 **预训练** 和 **微调/指令调优** 语料），并注明它们是否已经整理好、规模与用途等关键信息（含开源许可与规模说明）。
+在 Hugging Face 上，LLM 数据集浩如烟海，但质量参差不齐。如果你想要**“已经整理好”、“相对全面”且“可以直接拿来训练”**的数据集，目前的趋势是使用经过深度清洗、去重（Deduplication）和质量过滤（Quality Filtering）的集合。
+
+以下是目前社区公认质量最高、最主流的几个数据集，按**预训练（Pre-training）**和**微调（Instruction Tuning/SFT）**分类整理：
 
 ---
 
-# 1) 大规模用于 LLM 预训练的开放数据集（适合从头训练或继续训练）
+### 一、 综合性预训练数据集 (Pre-training)
+这些数据集主要用于从头训练（Pre-train）或者持续预训练（Continual Pre-training）基座模型。
 
-## **CulturaX**
+#### 1. FineWeb (由 Hugging Face 官方发布) - **目前的“版本答案”**
+这是目前开源社区最受推崇的英语预训练数据集，旨在取代之前的 RefinedWeb 和 CommonCrawl 原始数据。
+*   **名称:** `HuggingFaceFW/fineweb`
+*   **规模:** 约 **15 Trillion (15万亿)** Tokens (共约 44TB 文本)。
+*   **特点:**
+    *   **清洗极度彻底:** 包含了去重、PII（个人隐私信息）去除、质量过滤。
+    *   **FineWeb-Edu:** 它有一个名为 `fineweb-edu` 的子集，专门筛选了具有教育价值的高质量网页，效果在许多榜单上超过了原始数据，非常适合用来训练逻辑能力强的模型。
+*   **适用场景:** 训练高性能英语基座模型。
 
-* **描述**：一个大规模多语种语料库，经过清洗与去重，用于 LLM 训练（覆盖 167 种语言）。
-* **规模**：约 **6.3 万亿 tokens**（open source 可直接用于训练）。
-* **用途**：适合大规模预训练、基础语料扩展。
-* **Hub 链接**：`uonlp/CulturaX` ([Hugging Face][1])
+#### 2. RedPajama & SlimPajama (由 Together AI / Cerebras 发布)
+RedPajama 旨在复刻 Llama 1 的训练数据配比；SlimPajama 则是其极致去重版。
+*   **名称:** `cerebras/SlimPajama-627B` (推荐) 或 `togethercomputer/RedPajama-Data-1T`
+*   **规模:** SlimPajama 约为 **627 Billion** Tokens；RedPajama v2 甚至达到了 **30 Trillion** Tokens。
+*   **特点:**
+    *   **配比科学:** 包含 CommonCrawl, C4, GitHub, Books, ArXiv, Wikipedia, StackExchange。
+    *   **高信噪比:** SlimPajama 剔除了大量重复内容，训练效率更高。
+*   **适用场景:** 标准化的大模型预训练，许多开源模型（如 TinyLlama）都基于此。
 
-## **FineWeb (及 FineWeb 系列：FineWeb-Edu / FineWeb2)**
-
-* **描述**：由 Hugging Face Science / FineData 团队构建的大规模网页文本集，基于 Common Crawl 多轮过滤、提取与清洗；可视为现代版“开放数据预训练语料”。
-* **规模**：
-
-  * **FineWeb**：约 **15 万亿 tokens**（主干网页语料）。
-  * **FineWeb-Edu**：约 **1.3 万亿 tokens**（教育类高质量文本）。
-  * **FineWeb2**：扩展到更多语言、覆盖上千语种（规模未完全公开但也是数万亿级别）。
-* **用途**：从头预训练大型 LLM、继续训练/扩展模型语料。
-* **Hub 链接**：`HuggingFaceFW/fineweb` 等 ([Hugging Face][2])
-
-## **The Pile / Common Pile**
-
-* **描述**：EleutherAI 构建的多领域英语大语料，包含科学文献、书籍、论坛、Coding、Web 等多项来源（经典开源 LLM 训练语料）。
-* **规模**：约 **800+ GB 文本**（总计约数千亿 tokens）。
-* **用途**：适合从头训练英文 LLM 或扩展已有模型语料。
-* **参考说明**：虽不一定全部托管在 HF 上（可通过Hub加载或镜像），但经常用于 LLM 训练与benchmark。 ([维基百科][3])
-
-## **RefinedWeb / C4 / 红杉式语料 (相关但未全开源)**
-
-* **RefinedWeb**：一种高质量网页语料（参考 FineWeb 设计逻辑）。部分衍生版本可在 Hugging Face 上找到。
-* **C4（Colossal Clean Crawled Corpus）**：基于 Common Crawl 清洗的大语料，很多开源模型训练中使用（通过 Hugging Face Datasets 可以加载）。
-* **这些数据集本身不是单一仓库，但其组件经常出现在 HF 上或可通过 HF 的 `datasets` 接口加载。** ([Medium][4])
+#### 3. The Pile (由 EleutherAI 发布)
+虽然发布时间较早，但依然是经典的黄金标准。
+*   **名称:** `EleutherAI/the_pile` (注意：原始版本因版权问题可能有变动，常用 `The Pile Deduplicated` 变体)
+*   **规模:** 约 **800 GB** 文本。
+*   **特点:** 包含了大量的学术论文（PubMed, ArXiv）、代码（GitHub）和书籍，比单纯的网页数据更有深度。
 
 ---
 
-# 2) 用于 **微调 & 指令调优（Instruction Tuning/SFT）** 的开源数据集
+### 二、 中文/多语言预训练数据集
+如果你主要面向中文环境，仅用上述英语数据是不够的，需要混合以下高质量中文数据。
 
-## **llm-jp/FLAN**
+#### 1. WanJuan (万卷) - 1.0 & 2.0 (由上海人工智能实验室发布)
+这是书生·浦语（InternLM）模型的训练数据。
+*   **名称:** `OpenDataLab/WanJuan1.0` (需在 OpenDataLab 官网申请或通过 HF 镜像)
+*   **规模:** 文本数据约 **2 TB**。
+*   **特点:**
+    *   **多模态融合:** 包含文本、图文对、视频（虽然你可能只需要文本）。
+    *   **来源丰富:** 包含中文网页、百科、书籍、专利、教材、代码。
+*   **适用场景:** 训练高质量中文基座模型。
 
-* **描述**：日本社区构建的一套指令调优语料，来自 Open-Orca/FLAN。
-* **规模**：约 **105,000 条样本**，适合微调 / 指令学习。
-* **用途**：针对指令调优、聊天风格迁移等任务。
-* **Hub 链接**：`llm-jp/FLAN` ([Hugging Face][5])
+#### 2. WuDaoCorpora (悟道) (由智源研究院 BAAI 发布)
+国内最早、影响力最大的开源中文数据集之一。
+*   **规模:** 约 **3 TB**。
+*   **特点:** 专注于高质量中文文本，包括新闻、博客、小说等。是许多早期中文 LLM（如 ChatGLM 早期版本）的重要数据来源。
 
-## **LMSYS-Chat-1M**
+#### 3. SkyPile (由 Skywork 天工发布)
+*   **名称:** `Skywork/SkyPile-150B`
+*   **规模:** **150 Billion** Tokens。
+*   **特点:** 这是一个经过严格清洗的中文网页数据集，主要来自 Common Crawl，旨在提供高质量的中文互联网语料。
 
-* **描述**：真实世界的大型 LLM 聊天记录数据集，约 **1 百万对话**。
-* **用途**：适用于构建更自然的对话模型与对话微调。
-* **Hub 链接**：`lmsys/lmsys-chat-1m` 等 ([arXiv][6])
-
-## **其他细分微调语料**
-
-在 HF Hub 上还有大量微调/对话/指令数据集，例如：
-
-* **openai/gsm8k**：数学推理类 benchmark 数据（适合评估与特定能力训练）。
-* 多语言特定领域指令数据（如医疗、法律、技术类微调集）。
-  这些数据规模通常在几万–百万级样本之间，便于快速微调与评估。 ([Hugging Face][7])
-
----
-
-# 3) 特定语种/任务数据集（补充）
-
-## **CCI3.0-HQ**（中文大语料）
-
-* **描述**：高质量中文语料（CCI3.0 生态的一部分），适合 pre-training 语言模型。
-* **规模**：约 **500GB** 高质量子集，已在 Hugging Face 上发布。
-* **用途**：中文预训练与继续训练。
-* **Hub 链接**：`BAAI/CCI3-HQ` 等 ([arXiv][8])
+#### 4. CulturaX (多语言)
+*   **名称:** `uonlp/CulturaX`
+*   **规模:** **6.3 Trillion** Tokens (涵盖 167 种语言)。
+*   **特点:** 如果你需要训练多语言模型（不仅是中英），这是最佳选择。它对 mC4 和 OSCAR 进行了深度清洗和去重。
 
 ---
 
-# 数据集整理状态与适用性
+### 三、 指令微调数据集 (SFT / Instruction Tuning)
+这些数据集规模较小，但质量极高，用于让基座模型学会“听懂指令”和“对话”。
 
-| 数据集                | 预训练 | 微调       | 多语种         | 规模           | 已整理/易用 |
-| ------------------ | --- | -------- | ----------- | ------------ | ------ |
-| CulturaX           | ✔   | ✘        | ✔           | ~6.3T tokens | 是      |
-| FineWeb / FineWeb2 | ✔   | ✘        | ✔（FineWeb2） | ~15T+ tokens | 是      |
-| The Pile           | ✔   | ✘        | ✘           | ~0.9TB       | 是      |
-| C4 / 网页语料          | ✔   | ✘        | 部分          | ~数百 GB+      | 是      |
-| llm-jp/FLAN        | ✘   | ✔        | ✘           | ~0.1M        | 是      |
-| LMSYS-Chat-1M      | ✘   | ✔        | ✘           | ~1M          | 是      |
-| gsm8k              | ✘   | ✔（评估/微调） | ✘           | ~8–20k       | 是      |
-| CCI3.0-HQ          | ✔   | ✘        | ✘           | ~500GB       | 是      |
+#### 1. UltraChat (由 Tsinghua/OpenBMB 发布)
+*   **名称:** `s-turing/UltraChat` (或 HuggingFaceH4 的处理版 `HuggingFaceH4/ultrachat_200k`)
+*   **规模:** 约 1.5M 对话 (200k 精选版更常用)。
+*   **特点:** 使用 ChatGPT 生成的多轮对话数据，覆盖面极广，是目前训练 Chat 模型的主流选择（如 Zephyr 系列）。
 
----
+#### 2. OpenHermes 2.5 (由 Teknium 发布)
+*   **名称:** `teknium/OpenHermes-2.5`
+*   **规模:** 约 100万条指令。
+*   **特点:** 集合了 GPT-4 生成的高质量指令，包含代码、逻辑推理等，被称为“开源版 GPT-4 数据”。
 
-# 如何开始使用（示例）
+#### 3. COIG (Chinese Open Instruction Generalist) (由 BAAI 发布)
+*   **名称:** `BAAI/COIG`
+*   **规模:** 第一期包含多种中文指令任务。
+*   **特点:** 专门针对中文语境优化的指令集，包含考试题、翻译、总结等任务。
 
-### 使用 `datasets` 加载数据集
-
-```python
-from datasets import load_dataset
-
-# 载入 FineWeb 子集（如果想从 HF Hub 下载）
-dataset = load_dataset("HuggingFaceFW/fineweb", streaming=True)
-
-# 或者载入微调语料
-sft_data = load_dataset("llm-jp/FLAN")
-```
-
-**提示**：
-
-* 对于数万亿级别的大语料建议使用 **streaming 模式**（可边读取边训练）。
-* 对于预训练语料通常需要先清洗与去重，然后按 token 划分 chunk，方便训练流水线使用。 ([Hugging Face][9])
+#### 4. Magpie (Pro & Air)
+*   **名称:** `Magpie-Align/Magpie-Pro-300K-Filtered`
+*   **特点:** 这是一个比较新的数据集，通过“诱导” Llama-3 等模型生成的高质量合成数据，不依赖 OpenAI，且包含思维链（CoT），质量极高。
 
 ---
 
-# 总结建议
+### 四、 代码与数学专项数据集
+如果希望模型在写代码或做数学题上表现出色，必须混入这类数据。
 
-1. **如果目标是从头训练或继续预训练大型模型**：
-
-   * 优先考虑 **CulturaX**、**FineWeb / FineWeb2**、**The Pile** 或其组合。
-   * 对于多语种模型，如需要覆盖多语种能力，**FineWeb2 + CulturaX** 是不错的基础语料组合。
-
-2. **如果目标是指令调优 / 生成风格训练（SFT）**：
-
-   * 使用 **llm-jp/FLAN、LMSYS-Chat-1M** 等配合自定义 prompt/response 数据。
-   * 可结合领域特定微调集（如法律、医疗、问答集）。
-
-3. **任务细化**：
-
-   * 小规模能力评估（reasoning）如 **gsm8k**。
-   * 中文预训练可选 **CCI3.0-HQ** 等语料。
+*   **代码:** **The Stack v2** (BigCode/HuggingFace)。规模达到 **3TB+**，包含了 GitHub 上几乎所有许可证友好的代码，支持 600+ 种编程语言。
+*   **数学:** **OpenMathInstruct-1** (NVIDIA)。包含数百万个数学问题及其解题步骤（CoT）。
 
 ---
 
-若你希望我根据你的具体训练目标（如“预训练 vs 微调”、使用语言范围、GPU 配置等）进一步推荐**具体组合与清洗方案**，请告诉我详细需求。
+### 总结建议：如何搭配使用？
 
-[1]: https://huggingface.co/datasets/uonlp/CulturaX?utm_source=chatgpt.com "uonlp/CulturaX · Datasets at Hugging Face"
-[2]: https://huggingface.co/datasets/HuggingFaceFW/fineweb?utm_source=chatgpt.com "HuggingFaceFW/fineweb · Datasets at Hugging Face"
-[3]: https://en.wikipedia.org/wiki/The_Pile_%28dataset%29?utm_source=chatgpt.com "The Pile (dataset)"
-[4]: https://medium.com/%40rajratangulab.more/big-data-in-hugging-face-datasets-a-comprehensive-guide-1413afaffa01?utm_source=chatgpt.com "Big Data in Hugging Face Datasets: A Comprehensive Guide"
-[5]: https://huggingface.co/datasets/llm-jp/FLAN?utm_source=chatgpt.com "llm-jp/FLAN · Datasets at Hugging Face"
-[6]: https://arxiv.org/abs/2309.11998?utm_source=chatgpt.com "LMSYS-Chat-1M: A Large-Scale Real-World LLM Conversation Dataset"
-[7]: https://huggingface.co/datasets?utm_source=chatgpt.com "Datasets - Hugging Face"
-[8]: https://arxiv.org/abs/2410.18505?utm_source=chatgpt.com "CCI3.0-HQ: a large-scale Chinese dataset of high quality designed for pre-training large language models"
-[9]: https://huggingface.co/learn/llm-course/zh-CN/chapter5/4?utm_source=chatgpt.com "大数据？🤗 Datasets 应对有方！ - Hugging Face LLM Course"
+如果你想训练一个类似 **Llama 3 8B** 级别的模型，建议的配方如下：
+
+1.  **基座预训练 (Pre-training):**
+    *   **英语:** 选用 **FineWeb** (或 FineWeb-Edu) 作为主力（占比 60-70%）。
+    *   **中文:** 选用 **WanJuan** 或 **SkyPile** (占比 20-30%)。
+    *   **代码:** 混入 **The Stack v2** 的一部分 (占比 10%)。
+    *   *数据量级建议:* 至少训练 1T - 2T Tokens 才能看到较好的智能涌现。
+
+2.  **指令微调 (SFT):**
+    *   使用 **UltraChat_200k** + **OpenHermes 2.5** + **Magpie**。
+    *   混合 **COIG** 以增强中文指令遵循能力。
+
+所有上述数据集均可在 Hugging Face Datasets Hub 直接搜索名称下载。下载前请注意查看数据集卡片（Dataset Card）中的 License（许可证），大部分是 Apache 2.0 或 MIT，但部分可能限制商用（如带有 CC-BY-NC 协议）。

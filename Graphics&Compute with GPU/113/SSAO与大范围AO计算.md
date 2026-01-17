@@ -8,178 +8,70 @@
 
 ### 🤖 Assistant
 
-下面从**几何原理、采样分布、噪声与遮挡概率、深度图局限性**四个角度解释，为什么 **SSAO（Screen-Space Ambient Occlusion）几乎无法可靠计算“大范围 AO”**，而通常必须依赖 **RTGI / RTAO（Ray Traced GI/AO）** 才能实现大尺度遮挡。
+SSAO（Screen Space Ambient Occlusion，屏幕空间环境光遮蔽）之所以难以计算大范围（Large-scale）的 AO，本质上是由**屏幕空间算法的先天局限性**和**GPU 硬件架构的特性**共同决定的。
+
+简单来说，SSAO 是一个基于“猜测”的近似算法，而想要获得大范围的遮蔽关系，这种猜测的代价会呈指数级上升，且准确度会急剧下降。
+
+以下是具体的技术原因分析：
+
+### 1. 数据的缺失（Screen Space Limitation）
+
+SSAO 仅依赖于当前帧的 **G-Buffer**（主要是 Depth Buffer 和 Normal Buffer）。这意味着它是一个“管中窥豹”的算法。
+
+*   **屏幕外几何体缺失**：如果造成遮蔽的物体在屏幕之外（Frustum 之外），或者被前景物体挡住（Z-Buffer 中没有该物体的数据），SSAO 根本无法知道它的存在。
+*   **大范围意味着更多缺失**：当你计算局部 AO（比如衣服的褶皱）时，所需的数据通常都在相邻像素里。但当你试图计算大范围 AO（比如建筑物投射在地面上的阴影，或者房间角落的阴影）时，遮蔽物很可能位于屏幕边缘甚至屏幕外。如果不使用 Ray Tracing 或 Voxel，SSAO 对此无能为力。
+
+### 2. 采样半径与缓存命中率（Sampling Radius & Cache Locality）
+
+SSAO 的核心逻辑是在当前像素周围的一个球体（半球）内进行采样，对比深度值。
+
+$$
+A(p) = \frac{1}{\pi} \int_{\Omega} V(p, \omega) (n \cdot \omega) d\omega
+$$
+
+其中 $V$ 是可见性函数。在代码实现中，这是一个蒙特卡洛积分，需要循环采样 $N$ 次。
+
+*   **小范围（Local）**：采样点都在当前像素附近。GPU 的纹理缓存（Texture Cache/L1/L2）非常喜欢这种访问模式，因为相邻像素的数据很可能已经被读入缓存了。
+*   **大范围（Large-scale）**：为了捕捉大范围遮蔽，采样半径必须设得很大（例如跨越屏幕几百个像素）。
+    *   **Cache Thrashing（缓存颠簸）**：采样点分布极其稀疏且跨度大，导致纹理采样频繁发生 **Cache Miss**。GPU 必须不断从显存（VRAM）中读取数据，导致带宽成为瓶颈，性能急剧下降。
+    *   **步进问题**：如果为了性能减少采样数但保持大半径，会导致严重的**欠采样（Undersampling）**，表现为明显的噪点或条纹。
+
+### 3. 几何厚度的缺失（Lack of Thickness Information）
+
+这是 SSAO 最经典的缺陷，在大范围计算时尤为致命。
+
+Z-Buffer 只有“一面”墙，它没有厚度。SSAO 算法通常假设遮蔽物是无限厚的，或者是薄片。
+*   当采样半径很小时，物体表面的局部凹凸可以被视为简单的几何结构，误差不明显。
+*   当采样半径很大时，算法可能会采样到很远背景的物体。例如，一个前景的角色站在一面远处的墙前面。
+    *   SSAO 会发现背景墙的深度大于角色的深度。
+    *   如果不加特殊的处理（Range Check），算法会误以为背景墙被角色遮挡了，或者角色被背景墙遮挡了，从而产生**错误的黑色光晕（Halo Artifacts）**。
+    *   为了消除这种伪影，必须引入严格的深度阈值截断，但这反而切断了真正的长距离遮蔽效果。
+
+### 4. 视角依赖性（View Dependence）
+
+大范围 AO 应该是环境的一种固有属性（低频光照信息），不应随相机移动而剧烈变化。
+然而，SSAO 是基于视角的。当你转动镜头，屏幕边缘的大范围遮蔽信息会突然消失或出现（因为产生遮蔽的物体移出了屏幕）。这种**时域上的不稳定（Temporal Instability）**在大范围 AO 上表现得比局部 AO 更明显，给玩家一种“阴影在闪烁”的廉价感。
 
 ---
 
-# ✅ 1. **SSAO 的“视锥体/屏幕空间”限制 —— 看不到的东西无法提供遮挡**
+### 为什么 Ray Tracing (GI) 能解决这个问题？
 
-SSAO 只依赖 **当前屏幕** 的：
+依赖 Ray Tracing 的 GI（或 RTAO - Ray Traced Ambient Occlusion）在根本上解决了上述问题：
 
-* depth buffer
-* normal buffer
+1.  **世界空间（World Space）**：RT 访问的是 **BVH（Bounding Volume Hierarchy）** 结构，包含整个场景的完整几何信息，无论物体是否在屏幕内。
+2.  **任意距离**：光线追踪的射线（Ray）可以射出任意长度。检测 1 米外的遮蔽和 100 米外的遮蔽，在逻辑上是一样的，只是遍历 BVH 的成本不同，不存在屏幕空间的“步进”和“缓存局部性”噩梦。
+3.  **准确的几何关系**：RT 精确知道物体之间的空间距离，不会出现 SSAO 那种“分不清是前景还是背景”导致的 Halo 伪影。
 
-它完全不知道 **屏幕外的几何、被前景遮挡的几何、背后的场景拓扑**。
+### 总结
 
-因此，屏幕空间 AO **只能计算到摄像机可见的 surfaces 的局部遮挡**。
+SSAO 的设计初衷就是为了以极低的消耗模拟**高频的、局部的**接触阴影（Contact Shadows）。
 
-> **大尺度 AO（如几米外的柱子投的全局遮挡）在 depth buffer 中根本不可见，所以 SSAO 不可能知道它的存在。**
+试图用 SSAO 做大范围 AO，就像试图用放大镜去观察整个城市：
+1.  你看不全（屏幕边缘切断）。
+2.  你移动太慢（Cache Miss 导致性能低下）。
+3.  你失去了透视关系（无法处理厚度和分离的物体）。
 
-举例：
-
-一个角落房间结构，远端墙壁对地面的环境光遮挡是巨大的，但在当前画面的 depth 中：
-
-```
-墙壁   [被遮住 → depth 中不存在]
-地面   [可见]
-```
-
-SSAO 不知道墙壁存在 → 无法添加长程 AO。
-
----
-
-# ✅ 2. **大范围 AO 需要“长程采样”，屏幕空间采不到**
-
-SSAO 的工作方式是：
-
-### 在像素附近的**半径 r 区域内**随机采样深度 → 估计遮挡概率
-
-但半径 r 实际上受多种强约束：
-
-* 采样距离越大，深度 buffer 分辨率不足 → 跳变/不连续
-* 采样越远越容易穿透背景（depth discontinuity）
-* 投影空间的采样半径非常扭曲
-* 采样半径若明显大于物体屏幕投影大小 → AO 全是噪声和错误
-
-实际 SSAO 通常只能稳定处理：
-
-* 半径 ≈ 0.5%–2% 屏幕尺寸（在 world space 中通常 ≈ 0.1–1 m）
-
-> 真正 GI 级别 AO 需要 5–10m 的遮挡半径，而屏幕空间深度根本无法稳定支持这种距离的空间采样。
-
----
-
-# ✅ 3. **深度图是 2.5D 的 —— AO 是 3D 几何问题**
-
-SSAO 的深度图结构：
-
-```
-每个 (x,y) 只有一个 Z 值
-没有体积信息
-没有背面
-没有深度层次
-```
-
-也就是说：
-
-* 无法处理多层几何
-* 无法响应复杂拓扑（如洞口、门框）
-* 只能看到 surfaces，没有 geometry
-
-而 AO 本质是：
-
-> 计算某点周围 360° 立体空间的遮挡率
-
-这种东西 **2.5D 结构是根本描述不了的**。
-
-举例：你在桥下行走，桥上结构对你脚下地面的 AO 贡献极大，但深度图通常是：
-
-```
-地面深度 → visible
-桥深度 → 被遮挡 → 消失
-```
-
-SSAO 中“桥”完全不可见 → 不可能算出 global AO。
-
----
-
-# ✅ 4. **大范围 AO 会被投影空间畸变彻底破坏**
-
-SSAO 通常在 **view space 或屏幕投影空间**采样。
-
-当采样半径增加时：
-
-* 屏幕空间拉伸变形严重
-* 远处采样点聚在同一深度像素
-* Z 精度丢失（especially reversed-Z still limited）
-* 表面偏斜角导致噪声剧增
-
-SSAO 半径扩大 = AO 错误几何级别增长。
-
-这就是为什么大部分 SSAO 实现（HBAO, GTAO）都会强调：
-
-**不要使用过大采样半径，否则 AO artifact 爆炸。**
-
----
-
-# ✅ 5. **AO 需要“真实的几何”，SSAO 只有“投影后的片段”**
-
-AO 本质是：某点周围是否被体积阻挡。
-
-RTGI/RTAO 使用 BVH（真实三角形）进行射线查询：
-
-```
-射线 → 相交 → 告诉你几米外是否有遮挡物
-```
-
-SSAO：
-
-```
-屏幕片段 → 邻域采样 → 无法知道真实 3D 拓扑
-```
-
-等价于只用“二维照片”下判断三维遮挡 → 本质不可能全局正确。
-
----
-
-# 🔥 6. **为什么 RTGI / RTAO 可以解决大范围 AO？**
-
-因为 RTGI/RTAO 具有：
-
-### √ 真正的 3D 空间
-
-使用 acceleration structure（BVH）
-能查询任意距离的遮挡，甚至几十米也没问题。
-
-### √ 不依赖相机视野
-
-屏幕外几何仍存在于 BVH → 可以贡献 AO。
-
-### √ 不受深度图分辨率限制
-
-世界空间精确相交，而不是屏幕空间模糊投影。
-
-### √ 能处理多层几何、细节、拓扑
-
-桥下、桌子下、洞穴结构等各种情况都能正确计算。
-
----
-
-# 🔚 总结：为什么 SSAO 难做大范围 AO？
-
-| 问题    | SSAO       | RTGI/RTAO  |
-| ----- | ---------- | ---------- |
-| 屏幕外几何 | ✗ 无法看到     | ✓ BVH 存在   |
-| 长距离遮挡 | ✗ 深度图不支持   | ✓ 射线长度可调   |
-| 多层几何  | ✗ 只有 2.5D  | ✓ 完整 3D    |
-| 空间畸变  | ✗ 采样半径越大越错 | ✓ 无投影畸变    |
-| 光照拓扑  | ✗ 视空间局部    | ✓ 真实 3D 场景 |
-
-所以：
-
-> **SSAO 是局部 AO。要大范围/全局 AO，必须要 ray-traced AO 或 GI。**
-
----
-
-如果你愿意，我还可以进一步给你：
-
-* SSAO → GTAO → HBAO → GTAO+ 的能力比较
-* Ray-traced AO 与 SSRTGI 区别
-* 为什么 UE5 使用 DFAO、Lumen、RTAO 混合提供 long-range AO
-* 如何在非 RT pipeline 实现近似 long-range AO（GTAO bent-normal 分布）
-
-只要告诉我你想继续深挖哪一块。
-
+因此，现代引擎通常采用混合方案：用 **SSAO/GTAO** 处理微小的褶皱和接触阴影，用 **SDF AO（距离场 AO）、Voxel AO（体素 AO）** 或 **Ray Tracing** 来处理大范围的环境遮蔽。
 
 ---
 
@@ -191,172 +83,62 @@ SSAO：
 
 ### 🤖 Assistant
 
-**不仅有这种可能，而且这正是现代实时渲染（UE5、Frostbite、RE Engine 等）在做的事情：
-当 RTGI 的采样密度与噪声控制足够好时，它可以天然地“包含” AO 的绝大多数效果。**
+这不仅仅是“可能”，在物理原理和高端渲染的发展趋势上，**这绝对是事实**。
 
-下面我详细解释为什么 **高精度 RTGI 会自然地产生 AO**，以及为什么它可以*取代*传统 AO。
+实际上，**Ambient Occlusion (AO) 本质上就是全局光照 (GI) 的一种廉价的、简化的近似**。
 
----
+当你的 RTGI（光线追踪全局光照）精度达到“无限高”（即全路径追踪 Path Tracing）时，AO 这个概念就不再作为一种独立的技术存在了，它会自然地融入到光照计算中。
 
-# ✅ 1. **AO 本来就是 GI 的一个特殊情形**
+以下是详细的分析：
 
-从光照方程（Rendering Equation）来看：
+### 1. 物理本质：AO 是 GI 的子集
 
-AO 的定义其实是：
+让我们看渲染方程（Rendering Equation）：
 
-> 在某点附近的小范围内，半球方向上有多少光线被遮挡。
+$$
+L_o(p, \omega_o) = L_e(p, \omega_o) + \int_{\Omega} f_r(p, \omega_i, \omega_o) L_i(p, \omega_i) (n \cdot \omega_i) d\omega_i
+$$
 
-而 GI 做的事情是：
+*   **GI (Global Illumination)**：试图求解这个积分的完整值。它计算从四面八方射入的光线 $L_i$，这些光线有的来自天空（天光），有的来自其他物体反射（间接光）。
+*   **AO (Ambient Occlusion)**：为了简化计算，假设场景被一个**均匀的白色光**包围（即 $L_i$ 是常数）。那么积分就变成只计算“有多少光线被挡住了”。
 
-> 在某点向各个方向射线，查看是否有光照贡献（直接光、间接光、遮挡）。
+**结论**：如果 GI 能够极其精确地计算出每一束进入角落的光线，那么角落自然会变黑（因为反射光进不去）。这时候，你计算出的图像天然就包含了 AO 的效果。
 
-如果你把 GI 的间接光全部屏蔽掉，只保留遮挡信息，扔掉颜色、反射、bounce 信息，你得到的就是：
+在离线渲染（如影视特效、皮克斯动画）中，**“AO Pass”往往不再用于直接合成最终画面**，因为路径追踪渲染器算出来的图已经包含了完美的遮蔽效果。AO 通道现在更多是留给合成师（Compositor）用来在后期微调画面对比度或做风格化处理的。
 
-> **AO = GI 在 0 bounce、仅算 visibility term 的情况**
+### 2. 为什么在实时渲染中，即便有 RTGI，我们有时还是需要 AO？
 
-因此：
+虽然理论上 RTGI 包含了 AO，但在目前的硬件水平下（即使是 RTX 4090），单纯依靠 RTGI 来替代所有 AO 效果还存在两个主要瓶颈：
 
-✔ AO ⊂ GI
-✔ GI 自然包含 AO
-✔ GI 越精确，AO 越自然真实
+#### A. 频率与分辨率问题 (Frequency & Resolution)
 
----
+*   **GI 通常是低频的**：为了性能，实时 RTGI（如 UE5 的 Lumen 或 NVIDIA 的 RTXGI）通常不会对每个像素射出几十条光线。它们往往在半分辨率、甚至更低的探针（Probe）网格上计算，或者严重依赖时域累积（Temporal Accumulation）。这意味着 RTGI 擅长处理**大范围的**光照反弹（比如红墙把地板映红）。
+*   **AO 需要高频细节**：衣服的缝隙、砖块的纹理凹凸、螺丝钉周围的阴影，这些属于极高频的细节。如果用 RTGI 去算这些，你需要极高密度的光线才能击中那些微小的缝隙。
+*   **现状**：目前的 RTGI 很容易把微小的接触阴影“涂抹”掉（Denoising 造成的模糊）。因此，我们仍然叠加一层 **SSAO** 或 **GTAO**，专门用来增强这些**微观几何（Micro-geometry）**的体积感。
 
-# ✅ 2. **RTGI 由于有 BVH + 真正射线，本质上比 AO 更“正确”**
+#### B. 漏光与接触阴影 (Light Leaking & Contact Shadows)
 
-RTGI 在计算时：
+由于实时 RTGI 经常使用简化的几何体（例如 Lumen 使用的 Mesh Distance Fields 或 Surface Cache），它可能无法精确匹配高模的表面。这会导致物体放在地面上时，底部没有完全变黑，产生“悬浮感”。
+专门的 AO（特别是 Ray Traced AO 或 Screen Space Contact Shadows）可以强制压暗这些接触区域，让物体“落地”。
 
-* 对每个像素向半球发射射线
-* 查 BVH 得到遮挡情况
-* 得到 bounce 光照与能量
+### 3. 未来的演变：从 AO 到 "Micro-Shadowing"
 
-AO 只需要其中的一部分：
+随着显卡算力的提升，我们正在经历一个术语和技术的转变：
 
-* 某方向光线是否被遮挡？（visibility 0/1 或 fraction）
+1.  **大范围遮蔽 (Large Scale Occlusion)**：已经被 GI 接管。正如你所说，以前用 AO 模拟的“房间角落变黑”，现在完全由 RTGI 的间接光照衰减来自然实现。
+2.  **小范围遮蔽 (Small Scale Occlusion)**：依然保留。但它越来越不像传统的 AO（均匀压暗），而更多地被称为 **Micro-Shadowing** 或 **Contact Hardening**。
 
-如果你把 GI 结果做一些 simplification：
+**一个现代的高端渲染管线（如 Cyberpunk 2077 的 Overdrive 模式）可能是这样的：**
 
-* 抹掉 indirect color
-* 抹掉 bounce light
-* 把光照强度变成纯遮挡率
+*   **不使用** 传统的 SSAO 去模拟大范围阴影（因为那是假的，而且不准）。
+*   **使用** RTGI (Path Tracing) 计算所有的光照反弹和主要的遮蔽关系。
+*   **可能保留** 一个极小半径的 GTAO 或者利用 Normal Map 导出的 Cavity Map，用来补充那些连光追都无法捕捉到的、纹理级别的微小缝隙阴影。
 
-就会得到：
+### 总结
 
-### **Ray-traced AO (RTAO) = RTGI 的“灰度遮挡项”**
+**是的，当 RTGI 精度足够高（接近 Path Tracing）时，它不仅能实现 AO 的效果，而且比 AO 更真实。**
 
-事实上，许多引擎：
-
-* **UE5 Lumen**
-* **Frostbite RTXGI**
-* **NVIDIA ReSTIR GI**
-  都已经直接用 GI 替代 AO，或者从 GI 中“推导”出 AO。
-
----
-
-# ✅ 3. 当 RTGI 噪声足够低时：
-
-AO 其实就是**GI 在小范围内的特殊参数化**。
-
-RTGI 默认是 multi-bounce + large radius。
-
-而 AO 只是：
-
-* 0 bounce 或 1 bounce 非颜色项
-* bent normal approximation
-* 只算 visibility term，不算 radiance term
-* 半球范围较小
-
-你甚至可以把 GI 的参数 tune 成 AO：
-
-```
-GI_Radius = AO_Radius
-GI_Bounce = 0
-GI_Color = White
-```
-
-这样 RTGI = 高精度 AO
-并且永远不受屏幕空间限制。
-
----
-
-# ✅ 4. **RTGI 精度非常高时，AO = GI 中低频阴影的一部分**
-
-当 RTGI 采样数量充足：
-
-GI 自然会包含：
-
-* 物体遮挡近处的暗角 → AO 效果
-* 巨大物体投出的 broad soft shadow → 是 long-range AO 的扩展
-* bounce 光照填充 → 让“AO 区域不会死黑”
-
-这比 SSAO/HBAO/GTAO 更正确。
-
-AO 本身是一个**原本应该属于 GI 的补丁**，因为早期无法做完整 GI，只能做局部遮挡项而已。
-
-现在 RTGI 的速度足够了，AO 的原始意义正在被吸收。
-
----
-
-# 🔥 5. **为什么 UE5 中 Lumen 的 GI 输出中 AO 已经“隐含存在”？**
-
-UE5 Lumen 已经：
-
-* 不再需要传统 SSAO 做全局 AO
-* GI 输出中天然包含 broad-scale AO
-* 用 screen-space AO 只补一些高频细节（small-scale contact shadows）
-
-因此 Lumen 的 pipeline 是：
-
-* **RTGI 提供大尺度 AO**
-* **SSAO 用来提升微细细节（micro contact shadows）**
-
-这正体现了你的观点：
-
-> **当 GI 足够好时，AO 变成 GI 的一个低频成分，仅需少量 screen-space 补高频。**
-
----
-
-# 🧠 6. **真正的未来：AO 会消失，统一回 GI 中**
-
-业内趋势已经越来越明确：
-
-### **AO 会淡出，最终由 RTGI/RTAO 替代。**
-
-原因：
-
-* GI 能提供更真实遮挡（multi-bounce、color bleeding）
-* GI涵盖了 AO 所能提供的所有效果
-* GI 精度上来后不需要单独的 AO pass
-* AO 仅在极少数情况作为一个“small-scale visibility booster”
-
-例如：
-
-* **Cyberpunk 2077 Path Tracing 模式：不需要 AO**
-* **UE5 Lumen High Quality 模式：不需要传统 AO**
-
----
-
-# 🧩 7. 回到你的问题：
-
-> **有没有一种可能，当 rtgi 精度足够高，用 gi 就可以实现 ao 的很多效果？**
-
-答案：
-
-### ✔ 不仅可能，而且是现代渲染正在发生的事实。
-
-### ✔ RTGI/GI 在高精度下天然包含 AO。
-
-### ✔ AO 正在从独立 pass 被吸收进 GI。
-
-如果你愿意，我可以继续讲：
-
-* RTGI 输出中如何 mathematically recover an AO term
-* 为什么现阶段仍保留 SSAO（微影子）
-* RTAO 和 RTGI 有什么本质区别
-* Lumen、RTXGI、Frostbite 都是如何从 GI 导出 AO 的
-
-告诉我下你想深入哪一块。
-
+AO 模拟的是“环境光被遮挡”，而高精度 GI 计算的是“光真的进不去”。物理世界中没有“AO”这种力或能量，只有“光照”。AO 只是我们在算力不足的时代，为了模仿光照不足而发明的一种聪明的“作弊手段”。随着算力提升，这种作弊手段正在逐渐退出现代图形学的舞台中心。
 
 ---
 
@@ -368,218 +150,58 @@ UE5 Lumen 已经：
 
 ### 🤖 Assistant
 
-你观察到的现象 **完全正确**，并且这是 SSGI/RTGI 在实际实时渲染中面临的最核心技术瓶颈：
+你的观察非常敏锐，而且**完全切中了当前实时渲染（Real-Time Rendering）领域最大的痛点**。
 
-> **即使 RTGI/SSGI 理论上能包含 AO，但实际实现中，RTGI 输出的 indirect diffuse 通常非常模糊（低频），根本不足以直接替代 AO。**
+你看到的现象——“GI 哪怕降噪后依然很糊，缺乏高频细节，无法替代 AO 的接触阴影”——是**实时随机光线追踪（Stochastic Ray Tracing）**目前面临的根本性物理和数学难题。
 
-下面我从**采样预算 → 几何错误 → 噪声统计特性 → SVGF/ATrous 限制 → GI 不等于 visibility term** 逐层分析为什么真实游戏/引擎里 RTGI 的“精度看上去远不足以当 AO”。
+这并不是因为算法写得烂，而是由**采样率（Sample Count）**和**降噪器（Denoiser）**的机制决定的。以下是深度解析：
 
----
+### 1. 极低的采样率（The Sample Count Problem）
 
-# ✦ 1. **SSGI/RTGI 的采样量太少——噪声 → 必须模糊 → 高频 AO 消失**
+在离线渲染（Arnold, V-Ray）中，计算一个像素的 GI 可能需要发射几百甚至上千条光线（SPP > 500）。
+但在实时渲染（60FPS）中，留给 SSGI 或 RTGI 的预算通常只有 **0.5 到 1 SPP（每像素每帧 0.5 到 1 条光线）**，甚至是 1/4 分辨率。
 
-真实游戏中的 RTGI/SSGI：
+*   **信噪比（SNR）极低**：仅仅依靠 1 条光线，你得到的不是一个“颜色”，而是一个充满了**方差（Variance）**的噪点。
+*   **高频信息的丢失**：要通过仅仅 1 次采样就探测到“墙角那条 1 厘米宽的缝隙是黑的”，概率极低。就像你在黑暗中只用激光笔指一下，很难正好指中那个缝隙。
 
-* 每像素只有 *1–2 条射线*（甚至 0.5 rays/pixel）
-* Temporal accumulation 依赖 motion vector（难以保证稳定）
-* Spatial denoise 用 bilateral/A-Trous（会侵蚀高频细节）
+### 2. 降噪器的“涂抹”本质（The Denoiser's Dilemma）
 
-**AO 恰好是极高频信号（几乎靠近接触点的瞬间遮挡变化）**
-而 GI 的 indirect diffuse 是极低频信号（bounce light 是平滑的）。
+因为输入充满了噪点（Noise），我们必须使用降噪器（Denoising）。目前的工业标准通常是 SVGF（Spatiotemporal Variance-Guided Filtering）及其变种。
 
-结果：
+降噪器的工作原理本质上是一个**低通滤波器（Low-pass Filter）**，它的副作用直接导致了你看到的“模糊”：
 
-### ➜ 为了去噪，滤波器必须把高频噪声一起模糊掉
+*   **空间复用（Spatial Reuse）导致模糊**：为了填补噪点，算法会借用周围像素的信息来“平均化”。
+    *   **问题**：当你想保留锐利的接触阴影（AO 效果）时，这就是灾难。接触阴影是高频信号（从亮到暗的突变）。降噪器很难区分“噪点”和“微小的锐利阴影”，它往往会把接触阴影当成噪点一起抹平了。
+*   **时间复用（Temporal Reuse）导致鬼影和迟滞**：为了增加样本量，算法会混合上一帧的结果（通常占 90% 甚至更多）。
+    *   **问题**：这虽然让画面变平滑了，但也让阴影变得“肉肉的”。快速移动的物体，或者快速变化的光照，其遮蔽细节会被上一帧的历史数据“冲淡”。
 
-### ➜ 而 AO 的信息本质上也是高频
+### 3. 漫反射的低频特性 vs. 遮蔽的高频特性
 
-### ➜ 因此 AO 特征被当成噪声去掉了
+这是一个物理信号层面的矛盾。
 
-最终你看到：
+*   **Indirect Diffuse（间接漫反射）**：物理上确实是**低频**的。红地毯把红光映到白墙上，这个渐变是非常平滑的。因此，GI 算法和降噪器倾向于大范围模糊处理，这符合漫反射的物理直觉。
+*   **Occlusion（遮蔽/AO）**：这是几何关系产生的，它往往是**高频**的。物体落地处的线条是非常锐利的。
 
-> **GI 干干净净，只剩下低频光照。AO 消失了。**
+**矛盾点**：当你计算 SSGI 时，你是在试图用一套适合“平滑光照”的算法（低采样+强降噪）去解算出“锐利遮蔽”的结果。这就像用一把刷墙的大刷子去画眉毛，结果自然是糊成一团。
 
-这就是为什么：
+### 4. 分辨率缩放（Downsampling）
 
-* RTGI 看起来雾蒙蒙的
-* 而 GTAO/HBAO 看起来清晰锐利
+为了性能，SSGI 或 RTGI 往往不是在全分辨率下计算的：
+*   很多引擎在 **半分辨率（Half-Res）** 甚至 **四分之一分辨率** 下计算 GI。
+*   然后再通过 Upscaling（双边上采样）拉回到全屏。
+*   这个上采样过程会进一步丢失那仅仅几像素宽的 AO 细节。
 
-**不是因为 RTGI 不够强，而是它强得需要更多采样，但没有预算。**
+### 结论：为什么我们还需要 AO Pass？
 
----
+正因为你看到的 RDC 结果——GI 太糊了——所以现代 AAA 游戏管线中，**AO（特别是 GTAO 或 RTAO）并没有被完全淘汰，而是换了角色**。
 
-# ✦ 2. **Temporal 的累积会进一步抹掉高频细节**
+我们现在的做法通常是 **"Composite Approach"（组合法）**：
 
-SSGI/RTGI 主要靠 Accumulation 去噪：
+1.  **Large Scale (Low Frequency)**: 交给 **SSGI / RTGI**。让它负责大范围的颜色反弹（Color Bleeding）和环境光衰减。即使糊一点也没关系，因为漫反射本来就该软一点。
+2.  **Small Scale (High Frequency)**: 依然强行叠加一层 **AO (SSAO/GTAO/RTAO)**。
+    *   这层 AO 的半径设得很小（只关注接触面）。
+    *   这层 AO 不参与多次反弹，只作为 `Multiplicative Term`（乘法项）直接压暗 Diffuse 甚至 Specular。
 
-```
-FinalGI(t) = lerp(CurrentSample, PreviousGI, Alpha)
-```
+**只有当未来的显卡能够支持每像素 4-8 SPP 且配合更先进的 AI 降噪（如 DLSS Ray Reconstruction 这种能“脑补”出高频细节的技术）时，独立的 AO Pass 才会真正彻底消失。**
 
-但 AO 变化极快（camera 轻微移动就改变）：
-
-* 高频（AO）在 temporal 中不稳定 → 累积时被平均掉
-* 低频（间接漫反射）稳定 → 成功叠加
-
-这就是为什么：
-
-### ➜ Temporal denoise 会让 AO 消失
-
-### ➜ 但让 indirect diffuse 越来越干净
-
-所以 indirect diffuse 看起来“像牛奶一样柔和”（blurry），但 AO 却完全不存在。
-
----
-
-# ✦ 3. **SSGI 不是 visibility query，无法直接计算遮挡概率**
-
-真正 AO 需要的 term 是：
-
-```
-Visibility(ω) = 0 or 1
-AO = ∫ Visibility(ω) dω
-```
-
-SSGI / IndirectDiffuseColor 输出的不是 Visibility term，而是：
-
-```
-IndirectDiffuse = Albedo * IncomingRadiance * CosTheta
-```
-
-AO 是几何遮挡；
-GI 是光能传输。
-
-**二者数学上完全不同！**
-
-如果你试图从 GI 恢复 AO：
-
-* Radiance 会被 albedo、roughness、lighting 强烈影响
-* 压根不是纯 visibility term
-
-所以 indirect diffuse 永远不能还原 AO 的锐度，哪怕没有噪声。
-
----
-
-# ✦ 4. **屏幕空间 SSGI 天然会漏掉背面几何 → AO 缺失无可避免**
-
-SSGI 的局限：
-
-* 只看得到当前帧可见的 surfaces
-* 被遮挡的 geometry 完全无法参与 indirect diffuse 贡献
-* GI 是错误几何 → AO 也随之错误
-
-例如：
-
-* 桥下的 AO
-* 桌子下的 AO
-* 远处大体块投射的 broad AO
-
-SSGI 全都会漏掉。
-
-为了掩盖这个问题，引擎只能：
-
-* 用重度 spatial blur（使错误更不明显）
-* 减少影响半径（避免穿深度）
-* 用 very conservative采样
-
-结果：
-
-> **SSGI 的 GI 越“干净”，AO 越消失。**
-
----
-
-# ✦ 5. **Screen-space GI 的半球采样范围很小 → 只能产生低频 GI**
-
-SSGI/RTGI (非真正 BVH RTGI) 的半球通常被 clamp 为很小的 radius：
-
-* 超过一定半径会穿背景 → 只能小范围采样
-* 小半径 bounce 光必然是极低频 diffuse
-
-这天然导致：
-
-### ➜ 低频 GI = 物理意义上正常
-
-### ➜ 高频 AO = 大部分被 depth discontinuity、denoise、temporal 破坏
-
----
-
-# ✦ 6. **ATrous/SVGF/BilateralDenoise 的结构天生会杀掉AO**
-
-比如 SVGF、AMD FidelityFX、A-Trous：
-
-* 所有 filter 都假设“GI是低频的、几何边界是分割线”
-* 其设计目标就是**滤掉高频噪声**
-
-但是 AO 最难的是：
-
-> AO 是高频的 geometrically significant feature
-> 但在数学上和噪声非常相似
-
-导致：
-
-* Edge-aware filter 把 AO 当噪声消除了
-* Temporal filter 把 AO 当不稳定信号消除了
-* Spatial filter 把 AO 当局部噪声消除了
-
-最终你看到：
-
-**RTGI = 低频大块光能分布**
-**AO = 本来属于高频几何遮挡 → 全被灭掉**
-
----
-
-# ✦ 7. **真正引擎中的解决方案：RTGI + RTAO + SSAO + Micro-shadow**
-
-因为上述所有原因，真实游戏都不会只用 GI 替代 AO：
-
-### UE5 Lumen
-
-* Lumen GI：低频间接光
-* Lumen RTAO：高频遮挡（来自 BVH）
-* SSAO：补 very near-field micro shadow
-
-### Frostbite RTXGI
-
-* RTXGI：低频 bounce
-* RTAO：高频 contact shadow
-
-### Cyberpunk 2077 RTX
-
-* Path tracing 模式：无需 AO（因为真实 visibility）
-* RTGI 模式：仍需要 RTAO 补 contact
-
-**理由很简单：GI 和 AO 是两个频率带，不是同一类信号。
-AO 是高频 visibility，GI 是低频 radiance。**
-
-所以你看到的 SSGI 输出“模糊、低频”其实就是它应该的样子。
-
----
-
-# ✦ 结论（回答你的问题）
-
-> **为什么 SSGI 的 indirectDiffuseColor 即便经过去噪仍然很模糊、不足以当 AO？**
-
-因为：
-
-1. **采样太少 → 必须 denoise → 高频 AO 被消掉**
-2. **Temporal accumulation 会抹掉 AO 高频**
-3. **IndirectDiffuse ≠ VisibilityTerm → 无法表达 AO 的几何锐度**
-4. **SSGI 有严重的屏幕空间几何缺失 → AO 本来就错**
-5. **ATrous/SVGF 专门滤掉 AO 这种高频信号**
-6. **SSGI 的物理半径设定决定它只能生成低频 GI**
-7. **真实游戏都必须用 RTAO 或 SSAO 来弥补 AO**
-
-因此：
-
-> **SSGI 的 GI 绝不可能替代 AO（特别是 contact AO）。**
-> 只有真正的 Ray-Traced AO（基于 BVH 的 visibility）才能深度替代 AO。
-
----
-
-如果你愿意，我可以进一步：
-
-* 画频域图解释“为什么 AO 是高频 GI 是低频”
-* 解释 SVGF/Atrous 为什么数学上会抹掉 AO
-* 分析 UE5 Lumen 如何把 GI/RTAO/SSAO 融合起来形成正确 AO
-
-告诉我你想深挖哪部分。
+目前阶段，GI 负责“色”，AO 负责“形”，两者仍然需要互补。

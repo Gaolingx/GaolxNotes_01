@@ -8,206 +8,85 @@
 
 ### 🤖 Assistant
 
-在**实时全局光照（Real-time Global Illumination, RTGI）**中，**Final Gather（最终聚集）**并不是一个单一、固定实现的算法名，而是一个**阶段性概念**：
+在实时全局光照（Real-Time Global Illumination, RTGI）的语境下，**Final Gather（最终聚集）** 是渲染管线中的一个关键步骤，它的核心任务是**计算着色点处来自所有方向的间接光照强度的总和**，并将其与材质属性结合，最终输出该像素的颜色。
 
-> 它指的是在已经获得“间接光的粗略表示”之后，在**着色点（shading point）处对入射间接辐射进行一次局部积分/重建**，从而得到可用于最终像素着色的间接光照结果。
+简而言之，就是“**收集**（Gather）”四面八方反弹过来的光线，“**最终**（Final）”决定这个点看起来应该是什么颜色。
 
-下面从**物理含义、在实时管线中的位置、与离线渲染的区别、以及现代实时GI中的典型实现**四个层面系统说明。
+以下是关于实时渲染中 Final Gather 的详细技术解析：
 
----
+### 1. 核心数学原理：渲染方程
 
-## 1. 物理与渲染意义（它在算什么）
+从数学角度来看，Final Gather 实际上是在近似求解**渲染方程**（The Rendering Equation）中的积分部分。
 
-从渲染方程角度看，Final Gather 本质是在近似计算：
+$$ L_o(p, \omega_o) = L_e(p, \omega_o) + \underbrace{\int_{\Omega} f_r(p, \omega_i, \omega_o) L_i(p, \omega_i) (\omega_i \cdot n) d\omega_i}_{\text{Final Gather 处理的部分}} $$
 
-[
-L_o(x,\omega_o) = \int_{\Omega} L_i(x,\omega_i), f_r(x,\omega_i,\omega_o), (\omega_i \cdot n), d\omega_i
-]
+其中：
+*   $L_o$：出射光 radiance（最终颜色）。
+*   $f_r$：BRDF（材质属性，如漫反射、高光）。
+*   $L_i$：入射光 radiance（来自环境或其他物体的反弹光）。
+*   $(\omega_i \cdot n)$：几何项（光线角度衰减）。
 
-在实时 GI 中：
-
-* **(L_i)**（入射间接光）
-  并不是通过无限反弹精确算出来的
-  → 而是来自某种**预计算 / 屏幕空间 / 体素 / 探针 / 光照缓存**的近似表示
-
-* **Final Gather 的任务**就是：
-  **在 shading point 处，对这些近似的入射辐射进行采样、过滤、方向加权、BRDF 调制**，输出稳定、连续、可用的间接光结果。
-
-一句话总结：
-
-> Final Gather = “把已经算好的（但很粗糙的）间接光信息，正确地‘拿来用’。”
+在实时光照中，直接光（Direct Lighting）通常单独计算，而 Final Gather 专注于计算积分中的**间接光（Indirect Lighting）**部分。
 
 ---
 
-## 2. 在实时 GI 管线中的位置
+### 2. 离线渲染 vs. 实时渲染中的 Final Gather
 
-一个典型的实时 GI 流程可以抽象为三层：
+理解两者的区别对于掌握 RTGI 非常重要：
 
-```
-① 间接光的生成（粗）
-   - 屏幕空间追踪
-   - 探针更新
-   - 体素注入
-   - SDF / BVH trace
-   - 历史缓存
+*   **离线渲染（Offline / Mental Ray / V-Ray）：**
+    传统的 Final Gather 是一种“缓存”技术。为了不追踪数百万条光线，渲染器会在场景中稀疏地选择一些点发射光线，计算出辐照度（Irradiance），然后在渲染像素时，通过**插值**这些稀疏点来获得平滑的间接光。
 
-② 间接光的存储（中间表示）
-   - Irradiance Volume / Probe Grid
-   - Radiance Cache
-   - Surfels
-   - Voxel mipmap
-   - DDGI probes
-
-③ Final Gather（你问的这个）
-   - 在像素/表面点上
-   - 采样 / 插值 / 方向投影
-   - 结合法线、粗糙度、BRDF
-   - 输出最终间接光
-```
-
-Final Gather **永远在第③步**。
+*   **实时渲染（Real-Time / UE5 Lumen / RTX）：**
+    由于每帧只有几毫秒的预算，我们无法发射成千上万条光线。实时中的 Final Gather 通常面临“**采样不足**（Undersampling）”的问题。
+    *   **策略：** 每像素可能只发射 0.5 到 1 条光线（Ray Tracing）。
+    *   **结果：** 得到的结果充满噪点（Noisy）。
+    *   **关键步骤：** 因此，实时 Final Gather 几乎总是与**降噪（Denoising）**和**时域累积（Temporal Accumulation）**紧密绑定。
 
 ---
 
-## 3. 和离线渲染中的 Final Gather 的关系
+### 3. 实时 Final Gather 的工作流程
 
-### 离线渲染（Mental Ray / V-Ray 时代）
+在现代显卡（支持硬件光追）的管线中，Final Gather 通常包含以下几个阶段：
 
-* Final Gather =
-  在每个 shading point 发射大量半球射线
-* 每条射线打到表面
-* 查询 irradiance cache
-* 本质是 **低频间接光的蒙特卡洛积分**
+#### A. 采样与光线追踪 (Sampling & Tracing)
+为了收集光照，必须知道光从哪里来。
+*   **重要性采样 (Importance Sampling)：** 根据 BRDF（粗糙度、法线）决定光线射向哪里。例如，镜面反射会向反射方向发射光线，漫反射则在半球面上随机发射。
+*   **光线求交：** 光线打到场景中的几何体，获取该位置的光照信息（可能是发光体，也可能是上一帧缓存的辐照度）。
 
-### 实时渲染
+#### B.  radiance 估算 (Radiance Estimation)
+当光线击中一个表面时，我们获取该表面的亮度。
+*   在 **Lumen (UE5)** 中，可能会查询 Surface Cache 或 Voxel Lighting。
+*   在 **ReSTIR (Reservoir Spatio-Temporal Importance Resampling)** 技术中，会通过复用时空邻域的样本来找到“最亮”的光源路径，从而极大提高 Gather 的质量。
 
-* 不可能每像素发几十/上百条射线
-* 于是：
-
-  * 射线数极少（甚至 0）
-  * 更多依赖缓存、插值、历史
-
-但**思想完全一致**：
-
-| 离线                  | 实时                  |
-| ------------------- | ------------------- |
-| 半球射线                | 探针/体素/屏幕空间采样        |
-| 精确遮挡                | 近似可见性               |
-| 高质量、慢               | 稳定、快                |
-| Final Gather = 减少噪声 | Final Gather = 重建信号 |
+#### C. 重构与降噪 (Reconstruction & Denoising)
+这是实时 Final Gather 最不同于离线渲染的地方。因为采样数极低，原始的 Gather 结果是一张充满噪点的图。
+*   **时域累积 (Temporal Accumulation)：** 混合上一帧的结果（利用 Motion Vectors 重投影），将有效采样数从 1 提升到几十。
+*   **空域滤波 (Spatial Filtering)：** 利用 SVGF (Spatiotemporal Variance-Guided Filtering) 或 A-SVGF 等算法，根据法线、深度和物体ID，借用周围像素的光照信息来平滑当前像素。
 
 ---
 
-## 4. 现代实时 GI 中 Final Gather 的典型形式
+### 4. 常见的 Final Gather 实现方案
 
-### 4.1 探针式 GI（DDGI / UE Lumen Surface Cache）
+在实时渲染中，"Final Gather" 这个术语可能指代具体的算法或阶段：
 
-Final Gather =
+#### 1. 基于探针 (Probe-Based) / DDGI
+*   **原理：** 场景中布满了光照探针（Light Probes）。光线追踪更新探针的数据。
+*   **Final Gather 过程：** 着色像素不直接发射光线，而是查找其周围的探针，对探针记录的 Irradiance 进行三线性插值。这是一种极其高效的 Final Gather，也是 **DDGI (Dynamic Diffuse Global Illumination)** 的核心。
 
-* 根据 shading point 的位置
-* 查找周围 8 / 27 个 irradiance probes
-* 对 probe 中的 SH / Octahedral radiance：
+#### 2. 屏幕空间全局光照 (SSGI)
+*   **原理：** 仅利用屏幕上的 G-Buffer 信息。
+*   **Final Gather 过程：** 在屏幕空间进行光线步进（Ray Marching），“收集”屏幕上可见的颜色作为间接光。
 
-  * 做三线性插值
-  * 按法线方向投影
-  * 用 visibility / bent normal 修正
-* 再乘 BRDF
+#### 3. 硬件光线追踪 (Hardware Ray Tracing)
+*   **原理：** 真实的 Ray Tracing。
+*   **Final Gather 过程：** 直接求解渲染方程积分。通常结合 **ReSTIR GI**。ReSTIR 本质上是一种先进的采样策略，它让 Final Gather 能够用极少的光线（每像素 1 条甚至更少）找到高贡献的光路，从而在实时帧率下实现接近离线质量的路径追踪。
 
-**这是最经典、最“正统”的 Final Gather**
+### 5. 总结
 
----
+在实时全局光照中，**Final Gather** 是连接“光线追踪计算”与“最终屏幕像素”的桥梁。
 
-### 4.2 体素 GI（VXGI / SVOGI）
-
-Final Gather =
-
-* 沿法线方向对 voxel radiance mipmap 采样
-* 多方向 cone tracing（锥形追踪）
-* 各 cone 的能量加权累积
-
-你会发现：
-
-> cone tracing 本身就相当于把 “trace + final gather” 合并了
-> 但从语义上，它仍然是 Final Gather 阶段。
-
----
-
-### 4.3 屏幕空间 GI（SSGI）
-
-Final Gather =
-
-* 在 shading point 周围：
-
-  * 屏幕空间射线 / taps
-* 获取邻域的 radiance
-* 用：
-
-  * 法线相似度
-  * 深度差
-  * 粗糙度
-* 做滤波和加权
-
-这里 Final Gather 更像是：
-
-> “空间 + 法线 + 材质域上的非线性滤波重建”
-
----
-
-### 4.4 硬件光追 GI（RTGI）
-
-即使有 RTX：
-
-* 一般也只做：
-
-  * 1–2 条 ray / pixel
-* 得到的是：
-
-  * 噪声极大的 radiance 样本
-
-Final Gather =
-
-* 对 ray hit 的 radiance：
-
-  * 空间滤波
-  * 时间累积（TAA）
-  * 法线/深度权重
-* 重建一个稳定的间接光
-
-**这里 Final Gather ≈ 去噪 + 重建**
-
----
-
-## 5. 为什么 Final Gather 非常关键
-
-如果没有 Final Gather：
-
-* GI 会：
-
-  * 噪声大
-  * 闪烁
-  * 漏光
-  * 与材质不匹配
-* 间接光只是“存在”，但**不可用**
-
-Final Gather 决定了：
-
-* GI 的稳定性
-* 能否与 BRDF 正确耦合
-* 低频是否干净
-* 高粗糙度表面是否自然
-
-在现代引擎里：
-
-> **GI 的“好不好看”，70% 取决于 Final Gather，而不是 trace 本身。**
-
----
-
-## 6. 一句话精确定义
-
-> 在实时全局光照中，**Final Gather 是在像素/表面点处，对来自缓存、探针、体素或射线的间接辐射进行采样、插值、可见性修正与 BRDF 加权，从而生成最终可用间接光照的阶段**。
-
-如果你愿意，我可以：
-
-* 结合 **UE5 Lumen** 的具体 pass 拆解 Final Gather
-* 或对比 **DDGI vs SSGI vs RTGI** 的 Final Gather 数学形式
-* 或从 **频域 / 信号重建** 的角度解释为什么 Final Gather 本质是低频重建
+*   **输入：** G-Buffer（法线、粗糙度、颜色）、场景结构（BVH/SDF）、光源。
+*   **动作：** 发射光线（或查询探针/缓存），通过 BRDF 加权，对入射光进行积分。
+*   **核心挑战：** 在极低采样数下消除噪点。
+*   **输出：** 降噪后的间接光照贴图（Indirect Lighting Map），随后它会与直接光照叠加，形成最终画面。

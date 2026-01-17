@@ -8,240 +8,51 @@
 
 ### 🤖 Assistant
 
-目前 **WebGPU + WASM** 的组合已经从“实验性技术”进入到**有明确落地场景但仍在快速演进**的阶段。可以从 **应用类别、典型项目、技术成熟度** 三个维度来理解它现在“能干什么、适合干什么、不适合干什么”。
+WebGPU 与 WebAssembly (Wasm) 的结合是目前 Web 开发中最前沿的技术方向之一。
 
----
+**WebAssembly** 提供了接近原生的 CPU 执行效率，而 **WebGPU** 提供了现代化的、低开销的 GPU 访问能力（包括图形渲染和通用计算/GPGPU）。两者的结合使得原本只能在桌面端运行的重型应用能够流畅地运行在浏览器中。
 
-## 一、核心定位：为什么一定要 WebGPU + WASM
+以下是目前 WebGPU 在 Wasm 上的主要应用领域和具体案例：
 
-先明确一点：
-**WebGPU 并不是为 JS 写高性能代码准备的，而是为 WASM 提供“GPU 级能力”的标准接口。**
+### 1. 端侧 AI 推理与大语言模型 (LLMs)
+这是目前最火热的应用场景。利用 WebGPU 的计算着色器（Compute Shaders）加速矩阵运算，配合 Wasm 处理模型逻辑，实现了在浏览器端直接运行大型神经网络，无需服务器交互。
 
-* JS：控制流、调度、胶水代码
-* WASM：数值密集 / 状态机 / SIMD / 编译器后端
-* WebGPU：统一访问 GPU（Compute + Graphics）
+*   **WebLLM / MLC LLM:** 这是一个开创性的项目，允许用户在浏览器中直接运行 Llama 3, Gemma, Mistral 等大语言模型。
+    *   *原理:* 使用 TVM 编译器栈将模型编译为 Wasm，并使用 WebGPU 后端进行硬件加速推理。
+*   **ONNX Runtime Web:** 微软推出的跨平台推理引擎。它支持 WebGPU 后端，许多基于 ONNX 格式的模型（如图像分类、风格迁移、甚至 Stable Diffusion）可以通过 Wasm 调用 WebGPU 进行加速。
+*   **Transformers.js:** 虽然主要是 JavaScript 库，但其底层通过 ONNX Runtime 和 Wasm 绑定来利用 WebGPU 加速 Transformer 模型（如 BERT, Whisper 等）。
+*   **MediaPipe (Google):** Google 的机器学习解决方案，广泛用于手势识别、人脸网格、姿态检测。它深度利用 Wasm 和 WebGPU 来实现实时的视频流处理。
 
-这使得浏览器第一次具备了：
+### 2. 跨平台游戏引擎与图形渲染
+传统的 WebGL 往往受限于 CPU-GPU 的通信瓶颈，WebGPU 解决了这个问题，使得基于 C++ 或 Rust 开发的游戏引擎能更好地移植到 Web。
 
-> **接近原生（Native）GPU 计算 + 可移植分发**
+*   **Rust 生态与 `wgpu`:**
+    *   **Bevy Engine:** 极受欢迎的 Rust 数据驱动游戏引擎。它使用 `wgpu` 库作为渲染后端。开发者写一次 Rust 代码，编译成 Wasm 后，即可在支持 WebGPU 的浏览器中运行，且性能远超 WebGL。
+    *   **wgpu (库):** 这是一个 Rust 库，它是 WebGPU 标准在原生端的实现，同时也是 Firefox 的 WebGPU 实现核心。它允许开发者用 Rust 写图形应用，既可以编译成本地应用（Vulkan/Metal/DX12），也可以编译成 Wasm (WebGPU)。
+*   **主流商业引擎:**
+    *   **Unity:** Unity 6 已经正式支持 WebGPU 导出。Unity 的 Web 导出主要基于 Wasm，WebGPU 的加入使其能够渲染更复杂的场景（如计算粒子、GPU 蒙皮）。
+    *   **Godot 4:** Godot 4 引入了基于 Vulkan 的渲染器，并正在完善对 WebGPU 的支持（通过 Wasm 导出）。
+    *   **Unreal Engine 5:** 正在实验性地支持 WebGPU 导出，允许虚幻引擎的高画质游戏运行在网页上。
 
----
+### 3. 高性能数据可视化与 3D 高斯泼溅 (3D Gaussian Splatting)
+3D Gaussian Splatting 是近期图形学的大突破，用于从照片重建逼真的 3D 场景。
 
-## 二、当前主要应用方向（按成熟度排序）
+*   **3D Gaussian Splatting Viewers:** 目前许多高性能的在线 Splatting 查看器（例如基于 `gsplat.js` 或 Rust 编写的查看器）都转向了 WebGPU。
+    *   *原因:* 这种技术需要实时排序数百万个高斯粒子，这在 WebGL 中非常慢，但利用 WebGPU 的 Compute Shader 进行并行排序（Bitonic Sort），再结合 Wasm 处理文件解析，可以实现 60FPS+ 的流畅体验。
 
-### 1. 浏览器端机器学习（最成熟）
+### 4. 专业生产力工具 (CAD, 视频编辑)
+将桌面级的专业软件搬到 Web 上是长期趋势，WebGPU + Wasm 是关键推手。
 
-这是 **WebGPU 在 WASM 上最成功的方向**。
+*   **CAD 与 3D 建模:** 例如 **SketchUp** (网页版) 和 **AutoCAD Web**。这些应用的核心计算几何内核通常是 C++ 编写并编译为 Wasm 的。WebGPU 允许它们渲染数百万个多边形的复杂建筑模型而不卡顿。
+*   **视频与图像处理:**
+    *   **FFmpeg (Wasm):** 虽然 FFmpeg 主要用于 CPU 解码，但结合 WebGPU，可以实现浏览器端的视频特效处理、颜色校正和合成，由 Wasm 负责编解码调度，WebGPU 负责像素处理。
+    *   **Adobe Photoshop Web:** Adobe 大量使用 Wasm 将 Photoshop 的 C++ 代码库移植到 Web。随着 WebGPU 的普及，更多的滤镜和图像处理算法正在从 WebGL 迁移到 WebGPU 以获得更高性能。
 
-#### 典型应用
+### 5. 科学计算与仿真
+*   **流体模拟与粒子系统:** 利用 Wasm 编写物理引擎（处理碰撞检测等），利用 WebGPU 模拟数百万个粒子的运动。例如，基于 WebGPU 的“平滑粒子流体动力学 (SPH)”模拟。
+*   **分子动力学:** 在浏览器中实时渲染和模拟复杂的蛋白质结构。
 
-* **LLM 推理（小模型 / 量化模型）**
-* **CV / 音频 / embedding / diffusion 推理**
-* **端侧隐私计算（数据不出浏览器）**
+### 总结
+目前 WebGPU 在 Wasm 上的应用可以概括为：**“用 Rust/C++ 编写核心逻辑 (Wasm)，用 WebGPU 进行大规模并行计算和渲染”。**
 
-#### 代表项目
-
-* **ONNX Runtime Web (WebGPU backend)**
-* **WebLLM / MLC-LLM**
-* **Transformers.js（WebGPU 路径）**
-* **MediaPipe WebGPU**
-
-#### 技术结构
-
-```
-模型算子 → (C++/Rust) → WASM
-                  ↓
-               WebGPU Compute Shader
-```
-
-#### 现状评估
-
-* 性能：
-
-  * 小模型（<1B）：可用
-  * 中模型（3–7B）：边缘可用（强依赖显存 / 量化）
-* 瓶颈：
-
-  * shader 编译时间
-  * bind group / dispatch overhead
-  * 缺少 persistent kernel / graph capture
-
-**结论**：
-
-> WebGPU + WASM 是目前“浏览器内 ML 推理”的事实标准方向。
-
----
-
-### 2. 科学计算 / 数值计算（稳定增长）
-
-#### 应用场景
-
-* 线性代数（GEMM / FFT）
-* 物理仿真
-* 金融 Monte Carlo
-* 图像 / 视频算法原型
-
-#### 代表项目
-
-* **wgpu + Rust + WASM**
-* **WebGPU-based BLAS / FFT demo**
-* **Taichi WebGPU backend（实验）**
-
-#### 技术优势
-
-* WASM：
-
-  * 可直接复用 HPC 代码
-  * SIMD + 手写内存布局
-* WebGPU：
-
-  * Compute-only pipeline
-  * 不依赖 WebGL legacy API
-
-#### 限制
-
-* 无 unified memory
-* GPU ↔ WASM 内存 copy 成本高
-* 调度灵活性不如 CUDA/HIP
-
-**结论**：
-
-> 非实时、强计算密集型数值计算已经可用，但仍不适合“极端性能追求”。
-
----
-
-### 3. 可视化 / CAD / 专业工具（渐进替代 WebGL）
-
-#### 应用场景
-
-* CAD / BIM
-* 医学影像（DICOM）
-* 大规模点云 / mesh
-* 数据可视化（百万级 primitive）
-
-#### WebGPU 的优势
-
-* 明确的 pipeline / resource model
-* Compute + Render 深度融合
-* 更接近 Vulkan / DX12 思维模型
-
-#### WASM 的角色
-
-* 几何处理
-* 空间索引（BVH / KD-tree）
-* 数据预处理与压缩
-
-#### 代表实践
-
-* Figma（部分内部 WebGPU）
-* Cesium（实验性 WebGPU）
-* 专业浏览器 CAD 工具原型
-
-**结论**：
-
-> WebGPU 正在成为 WebGL 的“长期继任者”，WASM 是不可或缺的算力补充。
-
----
-
-### 4. 浏览器内游戏引擎（早期）
-
-#### 现状
-
-* Unity WebGPU：实验阶段
-* Bevy / Godot：原型支持
-* WebAssembly 游戏引擎 demo
-
-#### 优势
-
-* 更低 CPU overhead
-* Compute-based culling / animation
-* 更贴近主机级渲染模型
-
-#### 问题
-
-* shader toolchain 不成熟
-* asset streaming 复杂
-* 移动端支持碎片化严重
-
-**结论**：
-
-> 游戏不是 WebGPU 的短期主战场，但中长期潜力巨大。
-
----
-
-### 5. 隐私计算 / 本地 AI Agent（新兴）
-
-这是一个**非常值得关注的新方向**。
-
-#### 特点
-
-* 数据永不离开浏览器
-* WASM 执行策略逻辑
-* WebGPU 执行重计算（embedding / rerank / local LLM）
-
-#### 应用
-
-* 本地搜索增强
-* 浏览器内 RAG
-* 企业内私有数据分析
-
-**结论**：
-
-> WebGPU + WASM 使“可信浏览器计算”第一次成为现实。
-
----
-
-## 三、目前明确不适合的方向
-
-### ❌ 极限 HPC / 超算级负载
-
-* 无 peer-to-peer
-* 无 NCCL
-* 无多 GPU 编排
-
-### ❌ 大规模训练
-
-* 内存模型受限
-* 无通信原语
-* 无高效 graph replay
-
-### ❌ 强实时低延迟系统
-
-* JS/WASM ↔ GPU 调度抖动
-* 浏览器调度不可控
-
----
-
-## 四、和你背景强相关的一点观察
-
-结合你之前关注的：
-
-* AVX2 / BF16 性能路径
-* fused matmul / MoE kernel
-* LLM 推理算子结构
-
-**一个非常现实的趋势是：**
-
-> WebGPU compute shader 正在成为
-> **“最通用的可移植 GPU IR 之一”**
-
-很多团队已经在做：
-
-```
-一个 kernel 描述
-→ CUDA / HIP / Metal / WebGPU
-```
-
-WASM 在这里扮演的是：
-
-* 算子调度器
-* memory planner
-* quantization / packing 逻辑
-
----
-
-## 五、一句话总结
-
-> **WebGPU + WASM 目前最成熟的应用是浏览器内 ML 推理，其次是数值计算与专业可视化；它不是 HPC 或训练平台，但正在成为“可分发 GPU 计算”的事实标准。**
-
-如果你愿意，下一步我可以从 **“WebGPU compute 与 CUDA kernel 在执行模型上的关键差异”** 或 **“为什么 WebGPU 的 kernel fusion 比你想象的更难”** 角度继续展开。
+目前最成熟且活跃的生态是 **Rust** 社区（通过 `wgpu` crate），而最引人注目的应用场景则是 **浏览器端的本地大模型推理 (WebLLM)**。

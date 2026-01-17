@@ -8,249 +8,109 @@
 
 ### 🤖 Assistant
 
-下面从**原理、公式、具体配置方式、训练/推理注意事项，以及常见误区**几个层面，系统说明如何用 **YaRN (Yet another RoPE extrapolatioN) rope scaling** 将 **4k 上下文扩展到 32k**。
+使用 YaRN (Yet another RoPE extension) 将大语言模型（如 LLaMA 2, LLaMA 3, Mistral 等使用 RoPE 的模型）的上下文窗口从 4k 扩展到 32k，主要涉及**计算缩放因子**、**修改模型配置**以及（通常建议的）**微调**。
 
----
+以下是具体的实施步骤和技术细节：
 
-## 1. 问题背景：为什么普通 RoPE 不能直接 4k → 32k
+### 1. 核心概念与计算
 
-标准 RoPE（Rotary Positional Embedding）中，位置编码以**频率空间的旋转角度**形式注入：
+YaRN 是一种改进的旋转位置编码（RoPE）插值方法。与线性插值不同，它通过混合“NTK-aware”插值和直接外推，并针对不同频率（维度）调整注意力熵，从而在扩展上下文的同时保持短文本的性能。
 
-[
-\theta(p, i) = p \cdot \omega_i,\quad \omega_i = 10000^{-2i/d}
-]
+要将上下文从原始的 $L_{orig} = 4096$ (4k) 扩展到目标 $L_{target} = 32768$ (32k)，我们需要计算缩放因子 $s$：
 
-其中：
+$$s = \frac{L_{target}}{L_{orig}} = \frac{32768}{4096} = 8$$
 
-* (p)：token 位置
-* (i)：head 内维度索引
+### 2. 在 Hugging Face Transformers 中实施
 
-问题在于：
+Hugging Face `transformers` 库原生支持 YaRN。你只需要在加载模型时修改配置，或者直接修改模型的 `config.json` 文件。
 
-* **低频维度负责长程顺序**
-* **高频维度负责短程细节**
+#### 方法 A：修改 `config.json` (永久生效)
 
-当你直接 extrapolate 到 32k：
-
-* 高频维度在 4k 之后已经发生**严重 aliasing**
-* attention score 退化，模型会“忘记顺序”
-
----
-
-## 2. YaRN 的核心思想（非常关键）
-
-YaRN 的本质不是“统一拉伸位置”，而是：
-
-> **只对“负责长程建模的低频维度”进行 rope scaling，高频维度保持原始 RoPE 行为**
-
-也就是说：
-
-* **分频段处理 RoPE**
-* 不是 naive 的 linear scaling
-
-这点和 NTK scaling、linear scaling 本质不同。
-
----
-
-## 3. YaRN 的数学形式（简化版）
-
-定义：
-
-* 原始最大上下文：(L_{\text{orig}} = 4096)
-* 目标上下文：(L_{\text{new}} = 32768)
-* scaling factor：
-  [
-  s = \frac{L_{\text{new}}}{L_{\text{orig}}} = 8
-  ]
-
-YaRN 对 RoPE 频率进行 **piecewise scaling**：
-
-[
-\omega_i' =
-\begin{cases}
-\omega_i / s & \text{低频区} \
-\omega_i & \text{高频区}
-\end{cases}
-]
-
-但**真正工程实现**不是硬切，而是：
-
-### 平滑过渡（关键）
-
-引入一个平滑函数 (f(i))：
-
-[
-\omega_i' = \omega_i / \bigl(s^{f(i)}\bigr)
-]
-
-其中：
-
-* (f(i) \in [0, 1])
-* 低频 (f(i)\approx 1)
-* 高频 (f(i)\approx 0)
-
-这样避免 attention 结构突然断裂。
-
----
-
-## 4. 实际工程参数（4k → 32k 的推荐配置）
-
-以 HuggingFace / LLaMA 系为例。
-
-### 4.1 scaling factor
-
-```text
-rope_scaling.factor = 8
-```
-
-这是硬性比例，来自 32k / 4k。
-
----
-
-### 4.2 rope_scaling 类型
+在模型文件夹中的 `config.json` 文件里，找到或添加 `rope_scaling` 字段。
 
 ```json
-"rope_scaling": {
-  "type": "yarn",
-  "factor": 8
+{
+  "architectures": [
+    "LlamaForCausalLM"
+  ],
+  "max_position_embeddings": 32768, 
+  "rope_scaling": {
+    "type": "yarn",
+    "factor": 8.0,
+    "original_max_position_embeddings": 4096
+  },
+  ...
 }
 ```
 
-如果框架支持 `original_max_position_embeddings`，务必显式指定：
+*   **`max_position_embeddings`**: 设置为你想要的目标长度 **32768**。
+*   **`type`**: 设置为 `"yarn"`。
+*   **`factor`**: 设置为 **8.0** ($32k / 4k$)。
+*   **`original_max_position_embeddings`**: 原始模型的长度 **4096**（这对于 YaRN 准确计算高频和低频部分至关重要）。
 
-```json
-"rope_scaling": {
-  "type": "yarn",
-  "factor": 8,
-  "original_max_position_embeddings": 4096
-}
-```
+#### 方法 B：代码中动态加载 (推理/微调时)
 
----
-
-### 4.3 YaRN 特有参数（极其重要）
-
-不同实现名字略有差异，但核心一致：
-
-| 参数                     | 含义                  | 推荐   |
-| ---------------------- | ------------------- | ---- |
-| `beta_fast`            | 高频过渡起点              | 32   |
-| `beta_slow`            | 低频完全缩放点             | 1    |
-| `extrapolation_factor` | 有时等同 factor         | 8    |
-| `attention_factor`     | attention re-weight | ≈1.0 |
-
-典型设置（来自社区实践）：
+如果你不想修改原始文件，可以在 Python 代码中动态传入配置：
 
 ```python
-rope_scaling = {
+from transformers import AutoConfig, AutoModelForCausalLM
+
+model_id = "your-base-model-4k"
+
+# 加载原始配置
+config = AutoConfig.from_pretrained(model_id)
+
+# 修改 RoPE 配置以启用 YaRN
+config.rope_scaling = {
     "type": "yarn",
-    "factor": 8,
-    "beta_fast": 32,
-    "beta_slow": 1
+    "factor": 8.0,  # 32k / 4k
+    "original_max_position_embeddings": 4096
 }
+config.max_position_embeddings = 32768
+
+# 使用修改后的配置加载模型
+model = AutoModelForCausalLM.from_pretrained(
+    model_id,
+    config=config,
+    device_map="auto",
+    trust_remote_code=True
+)
+
+# 现在模型可以处理更长的上下文，但未微调前效果可能有限
 ```
 
-直觉解释：
+### 3. YaRN 的高级超参数 (针对微调)
 
-* **最底层频率完全拉伸**
-* **最高频率几乎不动**
-* 中间频率平滑过渡
+如果你是在自己实现 YaRN 算法或者使用像 `Axolotl` 或 `LLaMA-Factory` 这样的框架进行微调，你可能需要配置更具体的参数（通常由论文推荐）：
 
----
+*   **$\beta_{fast}$ (beta_fast)**: 通常设为 **32**。这是高频部分不需要插值的阈值。
+*   **$\beta_{slow}$ (beta_slow)**: 通常设为 **1**。这是低频部分完全插值的阈值。
+*   **$mscale$**: 这是一个用于修正注意力熵的系数。
+    *   对于 LLaMA 2 模型，YaRN 论文建议设置 $mscale = 0.1 \cdot \ln(s) + 1$。
+    *   当 $s=8$ 时，近似值为 $0.1 \cdot \ln(8) + 1 \approx 1.2079$。但在 HF 的实现中，这通常是自动处理的，或者默认为 1。
 
-## 5. 训练 vs 推理：是否需要再训练？
+### 4. 关于微调 (Fine-tuning) 的必要性
 
-### 5.1 仅推理（zero-shot extrapolation）
+虽然 YaRN 声称在“免微调”（Zero-shot）扩展方面比线性插值好，但要从 4k 直接跳到 32k 并保持高质量输出，**必须进行微调**。
 
-可以直接用 YaRN：
+**微调建议：**
+1.  **数据集**: 使用长文本数据集（如 PG19, ArXiv, 或专门构建的长指令集）。
+2.  **步数**: 不需要全量训练。通常只需要对原始预训练步数的 **0.1% 到 0.5%** 进行微调即可让模型适应新的长度。
+3.  **显存优化**: 32k 上下文训练极其消耗显存。
+    *   使用 **Flash Attention 2** (必须)。
+    *   使用 **Gradient Checkpointing**。
+    *   使用 **Deepspeed Zero3** 或 **FSDP**。
+    *   考虑使用 LoRA 进行参数高效微调。
 
-* **结构正确**
-* **顺序感知基本保持**
-* 但：
+### 5. 常见问题排查
 
-  * 长上下文 recall 会下降
-  * reasoning 深度受限
+*   **PPL (困惑度) 激增**: 检查 `original_max_position_embeddings` 是否填写正确。如果没有指定原始长度，YaRN 可能会错误地计算频率，导致模型崩溃。
+*   **Flash Attention 报错**: 确保你的 Flash Attention 版本支持这种缩放配置，并且在调用模型时 `use_flash_attention_2=True`。
+*   **推理时输出乱码**: 确保推理时的 `rope_scaling` 配置与微调时的配置完全一致。
 
-适合：
+### 总结
 
-* 信息检索
-* 长文摘要
-* RAG
-
----
-
-### 5.2 轻量继续训练（强烈推荐）
-
-最佳实践：
-
-* **保持 YaRN rope**
-* 在 **8k–32k 混合长度**数据上继续训练
-* 1–5B tokens 通常就能显著修复长上下文能力
-
-原因：
-
-* 模型需要重新适配新的 attention phase space
-
----
-
-## 6. 为什么 YaRN 比 Linear / NTK scaling 好？
-
-从 attention score 角度看：
-
-[
-QK^\top \sim \cos(\theta_q - \theta_k)
-]
-
-* Linear scaling：所有频率同时压缩 → 短程 token 顺序被破坏
-* NTK scaling：过度偏向低频 → 近邻 token attention 模糊
-* **YaRN：频率分工不被破坏**
-
-一句话总结：
-
-> YaRN 是唯一同时保住 **local coherence** 和 **long-range ordering** 的 RoPE 外推方案
-
----
-
-## 7. 常见坑（非常常见）
-
-### ❌ 只改 factor，不改 type
-
-→ 变成 linear scaling，效果很差
-
-### ❌ 原始 max_position_embeddings 没设
-
-→ 频率分段错误，attention 退化
-
-### ❌ 直接训练 32k，从头跑
-
-→ 成本高、收敛慢、无必要
-
-### ❌ 结合 FlashAttention 时忘记同步 RoPE 实现
-
-→ kernel 和 Python RoPE 不一致，直接数值错误
-
----
-
-## 8. 一句话操作清单（TL;DR）
-
-**4k → 32k，用 YaRN：**
-
-1. `factor = 8`
-2. `type = "yarn"`
-3. 设置 `beta_fast / beta_slow`
-4. 显式声明原始 4k
-5. 最好做少量继续训练
-
----
-
-如果你愿意，我可以进一步：
-
-* 对比 **YaRN vs NTK scaling 在 attention phase space 的几何差异**
-* 给你一段 **HuggingFace / vLLM / llama.cpp 的具体 patch**
-* 分析 **32k 下 KV cache、FlashAttention tile size 的实际影响**
-
-这些都和你现在关心的系统层问题是强相关的。
-
+将 4k 扩展到 32k 的核心在于：将 `config.json` 中的 `rope_scaling` 类型设为 `"yarn"`，`factor` 设为 `8.0`，并确保 `original_max_position_embeddings` 设为 `4096`。为了获得可用的模型，请务必在长文本数据上进行少量的继续预训练（Continual Pre-training）。
 
 ---
 
@@ -262,292 +122,131 @@ QK^\top \sim \cos(\theta_q - \theta_k)
 
 ### 🤖 Assistant
 
-这是一个**非常关键且经常被低估的问题**。结论先行：
+你说得很对。**直接在 `config.json` 里修改参数而不进行微调（Zero-shot），对于从 4k 扩展到 32k（8倍扩展）这种跨度，效果通常很差。** 模型会出现严重的“困惑度暴涨”（PPL explosion）或者在该输出长文本时胡言乱语。
 
-> **YaRN 只能保证“相位空间是对的”，但并不能让模型“知道如何在 32k 相位空间里工作”**。
-> 如果原始模型只在 4k 以内训练过，那么**不做针对性的 long-context FT，掉点是必然的**。
+YaRN 的作者在论文中也明确指出，虽然 YaRN 的外推能力比线性插值好，但要达到目标长度的良好性能，**必须进行简短的继续预训练（Continual Pre-training / Fine-tuning）**。
 
-下面我从**为什么会掉点 → FT 的目标是什么 → 具体可操作的 FT 方案 → 训练配方与工程细节 → 常见失败模式**几个层面，给你一个**可直接落地的方案**。
+针对 Original Model（基座模型）进行长上下文微调（Long-Context Fine-Tuning），以下是标准且经过验证的流程：
 
----
+### 1. 数据准备 (Data Preparation)
 
-## 1. 为什么只改 YaRN config 仍然会掉点（本质原因）
+你不能只用简短的对话数据来微调长上下文。你需要真正的长文本数据。
 
-即使 YaRN 修复了 RoPE 的 extrapolation 几何结构，模型仍然存在三个“未适配”的问题：
+*   **数据集选择**：
+    *   **PG19**: 古腾堡计划书籍，天然的长文本。
+    *   **SlimPajama / RedPajama**: 其中的 `book` 或 `arxiv` 子集。
+    *   **Pile-CC**: CommonCrawl 的清洗版本，提取长文章。
+    *   **LongAlpaca**: 专门构建的长指令数据集（如果你是做指令微调）。
+*   **混合策略 (关键)**：为了防止模型“遗忘”短上下文的能力（性能退化），强烈建议在长文本数据中**混合一部分原始长度（4k以下）的高质量数据**。比例可以是 80% 长文本 + 20% 短文本。
 
-### 1.1 Attention 的统计分布完全变了
+### 2. 训练框架与配置
 
-在 4k 训练时：
+目前最方便进行此类微调的工具是 **LLaMA-Factory** 或 **Axolotl**。这里以通用的逻辑（适用于 HF Trainer）说明配置重点。
 
-* attention score 的有效支持区间：[0, 4096]
-* softmax temperature、head specialization 都隐含地适配了这个范围
+#### 核心配置清单
 
-扩到 32k 后：
+1.  **RoPE 配置 (必须与推理时一致)**:
+    在训练开始前，必须载入开启了 YaRN 的模型配置。
+    ```python
+    # 伪代码示例
+    config.rope_scaling = {
+        "type": "yarn",
+        "factor": 8.0, 
+        "original_max_position_embeddings": 4096
+    }
+    config.max_position_embeddings = 32768
+    ```
 
-* token pair 距离分布发生 **8× 扩张**
-* 大量 attention score 落在模型从未见过的相位区间
+2.  **序列长度 (Sequence Length)**:
+    设置 `max_seq_length` (或 `block_size`) 为 **32768**。
 
-**这不是 RoPE 能解决的问题，是统计适配问题。**
+3.  **数据打包 (Packing)**:
+    **一定要开启 `packing=True`** (在 LLaMA-Factory 中叫 `packing`，Axolotl 中叫 `sample_packing`)。
+    *   这意味着如果一条数据只有 10k token，训练器会自动把下一条数据拼在后面，直到填满 32k。这不仅利用了显存，更重要的是**强迫模型学习长距离的 attention 依赖**。
 
----
+4.  **学习率 (Learning Rate)**:
+    不要使用原始预训练的学习率。应使用较小的 LR。
+    *   建议范围：$1 \times 10^{-5}$ 到 $5 \times 10^{-5}$。
+    *   LR Scheduler：通常使用 `cosine` 或 `constant_with_warmup`。
 
-### 1.2 FFN / MLP 里存在“隐式长度假设”
+5.  **训练步数 (Steps)**:
+    YaRN 的收敛速度非常快。你不需要跑完整个 epoch。
+    *   通常只需要 **200 到 1000 个 step** (取决于 batch size) 就可以让模型适应新的 RoPE 频率。
+    *   观察 Loss 曲线，当 Loss 稳定下降并趋于平缓时即可停止。
 
-很多模型在：
+### 3. 显存优化 (Memory Optimization)
 
-* summary
-* delimiter
-* reasoning chain
+训练 32k 上下文对显存要求极高。如果直接 Full Fine-tune (全量微调)，通常需要 8张 A100 80G 或更多。对于资源有限的情况，方案如下：
 
-上学到的是：
+#### 方案 A：LoRA (推荐资源受限者)
+如果显存不够全量微调，可以使用 LoRA，但在长上下文扩展场景下有特殊技巧：
+*   **Target Modules**: `q_proj`, `k_proj`, `v_proj`, `o_proj`, `gate_proj`, `up_proj`, `down_proj` (即 `all-linear`)。
+*   **Rank**: 建议稍大一点，如 `r=64` 或 `r=128`。
+*   **关键点**: 虽然不是必须，但在大幅度扩展上下文时，将 `embed_tokens` 和 `lm_head` 加入 `modules_to_save` (即参与训练) 有助于模型适应新的位置编码分布，但这会显著增加显存。**通常仅 LoRA attention 层配合 YaRN 就足够了。**
 
-> “关键信息不会离我太远”
+#### 方案 B：Gradient Checkpointing (必须开启)
+必须开启梯度检查点 (`gradient_checkpointing=True`)，这能用计算换显存，将显存占用降低约 50%-70%。
 
-FT 前：
+#### 方案 C：Flash Attention 2 (必须开启)
+在 32k 长度下，没有 Flash Attention 2 的训练速度是不可接受的。
 
-* 中后段 token 的表示范数、激活分布明显不同
-* FFN gate 对远距离信息的利用效率极低
+### 4. 实战：使用 LLaMA-Factory 的配置示例
 
----
+如果你使用 LLaMA-Factory，可以参考以下 `yaml` 配置思路进行微调：
 
-### 1.3 Head specialization 被破坏但未重建
+```yaml
+### model
+model_name_or_path: /path/to/llama-2-7b-hf
 
-大量 head 在 pretrain 中形成：
+### method
+stage: pt           # 预训练模式 (Continual Pre-training)
+do_train: true
+finetuning_type: lora # 或者 full
+lora_target: all
 
-* local head
-* mid-range head
-* global head
+### dataset
+dataset: wiki_demo  # 替换为你的长文本数据集
+cutoff_len: 32768   # 关键：切分长度设为 32k
+overwrite_cache: true
+preprocessing_num_workers: 16
 
-但这个“global”的上限仍然是 **4k 级别**。
-YaRN 只是把“世界地图扩展了”，但**head 并不知道哪些 head 该负责 16k–32k**。
+### output
+output_dir: saves/llama-2-7b/yarn-32k
+logging_steps: 10
+save_steps: 100
+plot_loss: true
+overwrite_output_dir: true
 
----
+### train
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 8 # 累积梯度以模拟大 Batch
+learning_rate: 2.0e-5
+num_train_epochs: 1.0
+max_steps: 500       # 只需要少量步数
+lr_scheduler_type: cosine
+warmup_steps: 20
 
-## 2. Long-context FT 的真正目标（不是“训长文本”）
+### rope scaling (关键部分)
+# LLaMA-Factory 可能会自动识别 config，但建议显式指定或修改 config.json
+# 如果通过参数传入，这取决于框架版本，通常修改 config.json 最稳妥。
 
-**错误理解**：
-
-> “喂 32k 长文本给模型就行”
-
-**正确目标是三件事**：
-
-### 2.1 重标定 attention 的距离感知
-
-让模型学会：
-
-* 8k / 16k / 32k 的距离是“正常存在的”
-* attention 不应该在 4k 以后指数衰减
-
----
-
-### 2.2 重新分配 head 的职责
-
-让部分 head：
-
-* 明确负责 very-long-range dependency
-* 形成“稀疏但稳定”的远程 attention
-
----
-
-### 2.3 校准激活与数值稳定性
-
-尤其是：
-
-* RMSNorm / LayerNorm 后的分布
-* KV cache 在极远距离下的数值范围
-
----
-
-## 3. 针对 original model 的 **最小可行 FT 方案（强烈推荐）**
-
-这是社区和工业界实践下来 **性价比最高** 的做法。
-
----
-
-### 3.1 核心原则（一定要记住）
-
-1. **从不改模型结构**
-2. **保持 YaRN RoPE 全程启用**
-3. **只训练极少参数 / 或低 LR 全模型**
-4. **混合上下文长度训练**
-
----
-
-## 4. 具体 FT 配方（4k → 32k）
-
-### 4.1 RoPE 配置（FT 全程固定）
-
-```json
-"rope_scaling": {
-  "type": "yarn",
-  "factor": 8,
-  "original_max_position_embeddings": 4096,
-  "beta_fast": 32,
-  "beta_slow": 1
-}
+### runtime
+fp16: true
+flash_attn: fa2      # 开启 Flash Attention 2
+gradient_checkpointing: true
 ```
 
-**FT 时不要切换回原 RoPE。**
-
----
-
-### 4.2 上下文长度 curriculum（非常重要）
-
-不要直接全 32k。
-
-推荐比例：
-
-| 序列长度  | 占比  |
-| ----- | --- |
-| 2k–4k | 40% |
-| 8k    | 25% |
-| 16k   | 20% |
-| 32k   | 15% |
-
-目的：
-
-* 保住短上下文能力
-* 防止 attention 完全“长化”
-
----
-
-### 4.3 数据类型（比“长文本”更重要）
-
-**有效数据 ≫ 随便拼接**
-
-强烈建议包含：
-
-1. **远距信息检索任务**
-
-   * 问题在前，证据在 10k+ token 之后
-2. **多段 reasoning**
-
-   * 中间插入大量无关段落
-3. **Key-value recall**
-
-   * “在第 18342 个 token 出现的变量 X 是什么？”
-4. **结构化长文**
-
-   * 代码仓库、论文、日志
-
-> 单纯把短文本拼成 32k，收益非常有限。
-
----
-
-## 5. 训练策略：两条现实可行路径
-
----
-
-### 路径 A：LoRA / QLoRA（推荐起步）
-
-**训练对象**：
-
-* QKV projection
-* O projection
-* 可选：MLP gate
-
-**参数规模**：
-
-* <1% 参数
-
-**学习率**：
-
-```text
-lr = 1e-4 ～ 5e-5
-```
-
-**优势**：
-
-* 快
-* 不易破坏原模型
-* 掉点可控
-
----
-
-### 路径 B：全模型低 LR FT（效果最好）
-
-**学习率**：
-
-```text
-lr = 1e-5 ～ 5e-6
-```
-
-**训练量**：
-
-* 1B～5B tokens 通常足够
-* 不需要 full pretrain 级别
-
-**注意**：
-
-* 必须有 gradient clipping
-* attention 数值稳定性很关键
-
----
-
-## 6. 一些“反直觉但很重要”的工程细节
-
-### 6.1 不要冻结 attention
-
-很多人 freeze attention 只训 FFN —— **长上下文会几乎没改善**。
-
----
-
-### 6.2 FlashAttention / SDPA 必须一致
-
-FT 时用的 RoPE 实现：
-
-* kernel
-* Python reference
-
-必须完全一致，否则学到的是错相位。
-
----
-
-### 6.3 KV cache dtype 会影响 FT 成败
-
-* fp16 KV 在 32k 下数值误差明显
-* bf16 / fp32 KV cache 在 FT 阶段更稳
-
----
-
-## 7. 如何判断 FT 是否“训对了”
-
-几个强信号：
-
-1. **attention entropy**
-
-   * 32k 位置不再接近 uniform
-2. **远距 token 的 logit sensitivity**
-
-   * 修改 20k 处 token，输出明显变化
-3. **4k 内任务几乎不掉点**
-
-如果：
-
-* 长上下文提升了
-* 4k 掉点 <1–2%
-
-说明 FT 是成功的。
-
----
-
-## 8. 总结一句话
-
-> **YaRN 解决的是“几何合法性”，
-> long-context FT 解决的是“统计与功能适配”。**
-
-**正确做法不是“能跑 32k 就算成功”，而是：**
-
-* attention 结构稳定
-* head 职责重新分化
-* 短上下文能力不被破坏
-
----
-
-如果你愿意，下一步我可以帮你：
-
-* 设计一套 **最小 50M–100M token 的 long-context FT 数据方案**
-* 给出 **QKV-only LoRA 的具体 target_modules**
-* 或从 **attention phase / head entropy 的角度，给你一个“是否训对”的定量指标**
-
-这些都可以直接接到你现在的实验流程里。
+### 5. 验证与测试
+
+微调完成后，如何验证有没有成功？
+1.  **PPL Test**: 在长文本测试集上计算困惑度（Perplexity）。在 32k 长度内，PPL 应该保持平稳，不会随长度增加而剧烈上升。
+2.  **大海捞针 (Passkey Retrieval)**: 这是一个经典的测试。将一个随机 Passkey 藏在 30k 长度的文本中间，问模型 Passkey 是什么。经过 YaRN 微调的模型应该能达到接近 100% 的准确率。
+
+### 总结
+
+针对 Original Model 的操作路径：
+1.  修改 `config.json` 开启 YaRN (`factor=8`)。
+2.  准备长文本数据集（如书籍）。
+3.  开启 **Packing** 和 **Flash Attention 2**。
+4.  进行 **200-500 步** 的继续预训练（LR 约为 $2e-5$）。
+5.  这样得到的模型就是真正的 32k 长上下文模型。

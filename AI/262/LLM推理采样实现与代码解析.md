@@ -2,7 +2,7 @@
 
 ### 🧑‍💻 User
 
-llm推理采样阶段，结合python代码说说top_k_top_p_sampling_from_logits一般是如何实现的？
+llm推理采样阶段，结合python代码说说 `top_k_top_p_sampling_from_logits` 一般是如何实现的？
 
 ---
 
