@@ -108,3 +108,129 @@ Score 等于 $\boldsymbol{\epsilon}$-pred 的特定变换，是因为：
 2.  高斯分布的对数梯度（Score）形式上正比于 $(\mathbf{x} - \mu)$。
 3.  在扩散过程中，$(\mathbf{x} - \mu)$ 正好就是**噪声项**。
 4.  通过 **Denoising Score Matching** 理论，训练网络预测噪声 $\boldsymbol{\epsilon}$ 等价于训练网络估计 Score。
+
+---
+
+### 🧑‍💻 User
+
+为什么 x₀-pred、ε-pred、v-pred 都是 score 的不同参数化？
+
+---
+
+### 🤖 Assistant
+
+这是一个非常深刻且触及扩散模型本质的问题。
+
+简单来说，**$\mathbf{x}_0$-pred、$\boldsymbol{\epsilon}$-pred 和 $\mathbf{v}$-pred 之所以都是 Score 的参数化，是因为它们三者之间通过一个简单的线性方程组互相锁定。** 只要知道了其中一个，结合当前的输入 $\mathbf{x}_t$ 和时间 $t$，就能精确算出另外两个，进而算出 Score。
+
+它们本质上是在预测同一个高维空间中的**同一个向量**，只是选取的**坐标系基底**不同。
+
+---
+
+### 1. 核心方程：线性约束
+
+一切的根源在于扩散模型的前向过程公式（我们使用简化的 $\alpha, \sigma$ 符号，对应 $\sqrt{\bar{\alpha}_t}$ 和 $\sqrt{1-\bar{\alpha}_t}$）：
+
+$$
+\mathbf{x}_t = \alpha_t \mathbf{x}_0 + \sigma_t \boldsymbol{\epsilon}
+$$
+
+其中：
+*   $\mathbf{x}_t$ 是网络输入（已知）。
+*   $\alpha_t, \sigma_t$ 是预设的超参数（已知，满足 $\alpha_t^2 + \sigma_t^2 = 1$）。
+*   **$\mathbf{x}_0$ 和 $\boldsymbol{\epsilon}$ 是未知的变量**。
+
+这是一个二元一次方程（虽然是向量），有两个未知数。虽然我们无法仅凭 $\mathbf{x}_t$ 解出 $\mathbf{x}_0$ 和 $\boldsymbol{\epsilon}$，但**一旦神经网络预测了其中任意一个，另一个就被唯一确定了**。
+
+而我们之前已经推导过，**Score Function** 直接由 $\boldsymbol{\epsilon}$ 决定：
+$$
+\nabla_{\mathbf{x}_t} \log p_t(\mathbf{x}_t) = -\frac{\boldsymbol{\epsilon}}{\sigma_t}
+$$
+
+因此，无论网络预测什么，只要能推导出 $\boldsymbol{\epsilon}$，就是在预测 Score。
+
+---
+
+### 2. 三种参数化的推导
+
+我们定义神经网络的输出为 $f_\theta(\mathbf{x}_t, t)$，看看它如何转化为 Score。
+
+#### A. $\boldsymbol{\epsilon}$-prediction (预测噪声)
+这是最常见的方式（DDPM 默认）。网络直接输出 $\hat{\boldsymbol{\epsilon}}$。
+
+*   **关系**：$\text{Score} \propto -\hat{\boldsymbol{\epsilon}}$
+*   **公式**：
+    $$ \nabla_{\mathbf{x}_t} \log p_t(\mathbf{x}_t) \approx -\frac{f_\theta(\mathbf{x}_t, t)}{\sigma_t} $$
+*   **直观**：直接预测“也就是什么东西把图搞糊了”。
+
+#### B. $\mathbf{x}_0$-prediction (预测原图)
+网络输出对清晰原图的估计 $\hat{\mathbf{x}}_0$。
+我们可以通过移项前向公式来反求隐含的噪声 $\hat{\boldsymbol{\epsilon}}$：
+
+$$
+\hat{\boldsymbol{\epsilon}} = \frac{\mathbf{x}_t - \alpha_t \hat{\mathbf{x}}_0}{\sigma_t}
+$$
+
+*   **关系**：Score 是 $\mathbf{x}_t$ 和预测原图 $\hat{\mathbf{x}}_0$ 的线性组合。
+*   **公式**：
+    $$ \nabla_{\mathbf{x}_t} \log p_t(\mathbf{x}_t) \approx -\frac{\mathbf{x}_t - \alpha_t f_\theta(\mathbf{x}_t, t)}{\sigma_t^2} $$
+*   **直观**：如果我知道原图长什么样，我就知道现在的图里包含了多少噪声，也就知道了去噪方向。
+
+#### C. $\mathbf{v}$-prediction (预测速度)
+这种参数化方式源自 *Progressive Distillation* (Salimans & Ho, 2022)。
+如果你把扩散过程看作是 $\mathbf{x}_0$ 和 $\boldsymbol{\epsilon}$ 在一个圆上的**旋转**（因为 $\alpha_t = \cos \phi, \sigma_t = \sin \phi$），那么 $\mathbf{x}_t$ 是位置向量，而 $\mathbf{v}_t$ 就是与其垂直的**速度向量**。
+
+定义为：
+$$
+\mathbf{v}_t \equiv \alpha_t \boldsymbol{\epsilon} - \sigma_t \mathbf{x}_0
+$$
+
+利用 $\mathbf{x}_t$ 和 $\mathbf{v}_t$ 的定义以及 $\alpha_t^2 + \sigma_t^2 = 1$，我们可以完美解出 $\boldsymbol{\epsilon}$：
+$$
+\boldsymbol{\epsilon} = \alpha_t \mathbf{v}_t + \sigma_t \mathbf{x}_t
+$$
+
+*   **关系**：Score 是预测速度 $\hat{\mathbf{v}}$ 和当前输入 $\mathbf{x}_t$ 的线性组合。
+*   **公式**：
+    $$ \nabla_{\mathbf{x}_t} \log p_t(\mathbf{x}_t) \approx -\frac{\alpha_t f_\theta(\mathbf{x}_t, t) + \sigma_t \mathbf{x}_t}{\sigma_t} $$
+
+---
+
+### 3. 几何视角的统一 (The Geometric Intuition)
+
+想象一个二维平面坐标系，横轴是 $\mathbf{x}_0$（信号），纵轴是 $\boldsymbol{\epsilon}$（噪声）。
+
+1.  **扩散轨迹**：随着 $t$ 从 0 到 $T$，状态 $\mathbf{x}_t$ 是从横轴（纯信号）慢慢旋转到纵轴（纯噪声）的一个向量（假设 Variance Preserving）。
+2.  **$\mathbf{x}_t$ 向量**：$\mathbf{x}_t = \cos(\phi) \mathbf{x}_0 + \sin(\phi) \boldsymbol{\epsilon}$。
+3.  **$\mathbf{v}_t$ 向量**：$\mathbf{v}_t = -\sin(\phi) \mathbf{x}_0 + \cos(\phi) \boldsymbol{\epsilon}$（这是 $\mathbf{x}_t$ 旋转 90 度后的向量）。
+
+此时，Score 本质上就是要把 $\mathbf{x}_t$ 推回数据流形。这三个预测目标相当于把同一个向量投影到了不同的轴上：
+
+*   **$\mathbf{x}_0$-pred**：网络预测该向量在 X 轴的投影。
+*   **$\boldsymbol{\epsilon}$-pred**：网络预测该向量在 Y 轴的投影。
+*   **$\mathbf{v}$-pred**：网络预测该向量在“切线方向”的分量（也就是旋转速度）。
+
+### 4. 为什么要区分？(数值稳定性)
+
+既然数学上等价，为什么还要分这么多种？因为在计算机里，**$0$ 不能作除数，且浮点数有精度问题**。即 **Signal-to-Noise Ratio (SNR)** 问题。
+
+*   **$\boldsymbol{\epsilon}$-pred 的问题**：
+    *   在 $t=0$ 附近（生成刚结束），$\mathbf{x}_t \approx \mathbf{x}_0$，噪声 $\sigma_t \approx 0$。
+    *   此时 Score 公式里分母是 $\sigma_t$，预测 $\boldsymbol{\epsilon}$ 需要非常精准，否则除以一个极小的数会导致 Score 爆炸。
+    *   但在大多数扩散模型（如 Stable Diffusion）中，$t=0$ 处其实不采样，所以 $\boldsymbol{\epsilon}$-pred 表现很好。
+
+*   **$\mathbf{x}_0$-pred 的问题**：
+    *   在 $t=T$ 附近（纯噪声），$\mathbf{x}_t \approx \boldsymbol{\epsilon}$，信号 $\alpha_t \approx 0$。
+    *   此时想从一堆纯噪声里预测出原图 $\mathbf{x}_0$ 极其困难，网络收敛很慢。
+
+*   **$\mathbf{v}$-pred 的优势**：
+    *   它在整个区间（从 $t=0$ 到 $t=T$）都比较平滑。
+    *   当 $\alpha_t \to 0$ 时，$\mathbf{v}_t \approx \boldsymbol{\epsilon}$（像 $\boldsymbol{\epsilon}$-pred）。
+    *   当 $\sigma_t \to 0$ 时，$\mathbf{v}_t \approx -\mathbf{x}_0$（像 $\mathbf{x}_0$-pred）。
+    *   所以在**蒸馏（Distillation）**或者需要**零信噪比（Zero-SNR）**训练时，$\mathbf{v}$-pred 是最佳选择，因为它避免了端点的数值不稳定。
+
+### 总结
+
+$\mathbf{x}_0, \boldsymbol{\epsilon}, \mathbf{v}$ 三者就像是同一个物理对象（去噪所需的梯度场）在不同视角下的投影。
+*   **数学上**：它们通过线性变换互相等价。
+*   **工程上**：它们决定了神经网络在不同噪声强度下的**学习难度**和**数值稳定性**。
