@@ -1,0 +1,2767 @@
+Directory structure:
+└── ist-daslab-marlin/
+    ├── README.md
+    ├── bench.py
+    ├── LICENSE
+    ├── setup.py
+    ├── test.py
+    ├── gptq/
+    │   ├── datautils.py
+    │   ├── eval.py
+    │   ├── gptq.py
+    │   ├── llama2.py
+    │   └── quant.py
+    └── marlin/
+        ├── __init__.py
+        ├── marlin_cuda.cpp
+        └── marlin_cuda_kernel.cu
+
+================================================
+FILE: README.md
+================================================
+<div align="center">
+  <img src="assets/marlin.png" width="250"/>
+</div>
+
+# Marlin
+
+This is Marlin, a **M**ixed **A**uto-**R**egressive **Lin**ear kernel (and the name of one of the planet's fastest fish), an extremely optimized FP16xINT4 matmul kernel aimed at LLM inference that can deliver close to ideal (4x)
+speedups up to batchsizes of 16-32 tokens (in contrast to the 1-2 tokens of prior work with comparable speedup). This makes Marlin well suited for larger-scale
+serving, speculative decoding or advanced multi-inference schemes such as CoT-Majority.
+
+## Techniques:
+
+Most modern GPUs feature FLOP to byte ratios of around 100-200.
+Hence, as long as we perform less than 25-50 (tensor core) multiply-accumulates per 4-bit quantized weight, it should (theoretically) be possible to maintain near ideal 4x speedup over FP16 weights.
+This means that the full performance benefits of weight-only quantization should, in principle, extend to batchsizes 4-8x larger than what is currently achieved by existing kernels.
+However, actually realizing this in practice is very challenging, since we essentially need to fully utilize all available GPU resources (global memory, L2 cache, shared memory, tensor cores, vector cores), *simultaneously*.
+Marlin accomplishes this through numerous techniques and optimizations, briefly sketched below:
+
+* We organize computation in such a way that all activations are essentially always fetched from L2 cache and are further reused several times within registers to make sure that repeated loading from shared memory does not become a bottleneck either.
+* We execute global weight loads asynchronously, to all compute operations but also activations loads, with a cache policy that allows immediate eviction in order to not unnecessary pollute the L2 cache with values that are never reused.
+* We perform shared memory loads, whose footprint is quite significant due to relatively large activations, via double buffering to overlap them with computation and global loads.
+* We carefully order dequantization and tensor core instructions to ensure that both GPU pipelines are well saturated and do not bottleneck each other.
+* In general, both quantized weights and group scales are reshuffled offline, into a layout that gives ideal access patterns during execution, allowing for instance directly dequantizing weights into tensor core organization.
+* We have multiple warps in a threadblock compute partial results of the same output tile, in order to achieve higher warp counts, maximizing compute and latency hiding, without increasing the output tile size, which would make good partioning on realistic matrices difficult.
+* All loads use maximum vector length for peak efficiency and we also perform several layout transformations to guarantee that all shared memory reads and writes are conflict-free, in particular for matrix loading instructions, and that global reduction happens at minimal memory overhead.
+* We set up and unroll loops such that the majority of memory offsets are static, minimizing runtime index calculations.
+* We implement a "striped" paritioning scheme where the segment of tiles processed by each SM may (partially) span over multiple column "slices". This leads to good SM utlization on most matrix shapes, while minimizing required global reduction steps.
+* Global reduction happens directly in the output buffer (temporarily downcasting FP32 accumulators to FP16) which is kept in L2 cache; reduction operations are generally optimized to avoid any unnecessary reads or writes as well.
+* Overall, the kernel's PTX assembly was extensively analyzed in NSight-Compute, and the CUDA code features several more redundant or slightly suboptimal constructions that however compile to faster PTX.
+
+## Benchmarks:
+
+We first compare the performance of Marlin with other popular 4-bit inference kernels, on a large matrix that can be
+ideally partioned on an NVIDIA A10 GPU. This allows all kernels to reach pretty much their best possible performance.
+All kernels are executed at groupsize 128 (however, we note that scale formats are not 100% identical).
+
+<div align="center">
+  <img src="assets/peak.png" width="500"/>
+</div>
+
+While existing kernels achieve relatively close to the optimal 3.87x (note the 0.125 bits storage overhead of the
+group scales) speedup at batchsize 1, their performance degrades quickly as the number of inputs is increased. In
+contrast, Marlin delivers essentially ideal speedups at all batchsizes, enabling the maximum possible 3.87x speedup up
+to batchsizes around 16-32.
+
+Due to its striped partioning scheme, Marlin brings strong performance also on real (smaller) matrices and various GPUs.
+This is demonstrated by the below results, where we benchmark, at batchsize 16, the overall runtime across all linear
+layers in Transformer blocks of popular open-source models.
+
+<div align="center">
+  <img src="assets/models.png" width="500"/>
+</div>
+
+Finally, we also study what performance can be sustained over longer periods of time, at locked base GPU clock.
+Interestingly, we find that reduced clock speeds significantly harm the relative speedups of prior kernels, but have no
+effect on Marlin's virtually optimal performance (relative to the lower clock setting).
+
+<div align="center">
+  <img src="assets/sustained.png" width="500"/>
+</div>
+
+## Requirements:
+
+* CUDA >= 11.8 (in particular also for the `nvcc` compiler, the version of which should match with torch)
+* NVIDIA GPU with compute capability >= 8.0 (Ampere or Ada, Marlin is not yet optimized for Hopper)
+* `torch>=2.0.0`
+* `numpy`
+For running quantization script one also needs:
+* `transformers`
+* `datasets`
+* `sentencepiece`
+
+## Usage:
+
+If all requirements are met, it should be possible to install Marlin by calling
+
+```
+pip install .
+```
+
+in the root folder of this repository.
+
+Afterwards, the easiest way to use the  Marlin kernel is via a `marlin.Layer`, a torch-module representing a Marlin
+quantized layer. It allows converting a "fake-quantized" (dequantized values stored in FP16) `torch.Linear` layer into
+the compressed Marlin format via `marlin.Layer.pack(linear, scales)`. Alternatively, the kernel can also be called
+directly through `marlin.mul(..)`, provided that weights and scales have already been appropriately preprocessed (see
+`marlin.Layer.pack(...)`). The kernel itself can be found in the self-contained `marlin/marlin_cuda_kernel.cu` file,
+which does not contain any dependencies beyond base-CUDA and should thus be easy to integrate into other lower-level
+frameworks.
+
+Correctness tests can be executed via `python test.py` and benchmarks via `python bench.py`. Please note that in order
+to reproduce our "sustainable performance" benchmarks, the GPU clocks need to be locked to their respective base values
+using:
+
+```
+sudo nvidia-smi --lock-gpu-clocks=BASE_GPU_CLOCK --lock-memory-clocks=BASE_MEM_CLOCK
+```
+
+Additionally, if ECC is enabled (e.g., on an A10), then the maximum achievable memory bandwidth will be 10-15% lower
+than in the official spec sheet as every memory requests will contain checksum overheads. This can be disabled via 
+
+```
+sudo nvidia-smi -e 0
+```
+
+which we do in our A10 benchmarks.
+
+## GPTQ Example:
+
+In the `gptq` subfolder, we also provide a slightly improved version of the [GPTQ](https://github.com/IST-DASLab/gptq) algorithm, with better group grid clipping and non-uniform calibration sample length, that can produce Marlin-compatible 4-bit versions of Llama2 models.
+Additionally, there is a script to evaluate such compressed models (using Marlin kernels) in the popular [LLM eval harness](https://github.com/EleutherAI/lm-evaluation-harness).
+The script below was tested with `lm-eval-harness==0.4.0` and may not work with newer or older versions. 
+Here are corresponding sample commands (`marlin`, `transformers` and `datasets` packages must be installed):
+
+```
+% Compress Llama2 model and export model in Marlin format.
+python llama2.py LLAMA2_CHECKPOINT --wbits 4 --save checkpoint.pt
+% Perform perplexity evaluation of uncompressed model.
+python llama2.py LLAMA2_CHECKPOINT
+% Evaluate compressed model (with Marlin kernels) in the eval harness.
+python eval.py --model hf --model_args pretrained=LLAMA2_CHECKPOINT --tasks mmlu \
+  --marlin_checkpoint checkpoint.marlin.g128
+% Evaluate full precision baseline.
+python eval.py --model hf --model_args pretrained=LLAMA2_CHECKPOINT --tasks mmlu 
+```
+
+We measure the following WikiText and Red-Pajama perplexities, as well as MMLU zero-shot accuracy, for 4-bit (group=128) Marlin models:
+
+| Llama2 | Wiki2 (FP16) | Wiki2 (INT4) | RedPaj (FP16) | RedPaj (INT4) | MMLU (FP16) | MMLU (INT4)  |
+|:---:|:----:|:----:|:----:|:----:|:-----:|:-----:|
+| 7B  | 5.12 | 5.27 | 6.14 | 6.30 | 41.80 | 40.07 |
+| 13B | 4.57 | 4.67 | 5.67 | 5.79 | 52.10 | 51.13 |
+| 70B | 3.12 | 3.21 | 4.74 | 4.81 | 65.43 | 64.81 |
+
+We note that this GPTQ example is currently intended mostly as a demonstration of how to produce accurate Marlin models and as an end-to-end validation of kernel correctness (rather than to be a flexible compression tool).
+
+## Cite:
+
+If you found this work useful, please consider citing:
+
+```
+@article{frantar2024marlin,
+  title={MARLIN: Mixed-Precision Auto-Regressive Parallel Inference on Large Language Models},
+  author={Frantar, Elias and Castro, Roberto L and Chen, Jiale and Hoefler, Torsten and Alistarh, Dan},
+  journal={arXiv preprint arXiv:2408.11743},
+  year={2024}
+}
+```
+
+
+
+================================================
+FILE: bench.py
+================================================
+import sys
+
+import numpy as np
+import torch
+import marlin
+
+import time
+
+def benchmark(f, warmup=1, iter=10):
+    for i in range(warmup + iter):
+        f()
+        # We do not synchronize here in order to hide the kernel launch overhead during benchmarkining as this will also
+        # happen during realistic model inference as many launches are submitted to the kernel queue.
+        if i == warmup - 1:
+            torch.cuda.synchronize()
+            tick = time.time()
+    torch.cuda.synchronize()
+    res = (time.time() - tick) / iter
+    # Make sure there is enough to "cool down" the GPU in between benchmarks to avoid throttling for later runs when
+    # we execute many benchmarks consecutively
+    time.sleep(1.)
+    return res
+
+def get_problem(m, n, k, groupsize=-1):
+    if groupsize == -1:
+        groupsize = k
+    dev = torch.device('cuda:0')
+    A = torch.randn((m, k), dtype=torch.half, device=dev)
+    B = torch.randint(low=-2**31, high=2**31, size=(k * n // 8,), device=dev)
+    B_ref = torch.randn((k, n), dtype=torch.half, device=dev)
+    C = torch.zeros((m, n), dtype=torch.half, device=dev)
+    s = torch.zeros((k // groupsize, n), dtype=torch.half, device=dev)
+    torch.cuda.synchronize()
+    return A, B, C, B_ref, s
+
+def benchmark_dense(A, B, C):
+    res = benchmark(lambda: torch.matmul(A, B, out=C))
+    return {
+        's': res,
+        'TFLOP/s': 2 * A.numel() * C.shape[1] / res / 10 ** 12,
+        'GB/s': (2 * A.numel() + 2 * B.numel() + 2 * C.numel()) / res / 10 ** 9
+    }
+
+def benchmark_quant(A, B, C, s, thread_k, thread_n, sms):
+    workspace = torch.zeros(C.shape[1] // 128 * 16, device=torch.device('cuda:0'))
+    res = benchmark(lambda: marlin.mul(A, B, C, s, workspace, thread_k, thread_n, sms))
+    return {
+        's': res,
+        'TFLOP/s': 2 * A.numel() * C.shape[1] / res / 10 ** 12,
+        'GB/s': (2 * A.numel() + 4 * B.numel() + 2 * C.numel() + 2 * s.numel()) / res / 10 ** 9
+    }
+
+# Pass the SM count for known GPUs to avoid the kernel having to query this information (this is very minor)
+gpu = torch.cuda.get_device_name(0)
+if 'A100' in gpu:
+    SMS = 108
+elif 'A10' in gpu:
+    SMS = 72
+elif '3090' in gpu:
+    SMS = 82
+elif 'A6000' in gpu:
+    SMS = 84
+else:
+    SMS = -1
+
+MODELS = {
+    'ideal': [
+        (4 * 256 * SMS, 256 * SMS)
+    ],
+    'Llama7B': [
+        (4096, 3 * 4096),
+        (4096, 4096),
+        (4096, 2 * 10752),
+        (10752, 4096)
+    ],
+    'Llama13B': [
+        (5120, 3 * 5120),
+        (5120, 5120),
+        (5120, 2 * 13568),
+        (13568, 5120)
+    ],
+    'Llama33B': [
+        (6656, 3 * 6656),
+        (6656, 6656),
+        (6656, 2 * 17664),
+        (17664, 6656)
+    ],
+    'Llama65B': [
+        (8192, 3 * 8192),
+        (8192, 8192),
+        (8192, 2 * 21760),
+        (21760, 8192)
+    ],
+    'Falcon180B': [
+        # Note that parallel attention and FC allows layer fusions
+        (14848, 14848 * 5 + 1024),
+        (14848 * 5, 14848)
+    ]
+}
+
+# Set to true in order to run a more complete benchmark sweep; the default is reproduce README experiments
+ALL = False
+
+for groupsize in [-1, 128] if ALL else [128]:
+    print('groupsize=%d' % groupsize)
+    print()
+    for model, layers in MODELS.items():
+        print(model)
+        if ALL:
+            batchsizes =  [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]
+        else:
+            batchsizes = [1, 2, 4, 8, 16, 32, 64, 128]
+        for batch in batchsizes:
+            if not ALL and model != 'ideal' and batch != 16:
+                continue
+            tot_q = {'s': 0, 'TFLOP/s': 0, 'GB/s': 0, 'speedup': 0} 
+            for layer in layers:
+                A, B, C, B_ref, s = get_problem(batch, layer[1], layer[0], groupsize)
+                res_d = benchmark_dense(A, B_ref, C)
+                if model == 'ideal' and batch == 16:
+                    # This is a special case constructed to be optimal for a thread-shape different than the default one
+                    res_q = benchmark_quant(A, B, C, s, 64, 256, SMS)
+                else:
+                    res_q = benchmark_quant(A, B, C, s, -1, -1, SMS)
+                res_q['speedup'] = res_d['s'] / res_q['s']
+                tot_q['s'] += res_q['s']
+                for k in tot_q:
+                    if k != 's':
+                        tot_q[k] += res_q[k] * res_q['s']
+            for k in tot_q:
+                if k != 's':
+                    tot_q[k] /= tot_q['s']
+            print('batch=%04d: s=%.5f, TFLOP/s=%07.3f, GB/s=%08.3f, speedup=%.2f' % (
+                batch,
+                tot_q['s'],
+                tot_q['TFLOP/s'],
+                tot_q['GB/s'],
+                tot_q['speedup']
+            ))
+        print()
+
+
+
+================================================
+FILE: LICENSE
+================================================
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+   END OF TERMS AND CONDITIONS
+
+   APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+   Copyright [yyyy] [name of copyright owner]
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+
+
+================================================
+FILE: setup.py
+================================================
+from setuptools import setup
+from torch.utils import cpp_extension
+
+setup(
+    name='marlin',
+    version='0.1.1',
+    author='Elias Frantar',
+    author_email='elias.frantar@ist.ac.at',
+    description='Highly optimized FP16xINT4 CUDA matmul kernel.',
+    install_requires=['numpy', 'torch'],
+    packages=['marlin'],
+    ext_modules=[cpp_extension.CUDAExtension(
+        'marlin_cuda', ['marlin/marlin_cuda.cpp', 'marlin/marlin_cuda_kernel.cu']
+    )],
+    cmdclass={'build_ext': cpp_extension.BuildExtension},
+)
+
+
+
+================================================
+FILE: test.py
+================================================
+import unittest
+
+import numpy as np
+import torch
+import torch.nn as nn
+
+import marlin
+
+
+seed = 0
+np.random.seed(seed)
+torch.random.manual_seed(seed)
+
+DEV = torch.device('cuda:0')
+
+
+def gen_quant4(m, n, groupsize=-1):
+    tile = 16
+    maxq = 2 ** 4 - 1
+    w = torch.randn((m, n), dtype=torch.half, device=DEV)
+    if groupsize != -1:
+        w = w.reshape((-1, groupsize, n))
+        w = w.permute(1, 0, 2)
+        w = w.reshape((groupsize, -1))
+    s = torch.max(torch.abs(w), 0, keepdim=True)[0]
+    s *= 2 / maxq
+    w = torch.round(w / s).int()
+    w += (maxq + 1) // 2
+    w = torch.clamp(w, 0, maxq)
+    ref = (w - (maxq + 1) // 2).half() * s
+    if groupsize != -1:
+        def reshape(w):
+            w = w.reshape((groupsize, -1, n))
+            w = w.permute(1, 0, 2)
+            w = w.reshape((m, n)).contiguous()
+            return w
+        ref = reshape(ref)
+        w = reshape(w)
+    s = s.reshape((-1, n)).contiguous()
+    linear = nn.Linear(m, n)
+    linear.weight.data = ref.t()
+    # Workaround to test some special cases that are forbidden by the API
+    layer = marlin.Layer(256, 256, groupsize=groupsize)
+    if groupsize == -1:
+        groupsize = m
+    layer.k = m
+    layer.n = n
+    layer.groupsize = groupsize
+    layer.B = torch.empty((m // 16, n * 16 // 8), dtype=torch.int, device=DEV)
+    layer.s = torch.empty((m // groupsize, n), dtype=torch.half, device=DEV)
+    layer.pack(linear, s.t())
+    q = layer.B
+    s = layer.s
+    return ref, q, s
+
+class Test(unittest.TestCase):
+
+    def run_problem(self, m, n, k, thread_k, thread_n, groupsize=-1):
+        print('% 5d % 6d % 6d % 4d % 4d % 4d' % (m, n, k, thread_k, thread_n, groupsize))
+        A = torch.randn((m, k), dtype=torch.half, device=DEV)
+        B_ref, B, s = gen_quant4(k, n, groupsize=groupsize)
+        C = torch.zeros((m, n), dtype=torch.half, device=DEV)
+        C_ref = torch.matmul(A, B_ref)
+        workspace = torch.zeros(n // 128 * 16, device=DEV)
+        marlin.mul(A, B, C, s, workspace, thread_k, thread_n, -1)
+        torch.cuda.synchronize()
+        self.assertLess(torch.mean(torch.abs(C - C_ref)) / torch.mean(torch.abs(C_ref)), 0.001)
+
+    def test_tiles(self):
+        print()
+        for m in [1, 2, 3, 4, 8, 12, 16, 24, 32, 48, 64, 118, 128, 152, 768, 1024]:
+            for thread_k, thread_n in [(64, 256), (128, 128)]:
+                if m > 16 and thread_k == 128:
+                    continue
+                self.run_problem(m, 2 * 256, 1024, thread_k, thread_n)
+
+    def test_k_stages_divisibility(self):
+        print()
+        for k in [3 * 64 + 64 * 4 * 2 + 64 * i for i in range(1, 4)]:
+            self.run_problem(16, 2 * 256, k, 64, 256)
+
+    def test_very_few_stages(self):
+        print()
+        for k in [64, 128, 192]:
+            self.run_problem(16, 2 * 256, k, 64, 256)
+
+    def test_llama_shapes(self):
+        print()
+        return
+        MODELS = {
+            ' 7B': [
+                (4096, 3 * 4096),
+                (4096, 4096),
+                (4096, 2 * 10752),
+                (10752, 4096)
+            ],
+            '13B': [
+                (5120, 3 * 5120),
+                (5120, 5120),
+                (5120, 2 * 13568),
+                (13568, 5120)
+            ],
+            '33B': [
+                (6656, 3 * 6656),
+                (6656, 6656),
+                (6656, 2 * 17664),
+                (17664, 6656)
+            ],
+            '70B': [
+                (8192, 3 * 8192),
+                (8192, 8192),
+                (8192, 2 * 21760),
+                (21760, 8192)
+            ]
+        }
+        for _, layers in MODELS.items():
+            for layer in layers:
+                for thread_k, thread_n in [(128, 128)]:
+                    for batch in [1, 16]:
+                        self.run_problem(batch, layer[1], layer[0], thread_k, thread_n)
+
+    def test_errors(self):
+        print()
+        m, n, k = 16, 256, 64
+        A = torch.randn((m, k), dtype=torch.half, device=DEV)
+        B_ref, B, s = gen_quant4(k, n)
+        C = torch.zeros((m, n), dtype=torch.half, device=DEV)
+        workspace = torch.zeros(n // 128, device=DEV)
+        err = False
+        try:
+            marlin.mul(A, B, C, s, workspace, 128, 128, -1)
+        except:
+            err = True 
+        self.assertTrue(err)
+        err = False
+        try:
+            marlin.mul(A, B, C, s, workspace, 256, 256, -1)
+        except:
+            err = True 
+        self.assertTrue(err)
+        s = torch.zeros((2, n), dtype=torch.half, device=DEV)
+        err = False
+        try:
+            marlin.mul(A, B, C, s, workspace, 256, 256, -1)
+        except:
+            err = True 
+        self.assertTrue(err)
+
+    def test_groups(self):
+        print()
+        for m in [16]:
+            for groupsize in [128]:
+                for n, k in [(256, 512), (256, 1024), (256 * 128, 1024)]:
+                    for thread_shape in [(128, 128), (64, 256)]:
+                        self.run_problem(m, n, k, *thread_shape, groupsize)
+
+
+if __name__ == '__main__':
+    unittest.main()
+
+
+
+================================================
+FILE: gptq/datautils.py
+================================================
+import numpy as np
+import torch
+
+
+def set_seed(seed):
+    np.random.seed(seed)
+    torch.random.manual_seed(seed)
+
+
+def get_wikitext2(nsamples, seed, seqlen, model):
+    from datasets import load_dataset
+    traindata = load_dataset('wikitext', 'wikitext-2-raw-v1', split='train')
+    testdata = load_dataset('wikitext', 'wikitext-2-raw-v1', split='test')
+
+    from transformers import AutoTokenizer 
+    tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
+    trainenc = tokenizer("\n\n".join(traindata['text']), return_tensors='pt')
+    testenc = tokenizer("\n\n".join(testdata['text']), return_tensors='pt')
+
+    import random
+    random.seed(seed)
+    trainloader = []
+    for _ in range(nsamples):
+        i = random.randint(0, trainenc.input_ids.shape[1] - seqlen - 1)
+        j = i + seqlen
+        inp = trainenc.input_ids[:, i:j]
+        tar = inp.clone()
+        tar[:, :-1] = -100
+        trainloader.append((inp, tar))
+    testloader = []
+    for i in range(0, testenc.input_ids.shape[1] - seqlen, seqlen):
+        testloader.append(testenc.input_ids[:, i:(i + seqlen)])
+
+    return trainloader, testloader 
+
+def get_red(nsamples, seed, seqlen, model):
+    VALSAMPLES = 1024
+
+    from datasets import load_dataset
+    from transformers import AutoTokenizer 
+    tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
+    traindata = load_dataset('togethercomputer/RedPajama-Data-1T-Sample', split='train')
+
+    np.random.seed(0)
+    perm = np.random.permutation(len(traindata))
+
+    dataloader = []
+    for i in perm:
+        tokens = tokenizer(traindata[int(i)]['text'], return_tensors='pt').input_ids
+        if not (1 < tokens.shape[1] <= seqlen):
+            continue
+        dataloader.append(tokens)
+        if len(dataloader) == nsamples + VALSAMPLES:
+            break
+    trainloader = dataloader[VALSAMPLES:]
+    testloader = dataloader[:VALSAMPLES]
+    return trainloader, testloader
+
+
+def get_loaders(
+    name, nsamples=256, seed=0, seqlen=2048, model=''
+):
+    if 'wikitext2' in name:
+        return get_wikitext2(nsamples, seed, seqlen, model)
+        return data, None
+    if 'red' in name:
+        return get_red(nsamples, seed, seqlen, model)
+
+
+
+
+================================================
+FILE: gptq/eval.py
+================================================
+# Copied from https://github.com/EleutherAI/lm-evaluation-harness/blob/main/lm_eval/__main__.py
+# with minor modifications for Marlin checkpoint loading as I didn't find an easy way to call `lm_eval.cli_evaluate(...)` directly
+
+
+import marlin
+
+# Save checkpoint name here since passing around extra args seems to confuse the eval harness
+MARLIN_CHECKPOINT = '' 
+
+def get_llama_marlin(name, *args, **kwargs):
+    import torch
+    def skip(*args, **kwargs):
+        pass
+    torch.nn.init.kaiming_uniform_ = skip
+    torch.nn.init.uniform_ = skip
+    torch.nn.init.normal_ = skip
+    from transformers import LlamaForCausalLM
+    model = LlamaForCausalLM.from_pretrained(name, torch_dtype='auto')
+    # Not really sure why this is sometimes > 1, but it messes up quantized inference ...
+    # Fortunately, just setting it to 1 doesn't seem to affect standard inference
+    model.config.pretraining_tp = 1
+    def name_filter(n):
+        if 'q_proj' in n or 'k_proj' in n or 'v_proj' in n or 'o_proj' in n:
+            return True
+        if 'mlp.gate_proj' in n or 'mlp.up_proj' in n or 'mlp.down_proj' in n:
+            return True
+        return False
+    groupsize = -1 if MARLIN_CHECKPOINT.endswith('marlin') else 128
+    marlin.replace_linear(model, name_filter, groupsize=groupsize)
+    model.load_state_dict(torch.load(MARLIN_CHECKPOINT))
+    return model
+
+
+import argparse
+import json
+import logging
+import os
+import re
+import sys
+from pathlib import Path
+from typing import Union
+
+import numpy as np
+
+from lm_eval import evaluator, utils
+from lm_eval.api.registry import ALL_TASKS
+from lm_eval.tasks import include_path, initialize_tasks
+from lm_eval.utils import make_table
+
+
+def _handle_non_serializable(o):
+    if isinstance(o, np.int64) or isinstance(o, np.int32):
+        return int(o)
+    elif isinstance(o, set):
+        return list(o)
+    else:
+        return str(o)
+
+
+def parse_eval_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("--model", "-m", default="hf", help="Name of model e.g. `hf`")
+    parser.add_argument(
+        "--tasks",
+        "-t",
+        default=None,
+        metavar="task1,task2",
+        help="To get full list of tasks, use the command lm-eval --tasks list",
+    )
+    parser.add_argument(
+        "--model_args",
+        "-a",
+        default="",
+        help="Comma separated string arguments for model, e.g. `pretrained=EleutherAI/pythia-160m,dtype=float32`",
+    )
+    parser.add_argument(
+        "--num_fewshot",
+        "-f",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Number of examples in few-shot context",
+    )
+    parser.add_argument(
+        "--batch_size",
+        "-b",
+        type=str,
+        default=1,
+        metavar="auto|auto:N|N",
+        help="Acceptable values are 'auto', 'auto:N' or N, where N is an integer. Default 1.",
+    )
+    parser.add_argument(
+        "--max_batch_size",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Maximal batch size to try with --batch_size auto.",
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default=None,
+        help="Device to use (e.g. cuda, cuda:0, cpu).",
+    )
+    parser.add_argument(
+        "--output_path",
+        "-o",
+        default=None,
+        type=str,
+        metavar="DIR|DIR/file.json",
+        help="The path to the output file where the result metrics will be saved. If the path is a directory and log_samples is true, the results will be saved in the directory. Else the parent directory will be used.",
+    )
+    parser.add_argument(
+        "--limit",
+        "-L",
+        type=float,
+        default=None,
+        metavar="N|0<N<1",
+        help="Limit the number of examples per task. "
+        "If <1, limit is a percentage of the total number of examples.",
+    )
+    parser.add_argument(
+        "--use_cache",
+        "-c",
+        type=str,
+        default=None,
+        metavar="DIR",
+        help="A path to a sqlite db file for caching model responses. `None` if not caching.",
+    )
+    parser.add_argument("--decontamination_ngrams_path", default=None)  # TODO: not used
+    parser.add_argument(
+        "--check_integrity",
+        action="store_true",
+        help="Whether to run the relevant part of the test suite for the tasks.",
+    )
+    parser.add_argument(
+        "--write_out",
+        "-w",
+        action="store_true",
+        default=False,
+        help="Prints the prompt for the first few documents.",
+    )
+    parser.add_argument(
+        "--log_samples",
+        "-s",
+        action="store_true",
+        default=False,
+        help="If True, write out all model outputs and documents for per-sample measurement and post-hoc analysis. Use with --output_path.",
+    )
+    parser.add_argument(
+        "--show_config",
+        action="store_true",
+        default=False,
+        help="If True, shows the the full config of all tasks at the end of the evaluation.",
+    )
+    parser.add_argument(
+        "--include_path",
+        type=str,
+        default=None,
+        metavar="DIR",
+        help="Additional path to include if there are external tasks to include.",
+    )
+    parser.add_argument(
+        "--gen_kwargs",
+        default=None,
+        help=(
+            "String arguments for model generation on greedy_until tasks,"
+            " e.g. `temperature=0,top_k=0,top_p=0`."
+        ),
+    )
+    parser.add_argument(
+        "--verbosity",
+        "-v",
+        type=str.upper,
+        default="INFO",
+        metavar="CRITICAL|ERROR|WARNING|INFO|DEBUG",
+        help="Controls the reported logging error level. Set to DEBUG when testing + adding new task configurations for comprehensive log output.",
+    )
+    parser.add_argument(
+        "--marlin_checkpoint",
+        type=str,
+        default="",
+        help="Marlin checkpoint to load."
+    )
+    return parser.parse_args()
+
+
+def cli_evaluate(args: Union[argparse.Namespace, None] = None) -> None:
+    if not args:
+        # we allow for args to be passed externally, else we parse them ourselves
+        args = parse_eval_args()
+    if args.marlin_checkpoint:
+        global MARLIN_CHECKPOINT
+        MARLIN_CHECKPOINT = args.marlin_checkpoint
+        del args.marlin_checkpoint
+        # Overwrite model load with marlin load
+        import transformers
+        transformers.AutoModelForCausalLM.from_pretrained = staticmethod(get_llama_marlin)
+
+    eval_logger = utils.eval_logger
+    eval_logger.setLevel(getattr(logging, f"{args.verbosity}"))
+    eval_logger.info(f"Verbosity set to {args.verbosity}")
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+    initialize_tasks(args.verbosity)
+
+    if args.limit:
+        eval_logger.warning(
+            " --limit SHOULD ONLY BE USED FOR TESTING."
+            "REAL METRICS SHOULD NOT BE COMPUTED USING LIMIT."
+        )
+    if args.include_path is not None:
+        eval_logger.info(f"Including path: {args.include_path}")
+        include_path(args.include_path)
+
+    if args.tasks is None:
+        task_names = ALL_TASKS
+    elif args.tasks == "list":
+        eval_logger.info(
+            "Available Tasks:\n - {}".format("\n - ".join(sorted(ALL_TASKS)))
+        )
+        sys.exit()
+    else:
+        if os.path.isdir(args.tasks):
+            import glob
+
+            task_names = []
+            yaml_path = os.path.join(args.tasks, "*.yaml")
+            for yaml_file in glob.glob(yaml_path):
+                config = utils.load_yaml_config(yaml_file)
+                task_names.append(config)
+        else:
+            tasks_list = args.tasks.split(",")
+            task_names = utils.pattern_match(tasks_list, ALL_TASKS)
+            for task in [task for task in tasks_list if task not in task_names]:
+                if os.path.isfile(task):
+                    config = utils.load_yaml_config(task)
+                    task_names.append(config)
+            task_missing = [
+                task
+                for task in tasks_list
+                if task not in task_names and "*" not in task
+            ]  # we don't want errors if a wildcard ("*") task name was used
+
+            if task_missing:
+                missing = ", ".join(task_missing)
+                eval_logger.error(
+                    f"Tasks were not found: {missing}\n"
+                    f"{utils.SPACING}Try `lm-eval --tasks list` for list of available tasks",
+                )
+                raise ValueError(
+                    f"Tasks not found: {missing}. Try `lm-eval --tasks list` for list of available tasks, or '--verbosity DEBUG' to troubleshoot task registration issues."
+                )
+
+    if args.output_path:
+        path = Path(args.output_path)
+        # check if file or 'dir/results.json' exists
+        if path.is_file() or Path(args.output_path).joinpath("results.json").is_file():
+            eval_logger.warning(
+                f"File already exists at {path}. Results will be overwritten."
+            )
+            output_path_file = path.joinpath("results.json")
+            assert not path.is_file(), "File already exists"
+        # if path json then get parent dir
+        elif path.suffix in (".json", ".jsonl"):
+            output_path_file = path
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path = path.parent
+        else:
+            path.mkdir(parents=True, exist_ok=True)
+            output_path_file = path.joinpath("results.json")
+    elif args.log_samples and not args.output_path:
+        assert args.output_path, "Specify --output_path"
+
+    eval_logger.info(f"Selected Tasks: {task_names}")
+
+    results = evaluator.simple_evaluate(
+        model=args.model,
+        model_args=args.model_args,
+        tasks=task_names,
+        num_fewshot=args.num_fewshot,
+        batch_size=args.batch_size,
+        max_batch_size=args.max_batch_size,
+        device=args.device,
+        use_cache=args.use_cache,
+        limit=args.limit,
+        decontamination_ngrams_path=args.decontamination_ngrams_path,
+        check_integrity=args.check_integrity,
+        write_out=args.write_out,
+        log_samples=args.log_samples,
+        gen_kwargs=args.gen_kwargs,
+    )
+
+    if results is not None:
+        if args.log_samples:
+            samples = results.pop("samples")
+        dumped = json.dumps(
+            results, indent=2, default=_handle_non_serializable, ensure_ascii=False
+        )
+        if args.show_config:
+            print(dumped)
+
+        batch_sizes = ",".join(map(str, results["config"]["batch_sizes"]))
+
+        if args.output_path:
+            output_path_file.open("w").write(dumped)
+
+            if args.log_samples:
+                for task_name, config in results["configs"].items():
+                    output_name = "{}_{}".format(
+                        re.sub("/|=", "__", args.model_args), task_name
+                    )
+                    filename = path.joinpath(f"{output_name}.jsonl")
+                    samples_dumped = json.dumps(
+                        samples[task_name],
+                        indent=2,
+                        default=_handle_non_serializable,
+                        ensure_ascii=False,
+                    )
+                    filename.open("w").write(samples_dumped)
+
+        print(
+            f"{args.model} ({args.model_args}), gen_kwargs: ({args.gen_kwargs}), limit: {args.limit}, num_fewshot: {args.num_fewshot}, "
+            f"batch_size: {args.batch_size}{f' ({batch_sizes})' if batch_sizes else ''}"
+        )
+        print(make_table(results))
+        if "groups" in results:
+            print(make_table(results, "groups"))
+
+
+cli_evaluate()
+
+
+
+
+================================================
+FILE: gptq/gptq.py
+================================================
+import copy
+import math
+import time
+
+import torch
+import torch.nn as nn
+import transformers
+
+from quant import *
+
+
+DEBUG = False 
+
+torch.backends.cuda.matmul.allow_tf32 = False
+torch.backends.cudnn.allow_tf32 = False
+
+
+class GPTQ:
+
+    def __init__(self, layer, stable=False):
+        self.layer = layer
+        self.dev = self.layer.weight.device
+        W = layer.weight.data.clone()
+        self.rows = W.shape[0]
+        self.columns = W.shape[1]
+        self.H = torch.zeros((self.columns, self.columns), device=self.dev)
+        self.nsamples = 0
+
+        self.stable = stable
+        self.mean = torch.zeros((self.columns, 1), device=self.dev)
+
+    def add_batch(self, inp, out):
+        if DEBUG:
+            self.inp1 = inp
+            self.out1 = out
+        if len(inp.shape) == 2:
+            inp = inp.unsqueeze(0)
+        tmp = inp.shape[0]
+        if len(inp.shape) == 3:
+            inp = inp.reshape((-1, inp.shape[-1]))
+        inp = inp.t()
+
+        if self.stable:
+            inp = inp.float()
+            delta = torch.mean(inp, 1, keepdims=True) - self.mean
+            self.H += inp.matmul(inp.t()) + delta.matmul(delta.t()) * self.nsamples * tmp / (self.nsamples + tmp)
+            self.nsamples += tmp
+            self.mean += delta * tmp / self.nsamples
+        else:
+            self.H *= self.nsamples / (self.nsamples + tmp)
+            self.nsamples += tmp
+            inp = math.sqrt(2 / self.nsamples) * inp.float()
+            self.H += inp.matmul(inp.t())
+
+    def fasterquant(
+        self, blocksize=128, percdamp=.1, groupsize=-1, clip=False, baseline=False
+    ):
+        W = self.layer.weight.data.clone()
+        W = W.float()
+
+        tick = time.time()
+
+        if self.stable:
+            self.H /= self.nsamples
+            self.H += self.mean.matmul(self.mean.t())
+            self.H *= 2
+        H = self.H
+        del self.H
+
+        Losses = torch.zeros_like(W)
+        Q = torch.zeros_like(W)
+
+        if not baseline:
+            try:
+                damp = percdamp * torch.mean(torch.diag(H))
+                diag = torch.arange(self.columns, device=self.dev)
+                H[diag, diag] += damp
+                H = torch.linalg.cholesky(H)
+                H = torch.cholesky_inverse(H)
+                H = torch.linalg.cholesky(H, upper=True)
+                Hinv = H
+            except:
+                print('Singularity.')
+                baseline = True
+        if baseline:
+            del H
+            Hinv = torch.eye(self.columns, device=self.dev)
+
+        if groupsize == -1:
+            self.quantizer.find_params(W)
+        groups = []
+
+        for i1 in range(0, self.columns, blocksize):
+            i2 = min(i1 + blocksize, self.columns)
+            count = i2 - i1
+
+            W1 = W[:, i1:i2].clone()
+            Q1 = torch.zeros_like(W1)
+            Err1 = torch.zeros_like(W1)
+            Losses1 = torch.zeros_like(W1)
+            Hinv1 = Hinv[i1:i2, i1:i2]
+
+            if groupsize != -1:
+                self.quantizer.find_params(W1, solve=Hinv1 if clip else None)
+                groups.append(copy.deepcopy(self.quantizer))
+
+            for i in range(count):
+                w = W1[:, i]
+                d = Hinv1[i, i]
+
+                q = quantize(
+                    w.unsqueeze(1), self.quantizer.scale, self.quantizer.zero, self.quantizer.maxq
+                ).flatten()
+
+                Q1[:, i] = q
+                Losses1[:, i] = (w - q) ** 2 / d ** 2
+
+                err1 = (w - q) / d
+                W1[:, i:] -= err1.unsqueeze(1).matmul(Hinv1[i, i:].unsqueeze(0))
+                Err1[:, i] = err1
+
+            Q[:, i1:i2] = Q1
+            Losses[:, i1:i2] = Losses1 / 2
+            W[:, i2:] -= Err1.matmul(Hinv[i1:i2, i2:])
+
+            if DEBUG:
+                self.layer.weight.data[:, :i2] = Q[:, :i2]
+                self.layer.weight.data[:, i2:] = W[:, i2:]
+                print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
+                print(torch.sum(Losses))
+
+        torch.cuda.synchronize()
+        print('time %.2f' % (time.time() - tick))
+        print('error', torch.sum(Losses).item())
+
+        self.layer.weight.data = Q.reshape(self.layer.weight.shape).to(self.layer.weight.data.dtype)
+        if DEBUG:
+            print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
+
+        if groups:
+            scale = torch.cat([q.scale for q in groups], dim=1)
+            zero = torch.cat([q.zero for q in groups], dim=1)
+            return scale, zero
+        return self.quantizer.scale, self.quantizer.zero
+
+
+
+================================================
+FILE: gptq/llama2.py
+================================================
+import time
+
+import torch
+import torch.nn as nn
+
+from gptq import *
+from quant import *
+import marlin
+
+
+DEV = torch.device('cuda:0')
+
+def find_layers(module, layers=[nn.Conv2d, nn.Linear], name=''):
+    if type(module) in layers:
+        return {name: module}
+    res = {}
+    for name1, child in module.named_children():
+        res.update(find_layers(
+            child, layers=layers, name=name + '.' + name1 if name != '' else name1
+        ))
+    return res
+
+
+def get_llama(name):
+    import torch
+    def skip(*args, **kwargs):
+        pass
+    torch.nn.init.kaiming_uniform_ = skip
+    torch.nn.init.uniform_ = skip
+    torch.nn.init.normal_ = skip
+    from transformers import LlamaForCausalLM
+    model = LlamaForCausalLM.from_pretrained(name, torch_dtype='auto')
+    model.config.pretraining_tp = 1
+    model.seqlen = 4096 
+    return model
+
+@torch.no_grad()
+def llama_sequential(model, dataloader, dev):
+    print('Starting ...')
+
+    use_cache = model.config.use_cache
+    model.config.use_cache = False
+    layers = model.model.layers
+
+    model.model.embed_tokens = model.model.embed_tokens.to(dev)
+    model.model.norm = model.model.norm.to(dev)
+    layers[0] = layers[0].to(dev)
+
+    dtype = next(iter(model.parameters())).dtype
+    inps = []
+    attention_masks = []
+    position_ids = []
+
+    class Catcher(nn.Module):
+        def __init__(self, module):
+            super().__init__()
+            self.module = module
+        def forward(self, inp, **kwargs):
+            inps.append(inp)
+            attention_masks.append(kwargs['attention_mask'])
+            position_ids.append(kwargs['position_ids'])
+            raise ValueError
+    layers[0] = Catcher(layers[0])
+    for batch in dataloader:
+        try:
+            model(batch.to(dev))
+        except ValueError:
+            pass
+    layers[0] = layers[0].module
+
+    layers[0] = layers[0].cpu()
+    model.model.embed_tokens = model.model.embed_tokens.cpu()
+    model.model.norm = model.model.norm.cpu()
+    torch.cuda.empty_cache()
+
+    print('Ready.')
+
+    quantizers = {}
+    for i in range(len(layers)):
+        layer = layers[i].to(dev)
+        full = find_layers(layer)
+
+        if args.true_sequential:
+            sequential = [
+                ['self_attn.k_proj', 'self_attn.v_proj', 'self_attn.q_proj'],
+                ['self_attn.o_proj'],
+                ['mlp.up_proj', 'mlp.gate_proj'],
+                ['mlp.down_proj']
+            ]
+        else:
+            sequential = [list(full.keys())]
+
+        for names in sequential:
+            if model.config.num_attention_heads != model.config.num_key_value_heads and args.skip_gq:
+                names.remove('self_attn.k_proj')
+                names.remove('self_attn.v_proj')
+
+            subset = {n: full[n] for n in names}
+
+            gptq = {}
+            for name in subset:
+                gptq[name] = GPTQ(subset[name])
+                gptq[name].quantizer = Quantizer()
+                gptq[name].quantizer.configure(args.wbits)
+
+            def add_batch(name):
+                def tmp(_, inp, out):
+                    gptq[name].add_batch(inp[0].data, out.data)
+                return tmp
+            handles = []
+            for name in subset:
+                handles.append(subset[name].register_forward_hook(add_batch(name)))
+            for j in range(args.nsamples):
+                layer(inps[j], attention_mask=attention_masks[j], position_ids=position_ids[j])
+            for h in handles:
+                h.remove()
+
+            for name in subset:
+                print(i, name)
+                print('Quantizing ...')
+                res = gptq[name].fasterquant(
+                    percdamp=args.percdamp, groupsize=args.groupsize, clip=not args.no_clip, baseline=args.nearest
+                )
+                res = list(res)
+                res[0] = res[0].cpu()
+                res[1] = res[1].cpu()
+                quantizers['model.layers.%d.%s' % (i, name)] = res
+
+        for j in range(args.nsamples):
+            inps[j] = layer(inps[j], attention_mask=attention_masks[j], position_ids=position_ids[j])[0]
+
+        layers[i] = layer.cpu()
+        del layer
+        del gptq 
+        torch.cuda.empty_cache()
+
+    model.config.use_cache = use_cache
+    return quantizers
+
+@torch.no_grad()
+def llama_eval(model, dataloader, dev):
+    print('Evaluating ...')
+
+    nsamples = len(dataloader) 
+
+    use_cache = model.config.use_cache
+    model.config.use_cache = False
+    layers = model.model.layers
+
+    model.model.embed_tokens = model.model.embed_tokens.to(dev)
+    layers[0] = layers[0].to(dev)
+
+    dtype = next(iter(model.parameters())).dtype
+    inps = []
+    attention_masks = []
+    position_ids = []
+
+    class Catcher(nn.Module):
+        def __init__(self, module):
+            super().__init__()
+            self.module = module
+        def forward(self, inp, **kwargs):
+            inps.append(inp)
+            attention_masks.append(kwargs['attention_mask'])
+            position_ids.append(kwargs['position_ids'])
+            raise ValueError
+    layers[0] = Catcher(layers[0])
+    for batch in dataloader:
+        try:
+            model(batch.to(dev))
+        except ValueError:
+            pass
+    layers[0] = layers[0].module
+
+    layers[0] = layers[0].cpu()
+    model.model.embed_tokens = model.model.embed_tokens.cpu()
+    torch.cuda.empty_cache()
+
+    for i in range(len(layers)):
+        print(i)
+        layer = layers[i].to(dev)
+        for j in range(nsamples):
+            inps[j] = layer(inps[j], attention_mask=attention_masks[j], position_ids=position_ids[j])[0]
+        layers[i] = layer.cpu()
+        del layer
+        torch.cuda.empty_cache()
+
+    if model.model.norm is not None:
+        model.model.norm = model.model.norm.to(dev)
+    model.lm_head = model.lm_head.to(dev)
+
+    nlls = []
+    for i in range(nsamples):
+        hidden_states = inps[i]
+        if model.model.norm is not None:
+            hidden_states = model.model.norm(hidden_states)
+        lm_logits = model.lm_head(hidden_states)
+        shift_logits = lm_logits[:, :-1, :].contiguous()
+        shift_labels = (dataloader[i].to(dev))[:, 1:]
+        loss_fct = nn.CrossEntropyLoss()
+        loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+        neg_log_likelihood = loss.float() * model.seqlen
+        nlls.append(neg_log_likelihood)
+    ppl = torch.exp(torch.stack(nlls).sum() / (nsamples * model.seqlen))
+    print(ppl.item())
+
+    model.config.use_cache = use_cache
+
+def llama_pack(model, quantizers):
+    layers = find_layers(model)
+    layers = {n: layers[n] for n in quantizers}
+    marlin.replace_linear(model, lambda n: n in quantizers, groupsize=args.groupsize)
+    qlayers = find_layers(model, [marlin.Layer])
+    print('Packing ...')
+    for name in qlayers:
+        print(name)
+        qlayers[name].pack(layers[name].to(DEV), quantizers[name][0].to(DEV))
+        qlayers[name].cpu()
+        quantizers[name][0].cpu()
+        layers[name].cpu()
+    print('Done.')
+    return model
+
+
+if __name__ == '__main__':
+    import argparse
+    from datautils import *
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        'model', type=str,
+        help='LlaMa model to load; pass location of hugginface converted checkpoint.'
+    )
+    parser.add_argument(
+        '--dataset', type=str, default='red', choices=['red'],
+        help='Where to extract calibration data from.'
+    )
+    parser.add_argument(
+        '--seed',
+        type=int, default=0, help='Seed for sampling the calibration data.'
+    )
+    parser.add_argument(
+        '--nsamples', type=int, default=256,
+        help='Number of calibration data samples.'
+    )
+    parser.add_argument(
+        '--percdamp', type=float, default=.1,
+        help='Percent of the average Hessian diagonal to use for dampening.'
+    )
+    parser.add_argument(
+        '--nearest', action='store_true',
+        help='Whether to run the RTN baseline.'
+    ) 
+    parser.add_argument(
+        '--wbits', type=int, default=16, choices=[4, 16],
+        help='#bits to use for quantization; use 16 for evaluating base model.'
+    )
+    parser.add_argument(
+        '--groupsize', type=int, default=128, choices=[-1, 128],
+        help='Groupsize to use for quantization; default is 128.'
+    )
+    parser.add_argument(
+        '--true-sequential', action='store_true',
+        help='Whether to run in true sequential model.'
+    )
+    parser.add_argument(
+        '--no_clip', action='store_true',
+        help='Whether to skip hessian based grid clipping when using groups.'
+    )
+    parser.add_argument(
+        '--skip_gq', action='store_true',
+        help='Whether to skip quantizing group keys and values for the 70B model with group-query attention.'
+    )
+    parser.add_argument(
+        '--save', type=str, default='',
+        help='Whether and where to save the quantized model.'
+    )
+
+    args = parser.parse_args()
+
+    if args.nearest:
+        args.nsamples = 0
+
+    model = get_llama(args.model)
+    model.eval()
+
+    dataloader, testloader = get_loaders(
+        args.dataset, nsamples=args.nsamples, seed=args.seed, model=args.model, seqlen=model.seqlen
+    )
+
+    if args.wbits < 16:
+        tick = time.time()
+        quantizers = llama_sequential(model, dataloader, DEV)
+        print(time.time() - tick)
+
+    datasets = ['wikitext2', 'red'] 
+    for dataset in datasets:
+        dataloader, testloader = get_loaders(
+            dataset, seed=args.seed, model=args.model, seqlen=model.seqlen
+        )
+        print(dataset)
+        llama_eval(model, testloader, DEV)
+
+    if args.save:
+        args.save += '.marlin'
+        if args.groupsize != -1:
+            args.save += '.g%d' % args.groupsize
+        llama_pack(model, quantizers)
+        torch.save(model.state_dict(), args.save)
+
+
+
+
+================================================
+FILE: gptq/quant.py
+================================================
+import numpy as np
+import torch
+import torch.nn as nn
+
+
+def quantize(x, scale, zero, maxq):
+    q = torch.clamp(torch.round(x / scale) + zero, 0, maxq)
+    return scale * (q - zero)
+
+class Quantizer(nn.Module):
+
+    def __init__(self, shape=1):
+        super(Quantizer, self).__init__()
+        self.register_buffer('maxq', torch.tensor(0))
+        self.register_buffer('scale', torch.zeros(shape))
+        self.register_buffer('zero', torch.zeros(shape))
+
+    def configure(self, bits, sym=True, grid=100, maxshrink=.75):
+        self.maxq = torch.tensor(2 ** bits - 1)
+        self.sym = sym
+        self.grid = grid
+        self.maxshrink = maxshrink 
+
+    def find_params(self, x, solve=None, scales=None):
+        dev = x.device
+        self.maxq = self.maxq.to(dev)
+
+        shape = x.shape
+        x = x.flatten(1)
+        if scales is not None:
+            x *= scales
+
+        tmp = torch.zeros(x.shape[0], device=dev)
+        xmin = torch.minimum(x.min(1)[0], tmp)
+        xmax = torch.maximum(x.max(1)[0], tmp)
+
+        if self.sym:
+            xmax = torch.maximum(torch.abs(xmin), xmax)
+            tmp = xmin < 0
+            if torch.any(tmp):
+                xmin[tmp] = -xmax[tmp]
+        tmp = (xmin == 0) & (xmax == 0)
+        xmin[tmp] = -1
+        xmax[tmp] = +1
+
+        self.scale = (xmax - xmin) / self.maxq
+        if self.sym:
+            self.zero = torch.full_like(self.scale, (self.maxq + 1) / 2)
+        else:
+            self.zero = torch.round(-xmin / self.scale)
+
+        if solve is not None:
+            best = torch.full([x.shape[0]], float('inf'), device=dev)
+            for i in range(int(self.maxshrink * self.grid) + 1):
+                p = 1 - i / self.grid
+                clip = p * torch.max(xmax, torch.abs(xmin))
+                xmax1 = torch.min(xmax, +clip)
+                xmin1 = torch.max(xmin, -clip)
+                scale1 = (xmax1 - xmin1) / self.maxq
+                zero1 = torch.round(-xmin1 / scale1) if not self.sym else self.zero
+                q = quantize(x, scale1.unsqueeze(1), zero1.unsqueeze(1), self.maxq)
+                if scales is not None:
+                    q /= scales
+                delta = q - x
+                err = torch.sum(torch.linalg.solve_triangular(solve, delta, upper=True, left=False) ** 2, 1)
+                tmp = err < best
+                if torch.any(tmp):
+                    best[tmp] = err[tmp]
+                    self.scale[tmp] = scale1[tmp]
+                    self.zero[tmp] = zero1[tmp]
+
+        shape = [-1] + [1] * (len(shape) - 1)
+        self.scale = self.scale.reshape(shape)
+        self.zero = self.zero.reshape(shape)
+
+    def quantize(self, x):
+        return quantize(x, self.scale, self.zero, self.maxq)
+
+
+
+
+================================================
+FILE: marlin/__init__.py
+================================================
+# Copyright (C) Marlin.2024 Elias Frantar (elias.frantar@ist.ac.at)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+import numpy as np
+import torch
+import torch.nn as nn
+
+
+import marlin_cuda
+
+def mul(A, B, C, s, workspace, thread_k=-1, thread_n=-1, sms=-1, max_par=16):
+    """Marlin FP16xINT4 multiply; can be used within `torch.compile`.
+    @A: `torch.half` input matrix of shape `(m, k)` in standard row-major layout
+    @B: `torch.int` weight matrix of original shape `(k, n)` in Marlin format; see `Layer.pack()`
+    @C: `torch.half` out matrix of shape `(m, n)` in standard row-major layout
+    @s: `torch.half` scales of shape `(m / groupsize, n)`
+    @workspace: `torch.int` tensor with at least `n / 128 * max_par` entries that are all zero
+    @thread_k: `k` size of a thread_tile in `B` (can usually be left as auto -1)
+    @thread_n: `n` size of a thread_tile in `B` (can usually be left as auto -1)
+    @sms: number of SMs to use for the kernel (can usually be left as auto -1)
+    @max_par: maximum number of batch 64 problems to solve in parallel for large input sizes
+    """
+    marlin_cuda.mul(A, B, C, s, workspace, thread_k, thread_n, sms, max_par)
+
+
+# Precompute permutations for Marlin weight and scale shuffling 
+
+def _get_perms():
+    perm = []
+    for i in range(32):
+        perm1 = []
+        col = i // 4
+        for block in [0, 1]:
+            for row in [
+                2 * (i % 4),
+                2 * (i % 4) + 1,
+                2 * (i % 4 + 4),
+                2 * (i % 4 + 4) + 1
+            ]:
+                perm1.append(16 * row + col + 8 * block)
+        for j in range(4):
+            perm.extend([p + 256 * j for p in perm1])
+
+    perm = np.array(perm)
+    interleave = np.array([0, 2, 4, 6, 1, 3, 5, 7])
+    perm = perm.reshape((-1, 8))[:, interleave].ravel()
+    perm = torch.from_numpy(perm)
+    scale_perm = []
+    for i in range(8):
+        scale_perm.extend([i + 8 * j for j in range(8)])
+    scale_perm_single = []
+    for i in range(4):
+        scale_perm_single.extend([2 * i + j for j in [0, 1, 8, 9, 16, 17, 24, 25]])
+    return perm, scale_perm, scale_perm_single
+
+_perm, _scale_perm, _scale_perm_single = _get_perms()
+
+
+class Layer(nn.Module):
+    """PyTorch compatible Marlin layer; 4-bit (symmetric grouped) linear layer without bias."""
+
+    def __init__(self, infeatures, outfeatures, groupsize=-1):
+        """Create an empty Marlin layer.
+        @infeatures: number of input features (must be divisible by 128)
+        @outfeatures: number of output features (must be divisible by 256)
+        @groupsize: quantization groupsize (must be -1 or 128)
+        """
+        super().__init__()
+        if groupsize not in [-1, 128]:
+            raise ValueError('Only groupsize -1 and 128 are supported.')
+        if infeatures % 128 != 0 or outfeatures % 256 != 0:
+            raise ValueError('`infeatures` must be divisible by 128 and `outfeatures` by 256.')
+        if groupsize == -1:
+            groupsize = infeatures
+        if infeatures % groupsize != 0:
+            raise ValueError('`infeatures` must be divisible by `groupsize`.')
+        self.k = infeatures
+        self.n = outfeatures
+        self.groupsize = groupsize
+        self.register_buffer('B', torch.empty((self.k // 16, self.n * 16 // 8), dtype=torch.int))
+        self.register_buffer('s', torch.empty((self.k // groupsize, self.n), dtype=torch.half))
+        # 128 is currently the minimum `tile_n`, hence it gives the maximum workspace size; 16 is the default `max_par`
+        self.register_buffer('workspace', torch.zeros(self.n // 128 * 16, dtype=torch.int), persistent=False)
+
+    def forward(self, A):
+        C = torch.empty(A.shape[:-1] + (self.s.shape[1],), dtype=A.dtype, device=A.device)
+        mul(A.view((-1, A.shape[-1])), self.B, C.view((-1, C.shape[-1])), self.s, self.workspace)
+        return C
+
+    def pack(self, linear, scales):
+        """Pack a fake-quantized linear layer into this actual Marlin representation.
+        @linear: fake-quantized `torch.nn.Linear` layer to convert (must be of type `torch.half`)
+        @scales: corresponding quantization scales of shape `(infeatures, groups)`
+        """ 
+        if linear.weight.dtype != torch.half:
+            raise ValueError('Only `torch.half` weights are supported.')
+        tile = 16
+        maxq = 2 ** 4 - 1
+        s = scales.t()
+        w = linear.weight.data.t()
+        if self.groupsize != self.k:
+            w = w.reshape((-1, self.groupsize, self.n))
+            w = w.permute(1, 0, 2)
+            w = w.reshape((self.groupsize, -1))
+            s = s.reshape((1, -1))
+        w = torch.round(w / s).int()
+        w += (maxq + 1) // 2
+        w = torch.clamp(w, 0, maxq)
+        if self.groupsize != self.k:
+            w = w.reshape((self.groupsize, -1, self.n))
+            w = w.permute(1, 0, 2)
+            w = w.reshape((self.k, self.n)).contiguous()
+            s = s.reshape((-1, len(_scale_perm)))[:, _scale_perm]
+        else:
+            s = s.reshape((-1, len(_scale_perm_single)))[:, _scale_perm_single]
+        s = s.reshape((-1, self.n)).contiguous()
+        w = w.reshape((self.k // tile, tile, self.n // tile, tile))
+        w = w.permute((0, 2, 1, 3))
+        w = w.reshape((self.k // tile, self.n * tile))
+        res = w
+        res = res.reshape((-1, _perm.numel()))[:, _perm].reshape(res.shape)
+        q = np.zeros((res.shape[0], res.shape[1] // 8), dtype=np.uint32)
+        res = res.cpu().numpy().astype(np.uint32)
+        for i in range(8):
+            q |= res[:, i::8] << 4 * i
+        q = torch.from_numpy(q.astype(np.int32)).to(w.device)
+        self.B[:, :] = q.to(self.B.device)
+        self.s[:, :] = s.to(self.s.device)
+
+
+def replace_linear(module, name_filter=lambda n: True, groupsize=-1, name=''):
+    """Recursively replace all `torch.nn.Linear` layers by empty Marlin layers.
+    @module: top-level module in which to perform the replacement 
+    @name_filter: lambda indicating if a layer should be replaced
+    @groupsize: marlin groupsize
+    @name: root-level name
+    """
+    if isinstance(module, Layer):
+        return
+    for attr in dir(module):
+        tmp = getattr(module, attr)
+        name1 = name + '.' + attr if name != '' else attr
+        if isinstance(tmp, nn.Linear) and name_filter(name1):
+            setattr(
+                module, attr, Layer(tmp.in_features, tmp.out_features, groupsize=groupsize)
+            )
+    for name1, child in module.named_children():
+        replace_linear(child, name_filter, groupsize=groupsize, name=name + '.' + name1 if name != '' else name1)
+
+
+
+================================================
+FILE: marlin/marlin_cuda.cpp
+================================================
+/*
+ * Copyright (C) Marlin.2024 Elias Frantar (elias.frantar@ist.ac.at)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+#include <torch/all.h>
+#include <torch/python.h>
+#include <ATen/cuda/CUDAContext.h>
+#include <cuda_runtime.h>
+
+int marlin_cuda(
+  const void* A,
+  const void* B,
+        void* C,
+        void* s,
+  int prob_m,
+  int prob_n,
+  int prob_k,
+  void* workspace,
+  int groupsize = -1,
+  int dev = 0,
+  cudaStream_t stream = 0,
+  int thread_k = -1,
+  int thread_n = -1,
+  int sms = -1,
+  int max_par = 16
+);
+
+const int ERR_PROB_SHAPE = 1;
+const int ERR_KERN_SHAPE = 2;
+
+void mul(
+  const torch::Tensor& A,
+  const torch::Tensor& B,
+        torch::Tensor& C,
+  const torch::Tensor& s,
+        torch::Tensor& workspace,
+  int thread_k = -1,
+  int thread_n = -1,
+  int sms = -1,
+  int max_par = 8
+) {
+  int prob_m = A.size(0);
+  int prob_n = C.size(1);
+  int prob_k = A.size(1);
+  int groupsize = (s.size(0) == 1) ? -1 : prob_k / s.size(0);
+  if (groupsize != -1 && groupsize * s.size(0) != prob_k)
+    AT_ERROR("k=", prob_k, " not compatible with ", s.size(0), " groups.");
+  if (workspace.numel() < prob_n / 128 * max_par)
+    AT_ERROR("workspace must be of size at least ", prob_n / 128 * max_par, ".");
+  int dev = A.get_device();
+  int err = marlin_cuda(
+    A.data_ptr(),
+    B.data_ptr(),
+    C.data_ptr(),
+    s.data_ptr(),
+    prob_m, prob_n, prob_k,
+    workspace.data_ptr(),
+    groupsize,
+    dev,
+    at::cuda::getCurrentCUDAStream(dev),
+    thread_k,
+    thread_n,
+    sms,
+    max_par
+  );
+  if (err == ERR_PROB_SHAPE) {
+    AT_ERROR(
+      "Problem (m=", prob_m, ", n=", prob_n, ", k=", prob_k, ")",
+      " not compatible with thread_k=", thread_k, ", thread_n=", thread_n, "."
+    );
+  } else if (err == ERR_KERN_SHAPE) {
+    AT_ERROR(
+      "No kernel implementation for thread_k=", thread_k, ", thread_n=", thread_n, ", groupsize=", groupsize, "."
+    );
+  }
+}
+
+PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
+  m.def("mul", &mul, "Marlin FP16xINT4 matmul.");
+}
+
+
+
+================================================
+FILE: marlin/marlin_cuda_kernel.cu
+================================================
+/*
+ * Copyright (C) Marlin.2024 Elias Frantar (elias.frantar@ist.ac.at)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+#ifndef MARLIN_CUDA_KERNEL_CUH
+#define MARLIN_CUDA_KERNEL_CUH
+
+
+#include <cuda.h>
+#include <cuda_fp16.h>
+#include <cuda_runtime.h>
+#include <iostream>
+
+
+constexpr int ceildiv(int a, int b) {
+  return (a + b - 1) / b;
+}
+
+// Instances of `Vec` are used to organize groups of >>registers<<, as needed for instance as inputs to tensor core
+// operations. Consequently, all corresponding index accesses must be compile-time constants, which is why we
+// extensively use `#pragma unroll` throughout the kernel code to guarantee this.
+template <typename T, int n>
+struct Vec {
+  T elems[n];
+  __device__ T& operator[](int i) {
+    return elems[i];
+  }
+};
+
+using I4 = Vec<int, 4>;
+
+// Matrix fragments for tensor core instructions; their precise layout is documented here: 
+// https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#matrix-fragments-for-mma-m16n8k16-with-floating-point-type
+using FragA = Vec<half2, 4>;
+using FragB = Vec<half2, 2>;
+using FragC = Vec<float, 4>;
+using FragS = Vec<half2, 1>; // quantization scales
+
+// Predicated asynchronous global->shared copy; used for inputs A where we apply predication to handle batchsizes that
+// are not multiples of 16.
+__device__ inline void cp_async4_pred(void* smem_ptr, const void* glob_ptr, bool pred = true) {
+  const int BYTES = 16;
+  uint32_t smem = static_cast<uint32_t>(__cvta_generic_to_shared(smem_ptr));
+  asm volatile(
+    "{\n"
+    "   .reg .pred p;\n"
+    "   setp.ne.b32 p, %0, 0;\n"
+    "   @p cp.async.cg.shared.global [%1], [%2], %3;\n"
+    "}\n" :: "r"((int) pred), "r"(smem), "l"(glob_ptr), "n"(BYTES)
+  );
+}
+
+// Asynchronous global->shared copy with a cache hint indicating that the values may be evicted immediately; used for
+// quantized weights B, which are only accessed precisely once and should thus not pollute the L2 cache which we need
+// for inputs A and outputs C. 
+__device__ inline void cp_async4_stream(void* smem_ptr, const void* glob_ptr) {
+  const int BYTES = 16;
+  uint32_t smem = static_cast<uint32_t>(__cvta_generic_to_shared(smem_ptr));
+  asm volatile(
+    "{\n"
+    "   .reg .b64 p;\n"
+    "   createpolicy.fractional.L2::evict_first.b64 p, 1.0;"
+    "   cp.async.cg.shared.global.L2::cache_hint [%0], [%1], %2, p;\n"
+    "}\n" :: "r"(smem), "l"(glob_ptr), "n"(BYTES)
+  );
+}
+
+// Async copy fence.
+__device__ inline void cp_async_fence() {
+  asm volatile("cp.async.commit_group;\n" ::);
+}
+
+// Wait until at most `n` async copy stages are still pending.
+template <int n>
+__device__ inline void cp_async_wait() {
+  asm volatile("cp.async.wait_group %0;\n" :: "n"(n));
+}
+
+// m16n8k16 tensor core mma instruction with fp16 inputs and fp32 output/accumulation.
+__device__ inline void mma(const FragA& a_frag, const FragB& frag_b, FragC& frag_c) {
+  const uint32_t* a = reinterpret_cast<const uint32_t*>(&a_frag);
+  const uint32_t* b = reinterpret_cast<const uint32_t*>(&frag_b);
+  float* c = reinterpret_cast<float*>(&frag_c);
+  asm volatile(
+    "mma.sync.aligned.m16n8k16.row.col.f32.f16.f16.f32 "
+    "{%0,%1,%2,%3}, {%4,%5,%6,%7}, {%8,%9}, {%10,%11,%12,%13};\n"
+    : "=f"(c[0]), "=f"(c[1]), "=f"(c[2]), "=f"(c[3])
+    :  "r"(a[0]),  "r"(a[1]),  "r"(a[2]),  "r"(a[3]),  "r"(b[0]),  "r"(b[1]),
+       "f"(c[0]),  "f"(c[1]),  "f"(c[2]),  "f"(c[3])
+  );
+}
+
+// Instruction for loading a full 16x16 matrix fragment of operand A from shared memory, directly in tensor core layout.
+__device__ inline void ldsm4(FragA& frag_a, const void* smem_ptr) {
+  uint32_t* a = reinterpret_cast<uint32_t*>(&frag_a);
+  uint32_t smem = static_cast<uint32_t>(__cvta_generic_to_shared(smem_ptr));
+  asm volatile(
+    "ldmatrix.sync.aligned.m8n8.x4.shared.b16 {%0,%1,%2,%3}, [%4];\n"
+    : "=r"(a[0]), "=r"(a[1]), "=r"(a[2]), "=r"(a[3]) : "r"(smem)
+  );
+}
+
+// Lookup-table based 3-input logical operation; explicitly used for dequantization as the compiler does not seem to
+// automatically recognize it in all cases. 
+template <int lut>
+__device__ inline int lop3(int a, int b, int c) {
+  int res;
+  asm volatile(
+    "lop3.b32 %0, %1, %2, %3, %4;\n"
+    : "=r"(res) : "r"(a), "r"(b), "r"(c), "n"(lut)
+  );
+  return res;
+}
+
+// Efficiently dequantize an int32 value into a full B-fragment of 4 fp16 values.
+// We mostly follow the strategy in the link below, with some small changes:
+// https://github.com/NVIDIA/FasterTransformer/blob/main/src/fastertransformer/cutlass_extensions/include/cutlass_extensions/interleaved_numeric_conversion.h
+__device__ inline FragB dequant(int q) {
+  const int LO = 0x000f000f;
+  const int HI = 0x00f000f0;
+  const int EX = 0x64006400;
+  // Guarantee that the `(a & b) | c` operations are LOP3s.
+  int lo = lop3<(0xf0 & 0xcc) | 0xaa>(q, LO, EX);
+  int hi = lop3<(0xf0 & 0xcc) | 0xaa>(q, HI, EX);
+  // We want signed int4 outputs, hence we fuse the `-8` symmetric zero point directly into `SUB` and `ADD`.
+  const int SUB = 0x64086408;
+  const int MUL = 0x2c002c00;
+  const int ADD = 0xd480d480;
+  FragB frag_b;
+  frag_b[0] = __hsub2(
+    *reinterpret_cast<half2*>(&lo),
+    *reinterpret_cast<const half2*>(&SUB)
+  );
+  frag_b[1] = __hfma2(
+    *reinterpret_cast<half2*>(&hi),
+    *reinterpret_cast<const half2*>(&MUL), *reinterpret_cast<const half2*>(&ADD)
+  );
+  return frag_b;
+}
+
+// Multiply dequantized values by the corresponding quantization scale; used only for grouped quantization.
+__device__ inline void scale(FragB& frag_b, FragS& frag_s, int i) {
+  half2 s = __half2half2(reinterpret_cast<__half*>(&frag_s)[i]);
+  frag_b[0] = __hmul2(frag_b[0], s);
+  frag_b[1] = __hmul2(frag_b[1], s);
+}
+
+// Wait until barrier reaches `count`, then lock for current threadblock.
+__device__ inline void barrier_acquire(int* lock, int count) {
+  if (threadIdx.x == 0) {
+    int state = -1;
+    do
+      // Guarantee that subsequent writes by this threadblock will be visible globally.
+      asm volatile ("ld.global.acquire.gpu.b32 %0, [%1];\n" : "=r"(state) : "l"(lock));
+    while (state != count);
+  }
+  __syncthreads();
+}
+
+// Release barrier and increment visitation count.
+__device__ inline void barrier_release(int* lock, bool reset = false) {
+  __syncthreads();
+  if (threadIdx.x == 0) {
+    if (reset) {
+      lock[0] = 0;
+      return;
+    }
+    int val = 1;
+    // Make sure that all writes since acquiring this barrier are visible globally, while releasing the barrier. 
+    asm volatile ("fence.acq_rel.gpu;\n");
+    asm volatile ("red.relaxed.gpu.global.add.s32 [%0], %1;\n" : : "l"(lock), "r"(val)); 
+  }
+}
+
+
+template <
+  const int threads, // number of threads in a threadblock
+  const int thread_m_blocks, // number of 16x16 blocks in the m dimension (batchsize) of the threadblock 
+  const int thread_n_blocks, // same for n dimension (output) 
+  const int thread_k_blocks, // same for k dimension (reduction)
+  const int stages, // number of stages for the async global->shared fetch pipeline
+  const int group_blocks = -1 // number of consecutive 16x16 blocks with a separate quantization scale
+>
+__global__ void Marlin(
+  const int4* __restrict__ A, // fp16 input matrix of shape mxk 
+  const int4* __restrict__ B, // 4bit quantized weight matrix of shape kxn 
+        int4* __restrict__ C, // fp16 output buffer of shape mxn
+  const int4* __restrict__ s, // fp16 quantization scales of shape (k/groupsize)xn 
+  int  prob_m, // batch dimension m
+  int  prob_n, // output dimension n
+  int  prob_k, // reduction dimension k
+  int* locks // extra global storage for barrier synchronization 
+) {
+  // Each threadblock processes one "stripe" of the B matrix with (roughly) the same size, which might involve multiple 
+  // column "slices" (of width 16 * `thread_n_blocks`). Stripes are defined as shown in the 3x3 matrix 5 SM example: 
+  //   0 1 3 
+  //   0 2 3
+  //   1 2 4
+  // While this kind of partitioning makes things somewhat more complicated, it ensures good utilization of all SMs
+  // for many kinds of shape and GPU configurations, while requiring as few slow global cross-threadblock reductions as 
+  // possible.
+  
+  // For larger GEMMs we run multiple batchsize 64 versions in parallel for a better partitioning with less reductions
+  int parallel = 1;
+  if (prob_m > 16 * thread_m_blocks) {
+    parallel = prob_m / (16 * thread_m_blocks);
+    prob_m = 16 * thread_m_blocks;
+  }
+
+  int k_tiles = prob_k / 16 / thread_k_blocks;
+  int n_tiles = prob_n / 16 / thread_n_blocks;
+  int iters = ceildiv(k_tiles * n_tiles * parallel, gridDim.x);
+  // Ensure that the number of tiles in each stripe is a multiple of the groupsize; this avoids an annoying special case
+  // where a stripe starts in the middle of group.
+  if (group_blocks != -1)
+    iters = (group_blocks / thread_k_blocks) * ceildiv(iters, (group_blocks / thread_k_blocks));
+
+  int slice_row = (iters * blockIdx.x) % k_tiles;
+  int slice_col_par = (iters * blockIdx.x) / k_tiles;
+  int slice_col = slice_col_par;
+  int slice_iters; // number of threadblock tiles in the current slice
+  int slice_count = 0; // total number of active threadblocks in the current slice
+  int slice_idx; // index of threadblock in current slice; numbered bottom to top
+
+  // We can easily implement parallel problem execution by just remapping indices and advancing global pointers
+  if (slice_col_par >= n_tiles) {
+    A += (slice_col_par / n_tiles) * 16 * thread_m_blocks * prob_k / 8;
+    C += (slice_col_par / n_tiles) * 16 * thread_m_blocks * prob_n / 8;
+    locks += (slice_col_par / n_tiles) * n_tiles;
+    slice_col = slice_col_par % n_tiles;
+  }
+
+  // Compute all information about the current slice which is required for synchronization.
+  auto init_slice = [&] () {
+    slice_iters = iters * (blockIdx.x + 1) - (k_tiles * slice_col_par + slice_row);
+    if (slice_iters < 0 || slice_col_par >= n_tiles * parallel)
+      slice_iters = 0;
+    if (slice_iters == 0)
+      return;
+    if (slice_row + slice_iters > k_tiles) 
+      slice_iters = k_tiles - slice_row;
+    slice_count = 1;
+    slice_idx = 0;
+    int col_first = iters * ceildiv(k_tiles * slice_col_par, iters);
+    if (col_first <= k_tiles * (slice_col_par + 1)) {
+      int col_off = col_first - k_tiles * slice_col_par;
+      slice_count = ceildiv(k_tiles - col_off, iters);
+      if (col_off > 0)
+        slice_count++;
+      int delta_first = iters * blockIdx.x - col_first;
+      if (delta_first < 0 || (col_off == 0 && delta_first == 0))
+        slice_idx = slice_count - 1;
+      else {
+        slice_idx = slice_count - 1 - delta_first / iters;
+        if (col_off > 0)
+          slice_idx--;
+      }
+    }
+    if (slice_col == n_tiles) {
+      A += 16 * thread_m_blocks * prob_k / 8;
+      C += 16 * thread_m_blocks * prob_n / 8;
+      locks += n_tiles;
+      slice_col = 0;
+    }
+  };
+  init_slice();
+
+  int a_gl_stride = prob_k / 8; // stride of the A matrix in global memory
+  // We typically use `constexpr` to indicate that this value is a compile-time constant
+  constexpr int a_sh_stride = 16 * thread_k_blocks / 8; // stride of an A matrix tile in shared memory
+  constexpr int a_gl_rd_delta_o = 16 * thread_k_blocks / 8; // delta between subsequent A tiles in global memory
+  int a_gl_rd_delta_i = a_gl_stride * (threads / a_gl_rd_delta_o); // between subsequent accesses within a tile
+  constexpr int a_sh_wr_delta = a_sh_stride * (threads / a_gl_rd_delta_o); // between shared memory writes
+  constexpr int a_sh_rd_delta_o = 2 * ((threads / 32) / (thread_n_blocks / 4)); // between shared memory tile reads
+  constexpr int a_sh_rd_delta_i = a_sh_stride * 16; // within a shared memory tile
+  constexpr int a_sh_stage = a_sh_stride * (16 * thread_m_blocks); // overall size of a tile
+  constexpr int a_sh_wr_iters = ceildiv(a_sh_stage, a_sh_wr_delta); // number of shared write iterations for a tile
+
+  int b_gl_stride = 16 * prob_n / 32;
+  constexpr int b_sh_stride = 32 * thread_n_blocks / 4;
+  int b_gl_rd_delta_o = b_gl_stride * thread_k_blocks;
+  int b_gl_rd_delta_i = b_gl_stride * (threads / b_sh_stride);
+  constexpr int b_sh_wr_delta = threads;
+  constexpr int b_sh_rd_delta = threads;
+  constexpr int b_sh_stage = b_sh_stride * thread_k_blocks;
+  constexpr int b_sh_wr_iters = b_sh_stage / b_sh_wr_delta;
+
+  int s_gl_stride = prob_n / 8;
+  constexpr int s_sh_stride = 16 * thread_n_blocks / 8;
+  constexpr int s_sh_stage = s_sh_stride;
+  int s_gl_rd_delta = s_gl_stride;
+
+  // Global A read index of current thread.
+  int a_gl_rd = a_gl_stride * (threadIdx.x / a_gl_rd_delta_o) + (threadIdx.x % a_gl_rd_delta_o);
+  a_gl_rd += a_gl_rd_delta_o * slice_row;
+  // Shared write index of current thread.
+  int a_sh_wr = a_sh_stride * (threadIdx.x / a_gl_rd_delta_o) + (threadIdx.x % a_gl_rd_delta_o);
+  // Shared read index.
+  int a_sh_rd = a_sh_stride * ((threadIdx.x % 32) % 16) + (threadIdx.x % 32) / 16;
+  a_sh_rd += 2 * ((threadIdx.x / 32) / (thread_n_blocks / 4));
+
+  int b_gl_rd = b_gl_stride * (threadIdx.x / b_sh_stride) + (threadIdx.x % b_sh_stride);
+  b_gl_rd += b_sh_stride * slice_col;
+  b_gl_rd += b_gl_rd_delta_o * slice_row;
+  int b_sh_wr = threadIdx.x;
+  int b_sh_rd = threadIdx.x;
+
+  int s_gl_rd = s_gl_stride * ((thread_k_blocks * slice_row) / group_blocks) + s_sh_stride * slice_col + threadIdx.x;
+  int s_sh_wr = threadIdx.x;
+  int s_sh_rd;
+  // We use a different scale layout for grouped and column-wise quantization as we scale a `half2` tile in column-major
+  // layout in the former and in row-major in the latter case.
+  if (group_blocks != -1)
+    s_sh_rd = 8 * ((threadIdx.x / 32) % (thread_n_blocks / 4)) + (threadIdx.x % 32) / 4;
+  else
+    s_sh_rd = 8 * ((threadIdx.x / 32) % (thread_n_blocks / 4)) + (threadIdx.x % 32) % 4;
+  
+  // Precompute which thread should not read memory in which iterations; this is needed if there are more threads than
+  // required for a certain tilesize or when the batchsize is not a multiple of 16.
+  bool a_sh_wr_pred[a_sh_wr_iters];
+  #pragma unroll
+  for (int i = 0; i < a_sh_wr_iters; i++)
+    a_sh_wr_pred[i] = a_sh_wr_delta * i + a_sh_wr < a_sh_stride * prob_m;
+  bool s_sh_wr_pred = threadIdx.x < s_sh_stride;
+
+  // To ensure that writing and reading A tiles to/from shared memory, the latter in fragment format, is fully bank
+  // conflict free, we need to use a rather fancy XOR-based layout. The key here is that neither reads nor writes of 
+  // the 16-byte `int4` blocks of 8 consecutive threads involve the same shared memory banks. Further, it seems (based
+  // on NSight-Compute) that each warp must also write a consecutive memory segment?
+  auto transform_a = [&] (int i) {
+    int row = i / a_gl_rd_delta_o;
+    return a_gl_rd_delta_o * row + (i % a_gl_rd_delta_o) ^ row;
+  };
+  // Since the computation of this remapping is non-trivial and, due to our main loop unrolls, all shared memory 
+  // accesses are static, we simply precompute both transformed reads and writes.
+  int a_sh_wr_trans[a_sh_wr_iters];
+  #pragma unroll
+  for (int i = 0; i < a_sh_wr_iters; i++)
+    a_sh_wr_trans[i] = transform_a(a_sh_wr_delta * i + a_sh_wr);
+  int a_sh_rd_trans[b_sh_wr_iters][thread_m_blocks];
+  #pragma unroll
+  for (int i = 0; i < b_sh_wr_iters; i++) {
+    #pragma unroll
+    for (int j = 0; j < thread_m_blocks; j++)
+      a_sh_rd_trans[i][j] = transform_a(a_sh_rd_delta_o * i + a_sh_rd_delta_i * j + a_sh_rd); 
+  }
+
+  // Since B-accesses have non-constant stride they have to be computed at runtime; we break dependicies between
+  // subsequent accesses with a tile by maintining multiple pointers (we have enough registers), a tiny optimization.
+  const int4* B_ptr[b_sh_wr_iters];
+  #pragma unroll
+  for (int i = 0; i < b_sh_wr_iters; i++)
+    B_ptr[i] = B + b_gl_rd_delta_i * i + b_gl_rd;
+
+  extern __shared__ int4 sh[];
+  // Shared memory storage for global fetch pipelines. 
+  int4* sh_a = sh;
+  int4* sh_b = sh_a + (stages * a_sh_stage);
+  int4* sh_s = sh_b + (stages * b_sh_stage);
+  // Register storage for double buffer of shared memory reads. 
+  FragA frag_a[2][thread_m_blocks];
+  I4 frag_b_quant[2];
+  FragC frag_c[thread_m_blocks][4][2];
+  FragS frag_s[2][4];
+
+  // Zero accumulators.
+  auto zero_accums = [&] () {
+    #pragma unroll
+    for (int i = 0; i < thread_m_blocks * 4 * 2 * 4; i++)
+      reinterpret_cast<float*>(frag_c)[i] = 0;
+  };
+
+  // Asynchronously fetch the next A, B and s tile from global to the next shared memory pipeline location.
+  auto fetch_to_shared = [&] (int pipe, int a_off, bool pred = true) {
+    if (pred) {
+      int4* sh_a_stage = sh_a + a_sh_stage * pipe;
+      #pragma unroll
+      for (int i = 0; i < a_sh_wr_iters; i++) {
+        cp_async4_pred(
+          &sh_a_stage[a_sh_wr_trans[i]],
+          &A[a_gl_rd_delta_i * i + a_gl_rd + a_gl_rd_delta_o * a_off],
+          a_sh_wr_pred[i]
+        );
+      }
+      int4* sh_b_stage = sh_b + b_sh_stage * pipe;
+      #pragma unroll
+      for (int i = 0; i < b_sh_wr_iters; i++) {
+        cp_async4_stream(&sh_b_stage[b_sh_wr_delta * i + b_sh_wr], B_ptr[i]);
+        B_ptr[i] += b_gl_rd_delta_o;
+      }
+      // Only fetch scales if this tile starts a new group
+      if (group_blocks != -1 && pipe % (group_blocks / thread_k_blocks) == 0) {
+        int4* sh_s_stage = sh_s + s_sh_stage * pipe;
+        if (s_sh_wr_pred)
+          cp_async4_stream(&sh_s_stage[s_sh_wr], &s[s_gl_rd]);
+        s_gl_rd += s_gl_rd_delta;
+      }
+    }
+    // Insert a fence even when we are winding down the pipeline to ensure that waiting is also correct at this point.
+    cp_async_fence();
+  };
+
+  // Wait until the next thread tile has been loaded to shared memory.
+  auto wait_for_stage = [&] () {
+    // We only have `stages - 2` active fetches since we are double buffering and can only issue the next fetch when
+    // it is guaranteed that the previous shared memory load is fully complete (as it may otherwise be overwritten).
+    cp_async_wait<stages - 2>();
+    __syncthreads();
+  };
+
+  // Load the next sub-tile from the current location in the shared memory pipe into the current register buffer.
+  auto fetch_to_registers = [&] (int k, int pipe) {
+    // It may seem inefficient that we reload the groups for every sub-tile; however, this does not seem to be a
+    // significant bottleneck, while some theoretically better attempts have lead to bad instruction ordering by the
+    // compiler and correspondingly a noticable drop in performance.
+    if (group_blocks != -1) {
+      int4* sh_s_stage = sh_s + s_sh_stage * ((group_blocks / thread_k_blocks) * (pipe / (group_blocks / thread_k_blocks)));
+      reinterpret_cast<int4*>(&frag_s[k % 2])[0] = sh_s_stage[s_sh_rd];
+    }
+    int4* sh_a_stage = sh_a + a_sh_stage * pipe;
+    #pragma unroll
+    for (int i = 0; i < thread_m_blocks; i++)
+      ldsm4(frag_a[k % 2][i], &sh_a_stage[a_sh_rd_trans[k % b_sh_wr_iters][i]]);
+    int4* sh_b_stage = sh_b + b_sh_stage * pipe;
+    frag_b_quant[k % 2] = *reinterpret_cast<I4*>(&sh_b_stage[b_sh_rd_delta * (k % b_sh_wr_iters) + b_sh_rd]);
+  };
+
+  // Execute the actual tensor core matmul of a sub-tile. 
+  auto matmul = [&] (int k) {
+    // We have the m dimension as the inner loop in order to encourage overlapping dequantization and matmul operations.
+    #pragma unroll
+    for (int j = 0; j < 4; j++) {
+      int b_quant = frag_b_quant[k % 2][j];
+      int b_quant_shift = b_quant >> 8;
+      FragB frag_b0 = dequant(b_quant);
+      // If there are no groups, we can just scale the final output once and can avoid doing so for each weight.
+      if (group_blocks != -1)
+        scale(frag_b0, frag_s[k % 2][j], 0);
+      FragB frag_b1 = dequant(b_quant_shift);
+      if (group_blocks != -1)
+        scale(frag_b1, frag_s[k % 2][j], 1);
+      #pragma unroll
+      for (int i = 0; i < thread_m_blocks; i++) {
+        mma(frag_a[k % 2][i], frag_b0, frag_c[i][j][0]);
+        mma(frag_a[k % 2][i], frag_b1, frag_c[i][j][1]);
+      }
+    }
+  };
+
+  // Since we slice across the k dimension of a tile in order to increase the number of warps while keeping the n
+  // dimension of a tile reasonable, we have multiple warps that accumulate their partial sums of the same output
+  // location; which we have to reduce over in the end. We do in shared memory.
+  auto thread_block_reduce = [&] () {
+    constexpr int red_off = threads / b_sh_stride / 2;
+    if (red_off >= 1) {
+      int red_idx = threadIdx.x / b_sh_stride;
+      constexpr int red_sh_stride = b_sh_stride * 4 * 2;
+      constexpr int red_sh_delta = b_sh_stride; 
+      int red_sh_rd = red_sh_stride * (threadIdx.x / b_sh_stride) + (threadIdx.x % b_sh_stride);
+
+      // Parallel logarithmic shared memory reduction. We make sure to avoid any unnecessary read or write iterations,
+      // e.g., for two warps we write only once by warp 1 and read only once by warp 0. 
+
+      #pragma unroll
+      for (int m_block = 0; m_block < thread_m_blocks; m_block++) {
+        #pragma unroll
+        for (int i = red_off; i > 0; i /= 2) {
+          if (i <= red_idx && red_idx < 2 * i) {
+            #pragma unroll
+            for (int j = 0; j < 4 * 2; j++) {
+              int red_sh_wr = red_sh_delta * j + (red_sh_rd - red_sh_stride * i);
+              if (i < red_off) {
+                float* c_rd = reinterpret_cast<float*>(&sh[red_sh_delta * j + red_sh_rd]);
+                float* c_wr = reinterpret_cast<float*>(&sh[red_sh_wr]);
+                #pragma unroll
+                for (int k = 0; k < 4; k++)
+                  reinterpret_cast<FragC*>(frag_c)[4 * 2 * m_block + j][k] += c_rd[k] + c_wr[k];
+              }
+              sh[red_sh_wr] = reinterpret_cast<int4*>(&frag_c)[4 * 2 * m_block + j];
+            }
+          }
+          __syncthreads();
+        }
+        if (red_idx == 0) {
+          #pragma unroll
+          for (int i = 0; i < 4 * 2; i++) {
+            float* c_rd = reinterpret_cast<float*>(&sh[red_sh_delta * i + red_sh_rd]);
+            #pragma unroll
+            for (int j = 0; j < 4; j++)
+              reinterpret_cast<FragC*>(frag_c)[4 * 2 * m_block + i][j] += c_rd[j];
+          }
+        }
+        __syncthreads();
+      }
+    }
+  };
+
+  // Since multiple threadblocks may process parts of the same column slice, we finally have to globally reduce over
+  // the results. As the striped partioning minimizes the number of such reductions and our outputs are usually rather
+  // small, we perform this reduction serially in L2 cache.
+  auto global_reduce = [&] (bool first = false, bool last = false) {
+    // We are very careful here to reduce directly in the output buffer to maximize L2 cache utilization in this step. 
+    // To do this, we write out results in FP16 (but still reduce with FP32 compute).
+    constexpr int active_threads = 32 * thread_n_blocks / 4;
+    if (threadIdx.x < active_threads) {
+      int c_gl_stride = prob_n / 8;
+      int c_gl_wr_delta_o = 8 * c_gl_stride;
+      int c_gl_wr_delta_i = 4 * (active_threads / 32);
+      int c_gl_wr = c_gl_stride * ((threadIdx.x % 32) / 4) + 4 * (threadIdx.x / 32) + threadIdx.x % 4;
+      c_gl_wr += (2 * thread_n_blocks) * slice_col;
+      constexpr int c_sh_wr_delta = active_threads;
+      int c_sh_wr = threadIdx.x;
+
+      int row = (threadIdx.x % 32) / 4;
+
+      if (!first) {
+        // Interestingly, doing direct global accesses here really seems to mess up the compiler and lead to slowdowns,
+        // hence we also use async-copies even though these fetches are not actually asynchronous.
+        #pragma unroll
+        for (int i = 0; i < thread_m_blocks * 4; i++) {
+          cp_async4_pred(
+            &sh[c_sh_wr + c_sh_wr_delta * i],
+            &C[c_gl_wr + c_gl_wr_delta_o * (i / 2) + c_gl_wr_delta_i * (i % 2)],
+            i < (thread_m_blocks - 1) * 4 || 8 * (i / 2) + row < prob_m
+          );
+        }
+        cp_async_fence();
+        cp_async_wait<0>();
+      }
+
+      #pragma unroll
+      for (int i = 0; i < thread_m_blocks * 4; i++) {
+        if (i < (thread_m_blocks - 1) * 4 || 8 * (i / 2) + row < prob_m) {
+          if (!first) {
+            int4 c_red = sh[c_sh_wr + i * c_sh_wr_delta];
+            #pragma unroll
+            for (int j = 0; j < 2 * 4; j++) {
+              reinterpret_cast<float*>(&frag_c)[4 * 2 * 4 * (i / 4) + 4 * j + (i % 4)] += __half2float(
+                reinterpret_cast<__half*>(&c_red)[j]
+              );
+            }
+          }
+          if (!last) {
+            int4 c;
+            #pragma unroll
+            for (int j = 0; j < 2 * 4; j++) {
+              reinterpret_cast<__half*>(&c)[j] = __float2half(
+                reinterpret_cast<float*>(&frag_c)[4 * 2 * 4 * (i / 4) + 4 * j + (i % 4)]
+              );
+            }
+            C[c_gl_wr + c_gl_wr_delta_o * (i / 2) + c_gl_wr_delta_i * (i % 2)] = c;
+          }
+        }
+      }
+    }
+  };
+
+  // Write out the reduce final result in the correct layout. We only actually reshuffle matrix fragments in this step,
+  // the reduction above is performed in fragment layout. 
+  auto write_result = [&] () {
+    int c_gl_stride = prob_n / 8;
+    constexpr int c_sh_stride = 2 * thread_n_blocks + 1;
+    int c_gl_wr_delta = c_gl_stride * (threads / (2 * thread_n_blocks));
+    constexpr int c_sh_rd_delta = c_sh_stride * (threads / (2 * thread_n_blocks));
+
+    int c_gl_wr = c_gl_stride * (threadIdx.x / (2 * thread_n_blocks)) + (threadIdx.x % (2 * thread_n_blocks));
+    c_gl_wr += (2 * thread_n_blocks) * slice_col;
+    int c_sh_wr = (4 * c_sh_stride) * ((threadIdx.x % 32) / 4) + (threadIdx.x % 32) % 4;
+    c_sh_wr += 32 * (threadIdx.x / 32);
+    int c_sh_rd = c_sh_stride * (threadIdx.x / (2 * thread_n_blocks)) + (threadIdx.x % (2 * thread_n_blocks));
+
+    int c_gl_wr_end = c_gl_stride * prob_m;
+
+    // We first reorder in shared memory to guarantee the most efficient final global write patterns
+    auto write = [&] (int idx, float c0, float c1, FragS& s) {
+      half2 res = __halves2half2(__float2half(c0), __float2half(c1));
+      if (group_blocks == -1) // for per-column quantization we finally apply the scale here
+        res = __hmul2(res, s[0]);
+      ((half2*) sh)[idx] = res;
+    };
+    if (threadIdx.x / 32 < thread_n_blocks / 4) {
+      #pragma unroll
+      for (int i = 0; i < thread_m_blocks; i++) {
+        #pragma unroll
+        for (int j = 0; j < 4; j++) {
+          int wr = c_sh_wr + 8 * j;
+          write(wr + (4 * c_sh_stride) * 0 + 0, frag_c[i][j][0][0], frag_c[i][j][0][1], frag_s[j / 2][2 * (j % 2) + 0]);
+          write(wr + (4 * c_sh_stride) * 8 + 0, frag_c[i][j][0][2], frag_c[i][j][0][3], frag_s[j / 2][2 * (j % 2) + 0]);
+          write(wr + (4 * c_sh_stride) * 0 + 4, frag_c[i][j][1][0], frag_c[i][j][1][1], frag_s[j / 2][2 * (j % 2) + 1]);
+          write(wr + (4 * c_sh_stride) * 8 + 4, frag_c[i][j][1][2], frag_c[i][j][1][3], frag_s[j / 2][2 * (j % 2) + 1]);
+        }
+        c_sh_wr += 16 * (4 * c_sh_stride);
+      }
+    }
+    __syncthreads();
+
+    #pragma unroll
+    for (int i = 0; i < ceildiv(16 * thread_m_blocks, threads / (2 * thread_n_blocks)); i++) {
+      if (c_gl_wr < c_gl_wr_end) {
+        C[c_gl_wr] = sh[c_sh_rd];
+        c_gl_wr += c_gl_wr_delta;
+        c_sh_rd += c_sh_rd_delta;
+      }
+    }
+  };
+
+  // Start global fetch and register load pipelines. 
+  auto start_pipes = [&] () {
+    #pragma unroll
+    for (int i = 0; i < stages - 1; i++)
+      fetch_to_shared(i, i, i < slice_iters);
+    zero_accums();
+    wait_for_stage();
+    fetch_to_registers(0, 0);
+    a_gl_rd += a_gl_rd_delta_o * (stages - 1);
+  };
+  start_pipes();
+
+  // Main loop.
+  while (slice_iters) {
+    // We unroll over both the global fetch and the register load pipeline to ensure all shared memory accesses are
+    // static. Note that both pipelines have even length meaning that the next iteration will always start at index 0.
+    #pragma unroll
+    for (int pipe = 0; pipe < stages;) {
+      #pragma unroll
+      for (int k = 0; k < b_sh_wr_iters; k++) {
+        fetch_to_registers(k + 1, pipe % stages);
+        if (k == b_sh_wr_iters - 2) {
+          fetch_to_shared((pipe + stages - 1) % stages, pipe, slice_iters >= stages);
+          pipe++;
+          wait_for_stage();
+        }
+        matmul(k);
+      }
+      slice_iters--;
+      if (slice_iters == 0)
+        break;
+    }
+    a_gl_rd += a_gl_rd_delta_o * stages;
+
+    // Process results and, if necessary, proceed to the next column slice. While this pattern may not be the most
+    // readable, other ways of writing the loop seemed to noticeably worse performance after compliation.
+    if (slice_iters == 0) {
+      cp_async_wait<0>();
+      bool last = slice_idx == slice_count - 1;
+      // For per-column scales, we only fetch them here in the final step before write-out
+      if (group_blocks == -1 && last) {
+        if (s_sh_wr_pred)
+          cp_async4_stream(&sh_s[s_sh_wr], &s[s_gl_rd]);
+        cp_async_fence();
+      }
+      thread_block_reduce();
+      if (group_blocks == -1 && last) {
+        cp_async_wait<0>();
+        __syncthreads();
+        if (threadIdx.x / 32 < thread_n_blocks / 4) {
+          reinterpret_cast<int4*>(&frag_s)[0] = sh_s[s_sh_rd + 0];
+          reinterpret_cast<int4*>(&frag_s)[1] = sh_s[s_sh_rd + 4];
+        }
+      }
+      if (slice_count > 1) { // only globally reduce if there is more than one block in a slice
+        barrier_acquire(&locks[slice_col], slice_idx);
+        global_reduce(slice_idx == 0, last);
+        barrier_release(&locks[slice_col], last);
+      }
+      if (last) // only the last block in a slice actually writes the result
+        write_result();
+      slice_row = 0;
+      slice_col_par++;
+      slice_col++;
+      init_slice();
+      if (slice_iters) {
+        a_gl_rd = a_gl_stride * (threadIdx.x / a_gl_rd_delta_o) + (threadIdx.x % a_gl_rd_delta_o);
+        #pragma unroll
+        for (int i = 0; i < b_sh_wr_iters; i++)
+          B_ptr[i] += b_sh_stride - b_gl_rd_delta_o * k_tiles;
+        if (slice_col == 0) {
+          #pragma unroll
+          for (int i = 0; i < b_sh_wr_iters; i++)
+            B_ptr[i] -= b_gl_stride;
+        }
+        s_gl_rd = s_sh_stride * slice_col + threadIdx.x;
+        start_pipes();
+      }
+    }
+  }
+}
+
+
+// 8 warps are a good choice since every SM has 4 schedulers and having more than 1 warp per schedule allows some more
+// latency hiding. At the same time, we want relatively few warps to have many registers per warp and small tiles.
+const int THREADS = 256;
+const int STAGES = 4; // 4 pipeline stages fit into shared memory
+const int SHARED_MEM = 96 * 1024; // max shared memory on compute capability 8.6 (< 8.0)
+
+#define CALL_IF(THREAD_M_BLOCKS, THREAD_N_BLOCKS, THREAD_K_BLOCKS, GROUP_BLOCKS) \
+  else if ( \
+    thread_m_blocks == THREAD_M_BLOCKS && thread_n_blocks == THREAD_N_BLOCKS && thread_k_blocks == THREAD_K_BLOCKS && \
+    group_blocks == GROUP_BLOCKS \
+  ) { \
+    cudaFuncSetAttribute( \
+      Marlin<THREADS, THREAD_M_BLOCKS, THREAD_N_BLOCKS, THREAD_K_BLOCKS, STAGES, GROUP_BLOCKS>, \
+      cudaFuncAttributeMaxDynamicSharedMemorySize, \
+      SHARED_MEM \
+    ); \
+    Marlin< \
+      THREADS, THREAD_M_BLOCKS, THREAD_N_BLOCKS, THREAD_K_BLOCKS, STAGES, GROUP_BLOCKS \
+    ><<<blocks, THREADS, SHARED_MEM, stream>>>( \
+      A_ptr, B_ptr, C_ptr, s_ptr, \
+      prob_m, prob_n, prob_k, \
+      locks \
+    ); \
+  }
+
+const int ERR_PROB_SHAPE = 1;
+const int ERR_KERN_SHAPE = 2;
+
+int marlin_cuda(
+  const void* A,
+  const void* B,
+        void* C,
+        void* s,
+  int prob_m,
+  int prob_n,
+  int prob_k,
+  void* workspace,
+  int groupsize = -1,
+  int dev = 0,
+  cudaStream_t stream = 0,
+  int thread_k = -1,
+  int thread_n = -1,
+  int sms = -1,
+  int max_par = 16
+) {
+  int tot_m = prob_m;
+  int tot_m_blocks = ceildiv(tot_m, 16);
+  int pad = 16 * tot_m_blocks - tot_m;
+
+  if (sms == -1)
+    cudaDeviceGetAttribute(&sms, cudaDevAttrMultiProcessorCount, dev);
+  if (thread_k == -1 || thread_n == -1) {
+    if (prob_m <= 16) {
+      // For small batchizes, better partioning is slightly more important than better compute utilization
+      thread_k = 128;
+      thread_n = 128;
+    } else {
+      thread_k = 64;
+      thread_n = 256;
+    }
+  }
+
+  int thread_k_blocks = thread_k / 16;
+  int thread_n_blocks = thread_n / 16;
+  int group_blocks = (groupsize == -1) ? -1 : groupsize / 16;
+  int blocks = sms;
+
+  if (prob_n % thread_n != 0 || prob_k % thread_k != 0 || (group_blocks != -1 && prob_k % group_blocks != 0))
+    return ERR_PROB_SHAPE;
+  if (prob_m == 0 || prob_n == 0 || prob_k == 0)
+    return 0;
+
+  const int4* A_ptr = (const int4*) A;
+  const int4* B_ptr = (const int4*) B;
+  int4* C_ptr = (int4*) C;
+  const int4* s_ptr = (const int4*) s;
+
+  int cols = prob_n / thread_n;
+  int* locks = (int*) workspace;
+
+  int ret = 0;
+  for (int i = 0; i < tot_m_blocks; i += 4) {
+    int thread_m_blocks = tot_m_blocks - i;
+    prob_m = tot_m - 16 * i;
+    int par = 1;
+    if (thread_m_blocks > 4) {
+      // Note that parallel > 1 currently only works for inputs without any padding
+      par = (16 * thread_m_blocks - pad) / 64;
+      if (par > max_par)
+        par = max_par;
+      prob_m = 64 * par;
+      i += 4 * (par - 1);
+      thread_m_blocks = 4;
+    }
+    
+    // For compilation speed, we only define the kernel configurations that have seemed useful (in terms of performance)
+    // in our testing, however many more are, in principle, possible.
+    if (false) {}
+    CALL_IF(1,  8,  8, -1)
+    CALL_IF(1,  8,  8,  8)
+    CALL_IF(1, 16,  4, -1)
+    CALL_IF(1, 16,  4,  8)
+    CALL_IF(2, 16,  4, -1)
+    CALL_IF(2, 16,  4,  8)
+    CALL_IF(3, 16,  4, -1)
+    CALL_IF(3, 16,  4,  8)
+    CALL_IF(4, 16,  4, -1)
+    CALL_IF(4, 16,  4,  8)
+    else
+      ret = ERR_KERN_SHAPE;
+
+    A_ptr += 16 * thread_m_blocks * (prob_k / 8) * par;
+    C_ptr += 16 * thread_m_blocks * (prob_n / 8) * par;
+  }
+
+  return ret;
+}
+
+
+#endif
+
+
