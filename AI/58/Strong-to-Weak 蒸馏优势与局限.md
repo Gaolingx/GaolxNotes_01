@@ -17,7 +17,7 @@ The Strong-to-Weak Distillation pipeline is specifically designed to optimize li
 
 ```
 
-qwen3这种针对小尺寸模型的蒸馏训练"strong-to-weak distillation"方式有什么优势和局限性？
+Qwen3 Technical Report 中，这种针对小尺寸模型的蒸馏训练"strong-to-weak distillation"方式有什么优势和局限性？
 
 ---
 
