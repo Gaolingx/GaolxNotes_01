@@ -16,7 +16,7 @@
         273.59649658203125
       ],
       "flags": {},
-      "order": 37,
+      "order": 38,
       "mode": 4,
       "inputs": [
         {
@@ -59,7 +59,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 38,
+      "order": 39,
       "mode": 4,
       "inputs": [
         {
@@ -162,7 +162,7 @@
         26
       ],
       "flags": {},
-      "order": 34,
+      "order": 35,
       "mode": 4,
       "inputs": [
         {
@@ -317,7 +317,7 @@
         {
           "name": "clip",
           "type": "CLIP",
-          "link": 347208
+          "link": 347211
         }
       ],
       "outputs": [
@@ -363,7 +363,7 @@
         {
           "name": "clip",
           "type": "CLIP",
-          "link": 347207
+          "link": 347210
         }
       ],
       "outputs": [
@@ -401,7 +401,7 @@
         769.1050987074352
       ],
       "flags": {},
-      "order": 35,
+      "order": 36,
       "mode": 4,
       "inputs": [
         {
@@ -465,7 +465,7 @@
         170
       ],
       "flags": {},
-      "order": 46,
+      "order": 45,
       "mode": 0,
       "inputs": [
         {
@@ -526,7 +526,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 31,
+      "order": 32,
       "mode": 4,
       "inputs": [
         {
@@ -539,19 +539,19 @@
           "label": "model",
           "name": "model",
           "type": "MODEL",
-          "link": 347205
+          "link": 347208
         },
         {
           "label": "clip",
           "name": "clip",
           "type": "CLIP",
-          "link": 347206
+          "link": 347209
         },
         {
           "label": "vae",
           "name": "vae",
           "type": "VAE",
-          "link": 347209
+          "link": 347212
         },
         {
           "label": "positive",
@@ -948,7 +948,7 @@
         1024,
         true,
         1216,
-        481269107288448,
+        930240890374623,
         "randomize",
         8,
         1,
@@ -988,7 +988,7 @@
         660.9366424208038
       ],
       "flags": {},
-      "order": 36,
+      "order": 37,
       "mode": 4,
       "inputs": [
         {
@@ -1030,7 +1030,7 @@
       "flags": {
         "collapsed": true
       },
-      "order": 33,
+      "order": 31,
       "mode": 0,
       "inputs": [
         {
@@ -1161,7 +1161,7 @@
         246
       ],
       "flags": {},
-      "order": 24,
+      "order": 23,
       "mode": 4,
       "inputs": [
         {
@@ -1201,7 +1201,7 @@
         118
       ],
       "flags": {},
-      "order": 16,
+      "order": 15,
       "mode": 4,
       "inputs": [
         {
@@ -1441,53 +1441,6 @@
       "widgets_values": []
     },
     {
-      "id": 5393,
-      "type": "ResolutionSelector",
-      "pos": [
-        -651.3403899812697,
-        4397.784778146912
-      ],
-      "size": [
-        270,
-        126
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 4,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "width",
-          "type": "INT",
-          "links": []
-        },
-        {
-          "name": "height",
-          "type": "INT",
-          "links": []
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.25.0",
-        "Node name for S&R": "ResolutionSelector",
-        "ue_properties": {
-          "widget_ue_connectable": {
-            "aspect_ratio": true,
-            "megapixels": true,
-            "multiple": true
-          },
-          "version": "7.8",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": [
-        "1:1 (Square)",
-        1,
-        16
-      ]
-    },
-    {
       "id": 5400,
       "type": "PromptSelector",
       "pos": [
@@ -1499,7 +1452,7 @@
         482.7530410500559
       ],
       "flags": {},
-      "order": 6,
+      "order": 5,
       "mode": 4,
       "inputs": [
         {
@@ -1551,7 +1504,7 @@
         521.5994501540556
       ],
       "flags": {},
-      "order": 48,
+      "order": 47,
       "mode": 0,
       "inputs": [
         {
@@ -1591,7 +1544,7 @@
         26
       ],
       "flags": {},
-      "order": 39,
+      "order": 33,
       "mode": 4,
       "inputs": [
         {
@@ -1633,7 +1586,7 @@
         106
       ],
       "flags": {},
-      "order": 18,
+      "order": 16,
       "mode": 0,
       "inputs": [
         {
@@ -1690,7 +1643,7 @@
         180.55048898368273
       ],
       "flags": {},
-      "order": 7,
+      "order": 6,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1723,7 +1676,7 @@
       "flags": {
         "collapsed": true
       },
-      "order": 25,
+      "order": 24,
       "mode": 0,
       "inputs": [
         {
@@ -1779,7 +1732,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 42,
+      "order": 41,
       "mode": 0,
       "inputs": [
         {
@@ -1835,7 +1788,7 @@
         130
       ],
       "flags": {},
-      "order": 8,
+      "order": 7,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1851,10 +1804,10 @@
         "aux_id": "yolain/ComfyUI-Easy-Use"
       },
       "widgets_values": [
-        639278710991118,
+        712231559335288,
         false,
         "randomize",
-        767166465872273
+        1013898832190686
       ],
       "color": "#323",
       "bgcolor": "#535",
@@ -1874,7 +1827,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 40,
+      "order": 34,
       "mode": 0,
       "inputs": [
         {
@@ -1964,7 +1917,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 41,
+      "order": 40,
       "mode": 0,
       "inputs": [
         {
@@ -2033,7 +1986,7 @@
         186
       ],
       "flags": {},
-      "order": 45,
+      "order": 44,
       "mode": 0,
       "inputs": [
         {
@@ -2070,7 +2023,7 @@
           "name": "vae",
           "shape": 7,
           "type": "VAE",
-          "link": 347214
+          "link": 347206
         },
         {
           "name": "clip",
@@ -2113,1498 +2066,6 @@
       "widgets_values": []
     },
     {
-      "id": 5410,
-      "type": "Fast Groups Bypasser (rgthree)",
-      "pos": [
-        -114.95548029796481,
-        604.5290614410076
-      ],
-      "size": [
-        247.2955078125,
-        274
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "OPT_CONNECTION",
-          "type": "*",
-          "links": null
-        }
-      ],
-      "properties": {
-        "matchColors": "",
-        "matchTitle": "",
-        "showNav": true,
-        "showAllGraphs": true,
-        "sort": "position",
-        "customSortAlphabet": "",
-        "toggleRestriction": "default",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.8"
-        }
-      }
-    },
-    {
-      "id": 5411,
-      "type": "CLIPTextEncode",
-      "pos": [
-        -1515.5013149179476,
-        476.04512361044146
-      ],
-      "size": [
-        217.1966367043433,
-        88
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 44,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 347156
-        },
-        {
-          "name": "text",
-          "type": "STRING",
-          "widget": {
-            "name": "text"
-          },
-          "link": 347155
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            347160
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.27.0",
-        "Node name for S&R": "CLIPTextEncode",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.8"
-        }
-      },
-      "widgets_values": [
-        ""
-      ]
-    },
-    {
-      "id": 5403,
-      "type": "easy showAnything",
-      "pos": [
-        -1904.4377229806414,
-        476.70881596168215
-      ],
-      "size": [
-        334.98050304053686,
-        628.2101609973683
-      ],
-      "flags": {},
-      "order": 43,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "anything",
-          "shape": 7,
-          "type": "*",
-          "link": 347134
-        }
-      ],
-      "outputs": [
-        {
-          "name": "output",
-          "type": "*",
-          "links": [
-            347155
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfyui-easy-use",
-        "ver": "1.3.6",
-        "Node name for S&R": "easy showAnything",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.8",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": [
-        "BArtstyle style, A character from Blue Archive. Iochi Mari., A cheerful, energetic anime girl with fluffy light blonde hair, bright blue eyes, and large expressive fox ears with white inner fur. She wears a white flower with a green leaf hair accessory on the left side of her head. A large, glowing, semi-transparent yellow ring with cutout circular patterns floats prominently in the sky behind her head, and a small pink heart icon floats near her ear. Her face is in a three-quarter profile, turned to look back over her left shoulder directly toward the viewer. Her head is tilted slightly downward and rotated, with a playful open-mouthed smile. Her eye line is slanted and directed straight at the camera, while her shoulders are angled dynamically. She is wearing a bright white bikini top with ruffled yellow trim and a small yellow bow, paired with matching side-tie bikini bottoms featuring yellow ruffles, a white armband on her right arm, a white wristband on her left arm, and a delicate thin strap around her right thigh. Her left arm is raised with her hand making a casual, open gesture, while her right hand rests on a large, translucent blue-and-white inflatable pool float that is partially visible at the bottom edge of the frame. Her body is turned away, but she is leaning forward to look back. The composition is a waist-up shot. The background features a vibrant, sunny beach scene with a bright blue sky, fluffy white clouds, and a sparkling turquoise ocean. The lighting is extremely bright and high-key, with a soft, pastel, summery color palette, giving the image a fresh, airy, and sparkling atmosphere with subtle lens flares and particle effects. The style is a polished, modern anime illustration with soft, glowing shading. No text, no watermark."
-      ]
-    },
-    {
-      "id": 95,
-      "type": "easy XYInputs: Lora",
-      "pos": [
-        -141.82663767481878,
-        -282.421305945882
-      ],
-      "size": [
-        460.6506995104295,
-        466
-      ],
-      "flags": {},
-      "order": 10,
-      "mode": 4,
-      "inputs": [
-        {
-          "name": "optional_lora_stack",
-          "shape": 7,
-          "type": "LORA_STACK",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "X or Y",
-          "type": "X_Y",
-          "links": [
-            160
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfyui-easy-use",
-        "ver": "7c470c67d6df44498e52c902173c1ac77cd5bdfd",
-        "Node name for S&R": "easy XYInputs: Lora",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.6.2"
-        }
-      },
-      "widgets_values": [
-        "Lora Names+Weights",
-        5,
-        1,
-        1,
-        "None",
-        0,
-        0,
-        "None",
-        0.8,
-        1,
-        "None",
-        1,
-        1,
-        "None",
-        1,
-        1,
-        "None",
-        1,
-        -6.66,
-        "None",
-        1,
-        1,
-        "None",
-        1,
-        1,
-        "None",
-        1,
-        1,
-        "None",
-        1,
-        1,
-        "None",
-        1,
-        1,
-        false
-      ]
-    },
-    {
-      "id": 5423,
-      "type": "easy imageBatchToImageList",
-      "pos": [
-        3928.1700201639555,
-        704.0470306148715
-      ],
-      "size": [
-        270,
-        30
-      ],
-      "flags": {},
-      "order": 52,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 347180
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "shape": 6,
-          "type": "IMAGE",
-          "slot_index": 0,
-          "links": [
-            347183
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfyui-easy-use",
-        "ver": "76b5896f089d5b4f7619559cf5f7fc0560e3dc40",
-        "Node name for S&R": "easy imageBatchToImageList",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.5.2",
-          "input_ue_unconnectable": {}
-        },
-        "aux_id": "yolain/ComfyUI-Easy-Use"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 5417,
-      "type": "easy imageListToImageBatch",
-      "pos": [
-        5174.99064566335,
-        673.467660400867
-      ],
-      "size": [
-        270,
-        40
-      ],
-      "flags": {},
-      "order": 56,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 347167
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "slot_index": 0,
-          "links": [
-            347168
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfyui-easy-use",
-        "ver": "76b5896f089d5b4f7619559cf5f7fc0560e3dc40",
-        "Node name for S&R": "easy imageListToImageBatch",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.5.2",
-          "input_ue_unconnectable": {}
-        },
-        "aux_id": "yolain/ComfyUI-Easy-Use"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 5422,
-      "type": "TTP_Image_Tile_Batch",
-      "pos": [
-        3605.615918257838,
-        706.7468389090851
-      ],
-      "size": [
-        250.18014526367188,
-        142
-      ],
-      "flags": {},
-      "order": 51,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 347201
-        },
-        {
-          "name": "tile_width",
-          "type": "INT",
-          "widget": {
-            "name": "tile_width"
-          },
-          "link": 347178
-        },
-        {
-          "name": "tile_height",
-          "type": "INT",
-          "widget": {
-            "name": "tile_height"
-          },
-          "link": 347179
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGES",
-          "type": "IMAGE",
-          "slot_index": 0,
-          "links": [
-            347180
-          ]
-        },
-        {
-          "name": "POSITIONS",
-          "type": "LIST",
-          "slot_index": 1,
-          "links": [
-            347169
-          ]
-        },
-        {
-          "name": "ORIGINAL_SIZE",
-          "type": "TUPLE",
-          "slot_index": 2,
-          "links": [
-            347170
-          ]
-        },
-        {
-          "name": "GRID_SIZE",
-          "type": "TUPLE",
-          "slot_index": 3,
-          "links": [
-            347171
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfyui_ttp_toolset",
-        "ver": "08fb8b9808b844a0137399b6fd34eec1e13e62d3",
-        "Node name for S&R": "TTP_Image_Tile_Batch",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.5.2",
-          "input_ue_unconnectable": {}
-        },
-        "aux_id": "TTPlanetPig/Comfyui_TTP_Toolset"
-      },
-      "widgets_values": [
-        1024,
-        1024
-      ],
-      "color": "#223",
-      "bgcolor": "#335"
-    },
-    {
-      "id": 5426,
-      "type": "VAEEncode",
-      "pos": [
-        4238.2756331753735,
-        716.724395989204
-      ],
-      "size": [
-        270,
-        50
-      ],
-      "flags": {},
-      "order": 53,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "pixels",
-          "type": "IMAGE",
-          "link": 347183
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 347210
-        }
-      ],
-      "outputs": [
-        {
-          "name": "LATENT",
-          "type": "LATENT",
-          "links": [
-            347191
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.68",
-        "Node name for S&R": "VAEEncode",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.5.2",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 5343,
-      "type": "ConditioningKrea2Rebalance",
-      "pos": [
-        2454.1877254855904,
-        772.158719425326
-      ],
-      "size": [
-        306.09140625,
-        82
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 27,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "conditioning",
-          "type": "CONDITIONING",
-          "link": 347066
-        }
-      ],
-      "outputs": [
-        {
-          "name": "conditioning",
-          "type": "CONDITIONING",
-          "links": [
-            347095,
-            347198
-          ]
-        }
-      ],
-      "title": "Conditioning Krea2 Rebalance(破限节点)",
-      "properties": {
-        "cnr_id": "ComfyUI-Conditioning-Rebalance",
-        "ver": "9ab5315e6aa8ec8cd14cc5354739d938c6fb101b",
-        "Node name for S&R": "ConditioningKrea2Rebalance",
-        "ue_properties": {
-          "widget_ue_connectable": {
-            "multiplier": true,
-            "per_layer_weights": true
-          },
-          "version": "7.8",
-          "input_ue_unconnectable": {}
-        },
-        "aux_id": "nova452/ComfyUI-ConditioningKrea2Rebalance"
-      },
-      "widgets_values": [
-        4,
-        "1.0,1.0,1.0,1.0,1.0,1.0,1.0,2.5,5.0,1.1,4.0,1.0"
-      ]
-    },
-    {
-      "id": 5330,
-      "type": "ConditioningZeroOut",
-      "pos": [
-        2456.073257723604,
-        929.978637643917
-      ],
-      "size": [
-        300.67328467569087,
-        94.17337584323377
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 26,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "conditioning",
-          "type": "CONDITIONING",
-          "link": 347063
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            347096,
-            347199
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.23.0",
-        "Node name for S&R": "ConditioningZeroOut",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.5.2",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 5365,
-      "type": "easy cleanGpuUsed",
-      "pos": [
-        2400.409365300724,
-        697.2981634333761
-      ],
-      "size": [
-        140,
-        26
-      ],
-      "flags": {},
-      "order": 19,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "anything",
-          "type": "*",
-          "link": 347204
-        }
-      ],
-      "outputs": [
-        {
-          "name": "output",
-          "type": "*",
-          "links": [
-            347200
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfyui-easy-use",
-        "ver": "1.3.6",
-        "Node name for S&R": "easy cleanGpuUsed",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.8"
-        }
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 5425,
-      "type": "VAEDecode",
-      "pos": [
-        4843.288557391071,
-        674.6651756649904
-      ],
-      "size": [
-        270,
-        50
-      ],
-      "flags": {},
-      "order": 55,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "samples",
-          "type": "LATENT",
-          "link": 347192
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 347211
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            347167
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.68",
-        "Node name for S&R": "VAEDecode",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.5.2",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 5364,
-      "type": "PreviewImage",
-      "pos": [
-        -373.272485818721,
-        958.433095411562
-      ],
-      "size": [
-        529.9803273094993,
-        1074.7083566179879
-      ],
-      "flags": {},
-      "order": 59,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 347202
-        }
-      ],
-      "outputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.27.0",
-        "Node name for S&R": "PreviewImage",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.8"
-        }
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 5366,
-      "type": "RTXVideoSuperResolution",
-      "pos": [
-        2889.560684773082,
-        764.0388736796298
-      ],
-      "size": [
-        285.81015625,
-        106
-      ],
-      "flags": {},
-      "order": 49,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 347080
-        },
-        {
-          "name": "resize_type.scale",
-          "type": "FLOAT",
-          "widget": {
-            "name": "resize_type.scale"
-          },
-          "link": 347138
-        }
-      ],
-      "outputs": [
-        {
-          "name": "upscaled_images",
-          "type": "IMAGE",
-          "links": [
-            347193,
-            347195,
-            347201
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfyui_nvidia_rtx_nodes",
-        "ver": "0.1.3",
-        "Node name for S&R": "RTXVideoSuperResolution",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.3"
-        }
-      },
-      "widgets_values": [
-        "scale by multiplier",
-        1.5,
-        "ULTRA"
-      ]
-    },
-    {
-      "id": 5430,
-      "type": "Image Comparer (rgthree)",
-      "pos": [
-        5167.203365405827,
-        938.452862611991
-      ],
-      "size": [
-        685.5097809031158,
-        760.2573128293125
-      ],
-      "flags": {},
-      "order": 58,
-      "mode": 0,
-      "inputs": [
-        {
-          "dir": 3,
-          "label": "图像_A",
-          "name": "image_a",
-          "type": "IMAGE",
-          "link": 347195
-        },
-        {
-          "dir": 3,
-          "label": "图像_B",
-          "name": "image_b",
-          "type": "IMAGE",
-          "link": 347194
-        }
-      ],
-      "outputs": [
-        {
-          "dir": 4,
-          "name": "images",
-          "shape": 3,
-          "type": "IMAGE",
-          "links": []
-        }
-      ],
-      "properties": {
-        "cnr_id": "rgthree-comfy",
-        "ver": "1.0.2512112053",
-        "comparer_mode": "Slide",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.3"
-        }
-      },
-      "widgets_values": [
-        [
-          {
-            "name": "A",
-            "selected": true,
-            "url": "/api/view?filename=rgthree.compare._temp_ixgpp_00005_.png&type=temp&subfolder=&rand=0.2814500815911105"
-          },
-          {
-            "name": "B",
-            "selected": true,
-            "url": "/api/view?filename=rgthree.compare._temp_ixgpp_00006_.png&type=temp&subfolder=&rand=0.3253671671646159"
-          }
-        ]
-      ]
-    },
-    {
-      "id": 5424,
-      "type": "TTP_Tile_image_size",
-      "pos": [
-        3252.1298423189432,
-        736.2190389731471
-      ],
-      "size": [
-        257.0339050292969,
-        126
-      ],
-      "flags": {},
-      "order": 50,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 347193
-        }
-      ],
-      "outputs": [
-        {
-          "name": "tile_width",
-          "type": "INT",
-          "slot_index": 0,
-          "links": [
-            347178
-          ]
-        },
-        {
-          "name": "tile_height",
-          "type": "INT",
-          "slot_index": 1,
-          "links": [
-            347179
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfyui_ttp_toolset",
-        "ver": "08fb8b9808b844a0137399b6fd34eec1e13e62d3",
-        "Node name for S&R": "TTP_Tile_image_size",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.5.2",
-          "input_ue_unconnectable": {}
-        },
-        "aux_id": "TTPlanetPig/Comfyui_TTP_Toolset"
-      },
-      "widgets_values": [
-        2,
-        2,
-        0.1
-      ],
-      "color": "#223",
-      "bgcolor": "#335"
-    },
-    {
-      "id": 5429,
-      "type": "KSamplerAdvanced",
-      "pos": [
-        4549.757043633711,
-        982.9433435873177
-      ],
-      "size": [
-        400,
-        760
-      ],
-      "flags": {},
-      "order": 54,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 347200
-        },
-        {
-          "name": "positive",
-          "type": "CONDITIONING",
-          "link": 347198
-        },
-        {
-          "name": "negative",
-          "type": "CONDITIONING",
-          "link": 347199
-        },
-        {
-          "name": "latent_image",
-          "type": "LATENT",
-          "link": 347191
-        }
-      ],
-      "outputs": [
-        {
-          "name": "LATENT",
-          "type": "LATENT",
-          "links": [
-            347192
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.26.0",
-        "Node name for S&R": "KSamplerAdvanced",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.3"
-        }
-      },
-      "widgets_values": [
-        "enable",
-        767166465872273,
-        "randomize",
-        8,
-        1,
-        "euler_ancestral",
-        "kl_optimal",
-        4,
-        10000,
-        "disable"
-      ]
-    },
-    {
-      "id": 5418,
-      "type": "TTP_Image_Assy",
-      "pos": [
-        5504.573922567093,
-        644.500605377549
-      ],
-      "size": [
-        280,
-        130
-      ],
-      "flags": {},
-      "order": 57,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "tiles",
-          "type": "IMAGE",
-          "link": 347168
-        },
-        {
-          "name": "positions",
-          "type": "LIST",
-          "link": 347169
-        },
-        {
-          "name": "original_size",
-          "type": "TUPLE",
-          "link": 347170
-        },
-        {
-          "name": "grid_size",
-          "type": "TUPLE",
-          "link": 347171
-        }
-      ],
-      "outputs": [
-        {
-          "name": "RECONSTRUCTED_IMAGE",
-          "type": "IMAGE",
-          "slot_index": 0,
-          "links": [
-            347194,
-            347202
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfyui_ttp_toolset",
-        "ver": "08fb8b9808b844a0137399b6fd34eec1e13e62d3",
-        "Node name for S&R": "TTP_Image_Assy",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.5.2",
-          "input_ue_unconnectable": {}
-        },
-        "aux_id": "TTPlanetPig/Comfyui_TTP_Toolset"
-      },
-      "widgets_values": [
-        128
-      ],
-      "color": "#223",
-      "bgcolor": "#335"
-    },
-    {
-      "id": 5405,
-      "type": "Lora Stacker (LoraManager)",
-      "pos": [
-        -4269.729191211486,
-        447.39330922265117
-      ],
-      "size": [
-        463.0260994037749,
-        653.7798952769658
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 11,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "text",
-          "name": "text",
-          "type": "AUTOCOMPLETE_TEXT_LORAS",
-          "widget": {
-            "name": "text"
-          },
-          "link": null
-        },
-        {
-          "label": "lora堆栈",
-          "name": "lora_stack",
-          "shape": 7,
-          "type": "LORA_STACK",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "label": "lora堆栈",
-          "name": "LORA_STACK",
-          "type": "LORA_STACK",
-          "links": [
-            347118
-          ]
-        },
-        {
-          "label": "触发词",
-          "name": "trigger_words",
-          "type": "STRING",
-          "links": [
-            347135
-          ]
-        },
-        {
-          "label": "活动loras",
-          "name": "active_loras",
-          "type": "STRING",
-          "links": []
-        }
-      ],
-      "title": "Lora加载器",
-      "properties": {
-        "cnr_id": "comfyui-lora-manager",
-        "ver": "0.8.26",
-        "Node name for S&R": "Lora Stacker (LoraManager)",
-        "ue_properties": {
-          "version": "7.0.1",
-          "widget_ue_connectable": {
-            "text": true
-          },
-          "input_ue_unconnectable": {}
-        },
-        "aux_id": "willmiao/ComfyUI-Lora-Manager",
-        "__lm_widget_ids": [
-          "__lm_autocomplete_meta_text",
-          "text",
-          "loras"
-        ]
-      },
-      "widgets_values": [
-        {
-          "version": 1,
-          "textWidgetName": "text",
-          "lastAccepted": {
-            "start": 85,
-            "end": 100,
-            "insertedText": "<lora:Rella:1>,",
-            "textSnapshot": "<lora:AddMicroDetails_NoobAI_v4:0.50><lora:momowaaai (19):0.60><lora:frypraiILL:0.80><lora:Rella:1>,"
-          }
-        },
-        "<lora:wei-anima:1.00>",
-        [
-          {
-            "name": "wei-anima",
-            "strength": 1,
-            "active": true,
-            "expanded": false,
-            "clipStrength": 1,
-            "locked": false
-          }
-        ]
-      ],
-      "color": "#223",
-      "bgcolor": "#335"
-    },
-    {
-      "id": 5402,
-      "type": "ResolutionMasterSimplify",
-      "pos": [
-        -797.6605424520295,
-        434.81063678872476
-      ],
-      "size": [
-        341.7955078125,
-        320
-      ],
-      "flags": {},
-      "order": 12,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "INT",
-          "links": [
-            347136
-          ]
-        },
-        {
-          "name": "",
-          "type": "INT",
-          "links": [
-            347137
-          ]
-        }
-      ],
-      "properties": {
-        "aux_id": "Aaalice233/ComfyUI-Danbooru-Gallery",
-        "ver": "3ed07b589f6dc8cce35f9ecb1e54cd354adebf2c",
-        "Node name for S&R": "ResolutionMasterSimplify",
-        "width": 1024,
-        "height": 832,
-        "canvas_min_x": 64,
-        "canvas_max_x": 2048,
-        "canvas_step_x": 64,
-        "canvas_min_y": 64,
-        "canvas_max_y": 2048,
-        "canvas_step_y": 64,
-        "selectedPreset": "自定义 (Custom)",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.8"
-        }
-      },
-      "widgets_values": [
-        1024,
-        832
-      ],
-      "color": "#222",
-      "bgcolor": "#000"
-    },
-    {
-      "id": 5404,
-      "type": "TriggerWord Toggle (LoraManager)",
-      "pos": [
-        -3776.132674293883,
-        602.3643640059788
-      ],
-      "size": [
-        404.75144527148404,
-        301.4044367579122
-      ],
-      "flags": {},
-      "order": 17,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "组模式",
-          "name": "group_mode",
-          "type": "BOOLEAN",
-          "widget": {
-            "name": "group_mode"
-          },
-          "link": null
-        },
-        {
-          "label": "默认激活",
-          "name": "default_active",
-          "type": "BOOLEAN",
-          "widget": {
-            "name": "default_active"
-          },
-          "link": null
-        },
-        {
-          "label": "触发词",
-          "name": "trigger_words",
-          "shape": 7,
-          "type": "string",
-          "link": 347135
-        }
-      ],
-      "outputs": [
-        {
-          "label": "过滤触发词",
-          "name": "filtered_trigger_words",
-          "type": "STRING",
-          "links": [
-            347112
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfyui-lora-manager",
-        "ver": "6d0d9600a7c50fa6f4f0ec4b2d4662fbdaf10ee5",
-        "Node name for S&R": "TriggerWord Toggle (LoraManager)",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.6.2"
-        }
-      },
-      "widgets_values": [
-        true,
-        true,
-        true,
-        [],
-        ""
-      ]
-    },
-    {
-      "id": 5382,
-      "type": "easy loraStackApply",
-      "pos": [
-        -3743.781230952097,
-        448.058166132297
-      ],
-      "size": [
-        310,
-        70
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 22,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "lora_stack",
-          "type": "LORA_STACK",
-          "link": 347118
-        },
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 347212
-        },
-        {
-          "name": "optional_clip",
-          "shape": 7,
-          "type": "CLIP",
-          "link": 347213
-        }
-      ],
-      "outputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "links": [
-            347119
-          ]
-        },
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "links": [
-            347150,
-            347152,
-            347156
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfyui-easy-use",
-        "ver": "625efbfa2fc20c31797dfffcbb41a26b6d91ab7b",
-        "Node name for S&R": "easy loraStackApply",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.5.2",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 5406,
-      "type": "WeiLinPromptUIWithoutLora",
-      "pos": [
-        -1002.5435371831943,
-        834.3094254192467
-      ],
-      "size": [
-        575.6803891665453,
-        439.4253164270451
-      ],
-      "flags": {},
-      "order": 30,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "opt_text",
-          "name": "opt_text",
-          "shape": 7,
-          "type": "*",
-          "link": null
-        },
-        {
-          "label": "opt_clip",
-          "name": "opt_clip",
-          "shape": 7,
-          "type": "CLIP",
-          "link": 347152
-        },
-        {
-          "label": "positive",
-          "name": "positive",
-          "type": "STRING",
-          "widget": {
-            "name": "positive"
-          },
-          "link": null
-        },
-        {
-          "label": "auto_random",
-          "name": "auto_random",
-          "type": "BOOLEAN",
-          "widget": {
-            "name": "auto_random"
-          },
-          "link": null
-        },
-        {
-          "label": "temp_str",
-          "name": "temp_str",
-          "shape": 7,
-          "type": "STRING",
-          "widget": {
-            "name": "temp_str"
-          },
-          "link": null
-        },
-        {
-          "label": "random_template",
-          "name": "random_template",
-          "shape": 7,
-          "type": "STRING",
-          "widget": {
-            "name": "random_template"
-          },
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "label": "STRING",
-          "name": "STRING",
-          "type": "STRING",
-          "links": [
-            347113
-          ]
-        },
-        {
-          "label": "CONDITIONING",
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": []
-        },
-        {
-          "label": "CLIP",
-          "name": "CLIP",
-          "type": "CLIP",
-          "links": []
-        }
-      ],
-      "properties": {
-        "cnr_id": "weilin-comfyui-tools",
-        "ver": "77a7c4fd85ff545d7e63f1860cd4900ec49e8e8f",
-        "Node name for S&R": "WeiLinPromptUIWithoutLora",
-        "ue_properties": {
-          "version": "7.0.1",
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": [
-        "BArtstyle style, A character from Blue Archive. Iochi Mari.\n\nA cheerful, energetic anime girl with fluffy light blonde hair, bright blue eyes, and large expressive fox ears with white inner fur. She wears a white flower with a green leaf hair accessory on the left side of her head. A large, glowing, semi-transparent yellow ring with cutout circular patterns floats prominently in the sky behind her head, and a small pink heart icon floats near her ear. Her face is in a three-quarter profile, turned to look back over her left shoulder directly toward the viewer. Her head is tilted slightly downward and rotated, with a playful open-mouthed smile. Her eye line is slanted and directed straight at the camera, while her shoulders are angled dynamically. She is wearing a bright white bikini top with ruffled yellow trim and a small yellow bow, paired with matching side-tie bikini bottoms featuring yellow ruffles, a white armband on her right arm, a white wristband on her left arm, and a delicate thin strap around her right thigh. Her left arm is raised with her hand making a casual, open gesture, while her right hand rests on a large, translucent blue-and-white inflatable pool float that is partially visible at the bottom edge of the frame. Her body is turned away, but she is leaning forward to look back. The composition is a waist-up shot. The background features a vibrant, sunny beach scene with a bright blue sky, fluffy white clouds, and a sparkling turquoise ocean. The lighting is extremely bright and high-key, with a soft, pastel, summery color palette, giving the image a fresh, airy, and sparkling atmosphere with subtle lens flares and particle effects. The style is a polished, modern anime illustration with soft, glowing shading. No text, no watermark.",
-        false,
-        "[{\"id\":\"token_2_1778339272764\",\"text\":\"@huangji\",\"translate\":\"@huangji\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_3_1778339272764\",\"text\":\"@wansui\",\"translate\":\"@wansui\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_4_1778339272764\",\"text\":\"golden eyes\",\"translate\":\"golden 眼睛\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_5_1778339272764\",\"text\":\"red streaked hair\",\"translate\":\"红色 挑染\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_6_1778339272764\",\"text\":\"jacket\",\"translate\":\"夹克衫\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_7_1778339272764\",\"text\":\"white hair\",\"translate\":\"白色头发\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_8_1778339272764\",\"text\":\"fangs\",\"translate\":\"尖牙\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_9_1778339272764\",\"text\":\"young\",\"translate\":\"young\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_31_1778260353729\",\"text\":\"black fur\",\"translate\":\"黑色 毛皮\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_10_1778339272764\",\"text\":\"two tone fur\",\"translate\":\"two tone 毛皮\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_11_1778339272764\",\"text\":\"wolf boy\",\"translate\":\"狼 男孩\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_12_1778339272764\",\"text\":\"(null-ghost:0.5)\",\"translate\":\"(null-ghost\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_13_1778339272764\",\"text\":\"(sowon:0.5)\",\"translate\":\"(sowon\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_14_1778339272764\",\"text\":\"(maccha (mochancc):0.5)\",\"translate\":\"(maccha (mochancc)\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_15_1778339272764\",\"text\":\"(reoen:0.5)\",\"translate\":\"(reoen\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_16_1778339272764\",\"text\":\"male\",\"translate\":\"男性\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_17_1778339272764\",\"text\":\"kemono\",\"translate\":\"kemono\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_58_1778325139333\",\"text\":\"masterpiece\",\"translate\":\"masterpiece\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_59_1778325139333\",\"text\":\"best quality\",\"translate\":\"best quality\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_19_1778339272764\",\"text\":\"highres\",\"translate\":\"高分辨率\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_20_1778339272764\",\"text\":\"4k\",\"translate\":\"4k\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_21_1778339272764\",\"text\":\"Clear and distinct lines\",\"translate\":\"Clear and distinct lines\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_22_1778339272764\",\"text\":\"Crisp and clear images\",\"translate\":\"Crisp and clear images\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_23_1778339272764\",\"text\":\"5 fingers only\",\"translate\":\"5 fingers only\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_25_1778339272765\",\"text\":\"fur detail\",\"translate\":\"毛皮 detail\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_26_1778339272765\",\"text\":\"anatomically correct\",\"translate\":\"anatomically correct\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_28_1778339272765\",\"text\":\"highres\",\"translate\":\"高分辨率\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_29_1778339272765\",\"text\":\"high details\",\"translate\":\"high details\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_30_1778339272765\",\"text\":\"masterpiece\",\"translate\":\"masterpiece\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_33_1778339272765\",\"text\":\"Refreshing and bright style\",\"translate\":\"Refreshing and bright style\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_13_1778260353729\",\"text\":\"solo\",\"translate\":\"单人\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_34_1778339272765\",\"text\":\"(sideways:1.3)\",\"translate\":\"(sideways\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_35_1778339272765\",\"text\":\"standing posture\",\"translate\":\"站立 posture\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(241, 229, 140, .4)\",\"isLoraTag\":false},{\"id\":\"token_40_1778339272765\",\"text\":\"best illustration\",\"translate\":\"best 插画\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_41_1778339272765\",\"text\":\"illustration\",\"translate\":\"插画\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_42_1778339272765\",\"text\":\"game cg\",\"translate\":\"游戏CG\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_43_1778339272765\",\"text\":\"Structurally correct human body\",\"translate\":\"Structurally correct human body\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_44_1778339272765\",\"text\":\"from side\",\"translate\":\"from side\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_45_1778339272765\",\"text\":\"dramatic angle\",\"translate\":\"dramatic angle\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_46_1778339272765\",\"text\":\"dynamic angle\",\"translate\":\"dynamic angle\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_48_1778339272765\",\"text\":\"clerk clothing\",\"translate\":\"clerk clothing\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_50_1778339272765\",\"text\":\"Topless\",\"translate\":\"Topless\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_51_1778339272765\",\"text\":\"mane\",\"translate\":\"mane\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_52_1778339272765\",\"text\":\"from above\",\"translate\":\"from above\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_53_1778339272765\",\"text\":\"looking up\",\"translate\":\"looking up\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_54_1778339272765\",\"text\":\"very close to viewers\",\"translate\":\"very close to viewers\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_55_1778339272765\",\"text\":\"sunglasses\",\"translate\":\"太阳镜\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_1_1778339660546\",\"text\":\"wolf tail\",\"translate\":\"狼 尾巴\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(189, 182, 107, .4)\",\"isLoraTag\":false},{\"id\":\"token_2_1778339660546\",\"text\":\"coat on shoulders\",\"translate\":\"外套 on shoulders\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false}]",
-        "",
-        ""
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
-    },
-    {
-      "id": 5408,
-      "type": "WeiLinPromptUIWithoutLora",
-      "pos": [
-        -2663.381226900131,
-        967.9446523245412
-      ],
-      "size": [
-        659.3078381863194,
-        176
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 29,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "opt_text",
-          "name": "opt_text",
-          "shape": 7,
-          "type": "*",
-          "link": null
-        },
-        {
-          "label": "opt_clip",
-          "name": "opt_clip",
-          "shape": 7,
-          "type": "CLIP",
-          "link": 347150
-        },
-        {
-          "label": "positive",
-          "name": "positive",
-          "type": "STRING",
-          "widget": {
-            "name": "positive"
-          },
-          "link": null
-        },
-        {
-          "label": "auto_random",
-          "name": "auto_random",
-          "type": "BOOLEAN",
-          "widget": {
-            "name": "auto_random"
-          },
-          "link": null
-        },
-        {
-          "label": "temp_str",
-          "name": "temp_str",
-          "shape": 7,
-          "type": "STRING",
-          "widget": {
-            "name": "temp_str"
-          },
-          "link": null
-        },
-        {
-          "label": "random_template",
-          "name": "random_template",
-          "shape": 7,
-          "type": "STRING",
-          "widget": {
-            "name": "random_template"
-          },
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "label": "STRING",
-          "name": "STRING",
-          "type": "STRING",
-          "links": []
-        },
-        {
-          "label": "CONDITIONING",
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            347161
-          ]
-        },
-        {
-          "label": "CLIP",
-          "name": "CLIP",
-          "type": "CLIP",
-          "links": []
-        }
-      ],
-      "properties": {
-        "cnr_id": "weilin-comfyui-tools",
-        "ver": "77a7c4fd85ff545d7e63f1860cd4900ec49e8e8f",
-        "Node name for S&R": "WeiLinPromptUIWithoutLora",
-        "ue_properties": {
-          "version": "7.0.1",
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": [
-        "low quality,lowres,score_2, score_1,flesh whiskers,worst quality,jpeg_artifacts,watermark,",
-        false,
-        "[{\"id\":\"token_2_1778339272764\",\"text\":\"@huangji\",\"translate\":\"@huangji\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_3_1778339272764\",\"text\":\"@wansui\",\"translate\":\"@wansui\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_4_1778339272764\",\"text\":\"golden eyes\",\"translate\":\"golden 眼睛\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_5_1778339272764\",\"text\":\"red streaked hair\",\"translate\":\"红色 挑染\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_6_1778339272764\",\"text\":\"jacket\",\"translate\":\"夹克衫\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_7_1778339272764\",\"text\":\"white hair\",\"translate\":\"白色头发\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_8_1778339272764\",\"text\":\"fangs\",\"translate\":\"尖牙\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_9_1778339272764\",\"text\":\"young\",\"translate\":\"young\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_31_1778260353729\",\"text\":\"black fur\",\"translate\":\"黑色 毛皮\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_10_1778339272764\",\"text\":\"two tone fur\",\"translate\":\"two tone 毛皮\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_11_1778339272764\",\"text\":\"wolf boy\",\"translate\":\"狼 男孩\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_12_1778339272764\",\"text\":\"(null-ghost:0.5)\",\"translate\":\"(null-ghost\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_13_1778339272764\",\"text\":\"(sowon:0.5)\",\"translate\":\"(sowon\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_14_1778339272764\",\"text\":\"(maccha (mochancc):0.5)\",\"translate\":\"(maccha (mochancc)\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_15_1778339272764\",\"text\":\"(reoen:0.5)\",\"translate\":\"(reoen\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_16_1778339272764\",\"text\":\"male\",\"translate\":\"男性\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_17_1778339272764\",\"text\":\"kemono\",\"translate\":\"kemono\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_58_1778325139333\",\"text\":\"masterpiece\",\"translate\":\"masterpiece\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_59_1778325139333\",\"text\":\"best quality\",\"translate\":\"best quality\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_19_1778339272764\",\"text\":\"highres\",\"translate\":\"高分辨率\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_20_1778339272764\",\"text\":\"4k\",\"translate\":\"4k\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_21_1778339272764\",\"text\":\"Clear and distinct lines\",\"translate\":\"Clear and distinct lines\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_22_1778339272764\",\"text\":\"Crisp and clear images\",\"translate\":\"Crisp and clear images\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_23_1778339272764\",\"text\":\"5 fingers only\",\"translate\":\"5 fingers only\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_25_1778339272765\",\"text\":\"fur detail\",\"translate\":\"毛皮 detail\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_26_1778339272765\",\"text\":\"anatomically correct\",\"translate\":\"anatomically correct\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_28_1778339272765\",\"text\":\"highres\",\"translate\":\"高分辨率\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_29_1778339272765\",\"text\":\"high details\",\"translate\":\"high details\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_30_1778339272765\",\"text\":\"masterpiece\",\"translate\":\"masterpiece\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_33_1778339272765\",\"text\":\"Refreshing and bright style\",\"translate\":\"Refreshing and bright style\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_13_1778260353729\",\"text\":\"solo\",\"translate\":\"单人\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_34_1778339272765\",\"text\":\"(sideways:1.3)\",\"translate\":\"(sideways\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_35_1778339272765\",\"text\":\"standing posture\",\"translate\":\"站立 posture\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(241, 229, 140, .4)\",\"isLoraTag\":false},{\"id\":\"token_40_1778339272765\",\"text\":\"best illustration\",\"translate\":\"best 插画\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_41_1778339272765\",\"text\":\"illustration\",\"translate\":\"插画\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_42_1778339272765\",\"text\":\"game cg\",\"translate\":\"游戏CG\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_43_1778339272765\",\"text\":\"Structurally correct human body\",\"translate\":\"Structurally correct human body\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_44_1778339272765\",\"text\":\"from side\",\"translate\":\"from side\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_45_1778339272765\",\"text\":\"dramatic angle\",\"translate\":\"dramatic angle\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_46_1778339272765\",\"text\":\"dynamic angle\",\"translate\":\"dynamic angle\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_48_1778339272765\",\"text\":\"clerk clothing\",\"translate\":\"clerk clothing\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_50_1778339272765\",\"text\":\"Topless\",\"translate\":\"Topless\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_51_1778339272765\",\"text\":\"mane\",\"translate\":\"mane\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_52_1778339272765\",\"text\":\"from above\",\"translate\":\"from above\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_53_1778339272765\",\"text\":\"looking up\",\"translate\":\"looking up\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_54_1778339272765\",\"text\":\"very close to viewers\",\"translate\":\"very close to viewers\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_55_1778339272765\",\"text\":\"sunglasses\",\"translate\":\"太阳镜\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_1_1778339660546\",\"text\":\"wolf tail\",\"translate\":\"狼 尾巴\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(189, 182, 107, .4)\",\"isLoraTag\":false},{\"id\":\"token_2_1778339660546\",\"text\":\"coat on shoulders\",\"translate\":\"外套 on shoulders\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false}]",
-        "",
-        ""
-      ],
-      "color": "#322",
-      "bgcolor": "#533"
-    },
-    {
       "id": 75,
       "type": "easy fullkSampler",
       "pos": [
@@ -3616,7 +2077,7 @@
         658
       ],
       "flags": {},
-      "order": 47,
+      "order": 46,
       "mode": 0,
       "inputs": [
         {
@@ -3734,18 +2195,1163 @@
         }
       },
       "widgets_values": [
-        25,
-        4.5,
+        26,
+        5,
         "euler_ancestral",
         "simple",
         1,
         "Sender",
         0,
         "ComfyUI",
-        767166465872273,
-        "randomize",
+        1013898832190686,
+        "randomize"
+      ]
+    },
+    {
+      "id": 5410,
+      "type": "Fast Groups Bypasser (rgthree)",
+      "pos": [
+        -114.95548029796481,
+        604.5290614410076
+      ],
+      "size": [
+        247.2955078125,
+        274
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "OPT_CONNECTION",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "matchColors": "",
+        "matchTitle": "",
+        "showNav": true,
+        "showAllGraphs": true,
+        "sort": "position",
+        "customSortAlphabet": "",
+        "toggleRestriction": "default",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      }
+    },
+    {
+      "id": 5408,
+      "type": "WeiLinPromptUIWithoutLora",
+      "pos": [
+        -2663.381226900131,
+        967.9446523245412
+      ],
+      "size": [
+        659.3078381863194,
+        176
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "opt_text",
+          "name": "opt_text",
+          "shape": 7,
+          "type": "*",
+          "link": null
+        },
+        {
+          "label": "opt_clip",
+          "name": "opt_clip",
+          "shape": 7,
+          "type": "CLIP",
+          "link": 347150
+        },
+        {
+          "label": "positive",
+          "name": "positive",
+          "type": "STRING",
+          "widget": {
+            "name": "positive"
+          },
+          "link": null
+        },
+        {
+          "label": "auto_random",
+          "name": "auto_random",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "auto_random"
+          },
+          "link": null
+        },
+        {
+          "label": "temp_str",
+          "name": "temp_str",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "temp_str"
+          },
+          "link": null
+        },
+        {
+          "label": "random_template",
+          "name": "random_template",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "random_template"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "label": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "label": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            347161
+          ]
+        },
+        {
+          "label": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "weilin-comfyui-tools",
+        "ver": "77a7c4fd85ff545d7e63f1860cd4900ec49e8e8f",
+        "Node name for S&R": "WeiLinPromptUIWithoutLora",
+        "ue_properties": {
+          "version": "7.0.1",
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "bad quality",
+        false,
+        "[{\"id\":\"token_2_1778339272764\",\"text\":\"@huangji\",\"translate\":\"@huangji\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_3_1778339272764\",\"text\":\"@wansui\",\"translate\":\"@wansui\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_4_1778339272764\",\"text\":\"golden eyes\",\"translate\":\"golden 眼睛\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_5_1778339272764\",\"text\":\"red streaked hair\",\"translate\":\"红色 挑染\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_6_1778339272764\",\"text\":\"jacket\",\"translate\":\"夹克衫\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_7_1778339272764\",\"text\":\"white hair\",\"translate\":\"白色头发\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_8_1778339272764\",\"text\":\"fangs\",\"translate\":\"尖牙\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_9_1778339272764\",\"text\":\"young\",\"translate\":\"young\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_31_1778260353729\",\"text\":\"black fur\",\"translate\":\"黑色 毛皮\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_10_1778339272764\",\"text\":\"two tone fur\",\"translate\":\"two tone 毛皮\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_11_1778339272764\",\"text\":\"wolf boy\",\"translate\":\"狼 男孩\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_12_1778339272764\",\"text\":\"(null-ghost:0.5)\",\"translate\":\"(null-ghost\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_13_1778339272764\",\"text\":\"(sowon:0.5)\",\"translate\":\"(sowon\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_14_1778339272764\",\"text\":\"(maccha (mochancc):0.5)\",\"translate\":\"(maccha (mochancc)\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_15_1778339272764\",\"text\":\"(reoen:0.5)\",\"translate\":\"(reoen\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_16_1778339272764\",\"text\":\"male\",\"translate\":\"男性\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_17_1778339272764\",\"text\":\"kemono\",\"translate\":\"kemono\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_58_1778325139333\",\"text\":\"masterpiece\",\"translate\":\"masterpiece\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_59_1778325139333\",\"text\":\"best quality\",\"translate\":\"best quality\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_19_1778339272764\",\"text\":\"highres\",\"translate\":\"高分辨率\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_20_1778339272764\",\"text\":\"4k\",\"translate\":\"4k\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_21_1778339272764\",\"text\":\"Clear and distinct lines\",\"translate\":\"Clear and distinct lines\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_22_1778339272764\",\"text\":\"Crisp and clear images\",\"translate\":\"Crisp and clear images\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_23_1778339272764\",\"text\":\"5 fingers only\",\"translate\":\"5 fingers only\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_25_1778339272765\",\"text\":\"fur detail\",\"translate\":\"毛皮 detail\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_26_1778339272765\",\"text\":\"anatomically correct\",\"translate\":\"anatomically correct\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_28_1778339272765\",\"text\":\"highres\",\"translate\":\"高分辨率\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_29_1778339272765\",\"text\":\"high details\",\"translate\":\"high details\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_30_1778339272765\",\"text\":\"masterpiece\",\"translate\":\"masterpiece\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_33_1778339272765\",\"text\":\"Refreshing and bright style\",\"translate\":\"Refreshing and bright style\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_13_1778260353729\",\"text\":\"solo\",\"translate\":\"单人\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_34_1778339272765\",\"text\":\"(sideways:1.3)\",\"translate\":\"(sideways\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_35_1778339272765\",\"text\":\"standing posture\",\"translate\":\"站立 posture\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(241, 229, 140, .4)\",\"isLoraTag\":false},{\"id\":\"token_40_1778339272765\",\"text\":\"best illustration\",\"translate\":\"best 插画\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_41_1778339272765\",\"text\":\"illustration\",\"translate\":\"插画\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_42_1778339272765\",\"text\":\"game cg\",\"translate\":\"游戏CG\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_43_1778339272765\",\"text\":\"Structurally correct human body\",\"translate\":\"Structurally correct human body\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_44_1778339272765\",\"text\":\"from side\",\"translate\":\"from side\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_45_1778339272765\",\"text\":\"dramatic angle\",\"translate\":\"dramatic angle\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_46_1778339272765\",\"text\":\"dynamic angle\",\"translate\":\"dynamic angle\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_48_1778339272765\",\"text\":\"clerk clothing\",\"translate\":\"clerk clothing\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_50_1778339272765\",\"text\":\"Topless\",\"translate\":\"Topless\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_51_1778339272765\",\"text\":\"mane\",\"translate\":\"mane\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_52_1778339272765\",\"text\":\"from above\",\"translate\":\"from above\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_53_1778339272765\",\"text\":\"looking up\",\"translate\":\"looking up\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_54_1778339272765\",\"text\":\"very close to viewers\",\"translate\":\"very close to viewers\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_55_1778339272765\",\"text\":\"sunglasses\",\"translate\":\"太阳镜\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_1_1778339660546\",\"text\":\"wolf tail\",\"translate\":\"狼 尾巴\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(189, 182, 107, .4)\",\"isLoraTag\":false},{\"id\":\"token_2_1778339660546\",\"text\":\"coat on shoulders\",\"translate\":\"外套 on shoulders\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false}]",
+        "",
+        ""
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 5411,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -1515.5013149179476,
+        476.04512361044146
+      ],
+      "size": [
+        217.1966367043433,
+        88
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 43,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 347156
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": 347155
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            347160
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.27.0",
+        "Node name for S&R": "CLIPTextEncode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
         ""
       ]
+    },
+    {
+      "id": 5403,
+      "type": "easy showAnything",
+      "pos": [
+        -1904.4377229806414,
+        476.70881596168215
+      ],
+      "size": [
+        334.98050304053686,
+        628.2101609973683
+      ],
+      "flags": {},
+      "order": 42,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "anything",
+          "shape": 7,
+          "type": "*",
+          "link": 347134
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "*",
+          "links": [
+            347155
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-easy-use",
+        "ver": "1.3.6",
+        "Node name for S&R": "easy showAnything",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "@konya karasue, @wanke, @asteroid ill, @sakiika0513, 1boy, original, bag, bicycle, bicycle basket, building, closed mouth, cloud, cloudy sky, day, doorway, food, grey pants, hands up, holding, holding food, industrial pipe, leaf, mirror, ocean, outdoors, plant, potted plant, power lines, pushing bicycle, railing, scenery, school bag, short sleeves, sign, sitting, sky, smile, standing, stool, summer, traffic mirror, wide shot, masterpiece, best quality, amazing quality, very, aesthetic"
+      ]
+    },
+    {
+      "id": 95,
+      "type": "easy XYInputs: Lora",
+      "pos": [
+        -141.82663767481878,
+        -282.421305945882
+      ],
+      "size": [
+        460.6506995104295,
+        466
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "optional_lora_stack",
+          "shape": 7,
+          "type": "LORA_STACK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "X or Y",
+          "type": "X_Y",
+          "links": [
+            160
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-easy-use",
+        "ver": "7c470c67d6df44498e52c902173c1ac77cd5bdfd",
+        "Node name for S&R": "easy XYInputs: Lora",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.6.2"
+        }
+      },
+      "widgets_values": [
+        "Lora Names+Weights",
+        5,
+        1,
+        1,
+        "None",
+        0,
+        0,
+        "None",
+        0.8,
+        1,
+        "None",
+        1,
+        1,
+        "None",
+        1,
+        1,
+        "None",
+        1,
+        -6.66,
+        "None",
+        1,
+        1,
+        "None",
+        1,
+        1,
+        "None",
+        1,
+        1,
+        "None",
+        1,
+        1,
+        "None",
+        1,
+        1,
+        false
+      ]
+    },
+    {
+      "id": 5423,
+      "type": "easy imageBatchToImageList",
+      "pos": [
+        3928.1700201639555,
+        704.0470306148715
+      ],
+      "size": [
+        270,
+        30
+      ],
+      "flags": {},
+      "order": 51,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 347180
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "shape": 6,
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            347183
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-easy-use",
+        "ver": "76b5896f089d5b4f7619559cf5f7fc0560e3dc40",
+        "Node name for S&R": "easy imageBatchToImageList",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.2",
+          "input_ue_unconnectable": {}
+        },
+        "aux_id": "yolain/ComfyUI-Easy-Use"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 5417,
+      "type": "easy imageListToImageBatch",
+      "pos": [
+        5174.99064566335,
+        673.467660400867
+      ],
+      "size": [
+        270,
+        40
+      ],
+      "flags": {},
+      "order": 55,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 347167
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            347168
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-easy-use",
+        "ver": "76b5896f089d5b4f7619559cf5f7fc0560e3dc40",
+        "Node name for S&R": "easy imageListToImageBatch",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.2",
+          "input_ue_unconnectable": {}
+        },
+        "aux_id": "yolain/ComfyUI-Easy-Use"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 5422,
+      "type": "TTP_Image_Tile_Batch",
+      "pos": [
+        3605.615918257838,
+        706.7468389090851
+      ],
+      "size": [
+        250.18014526367188,
+        142
+      ],
+      "flags": {},
+      "order": 50,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 347201
+        },
+        {
+          "name": "tile_width",
+          "type": "INT",
+          "widget": {
+            "name": "tile_width"
+          },
+          "link": 347178
+        },
+        {
+          "name": "tile_height",
+          "type": "INT",
+          "widget": {
+            "name": "tile_height"
+          },
+          "link": 347179
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGES",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            347180
+          ]
+        },
+        {
+          "name": "POSITIONS",
+          "type": "LIST",
+          "slot_index": 1,
+          "links": [
+            347169
+          ]
+        },
+        {
+          "name": "ORIGINAL_SIZE",
+          "type": "TUPLE",
+          "slot_index": 2,
+          "links": [
+            347170
+          ]
+        },
+        {
+          "name": "GRID_SIZE",
+          "type": "TUPLE",
+          "slot_index": 3,
+          "links": [
+            347171
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_ttp_toolset",
+        "ver": "08fb8b9808b844a0137399b6fd34eec1e13e62d3",
+        "Node name for S&R": "TTP_Image_Tile_Batch",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.2",
+          "input_ue_unconnectable": {}
+        },
+        "aux_id": "TTPlanetPig/Comfyui_TTP_Toolset"
+      },
+      "widgets_values": [
+        1024,
+        1024
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 5426,
+      "type": "VAEEncode",
+      "pos": [
+        4238.2756331753735,
+        716.724395989204
+      ],
+      "size": [
+        270,
+        50
+      ],
+      "flags": {},
+      "order": 52,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pixels",
+          "type": "IMAGE",
+          "link": 347183
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 347213
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            347191
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.68",
+        "Node name for S&R": "VAEEncode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.2",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 5343,
+      "type": "ConditioningKrea2Rebalance",
+      "pos": [
+        2454.1877254855904,
+        772.158719425326
+      ],
+      "size": [
+        306.09140625,
+        82
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 347066
+        }
+      ],
+      "outputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "links": [
+            347095,
+            347198
+          ]
+        }
+      ],
+      "title": "Conditioning Krea2 Rebalance(破限节点)",
+      "properties": {
+        "cnr_id": "ComfyUI-Conditioning-Rebalance",
+        "ver": "9ab5315e6aa8ec8cd14cc5354739d938c6fb101b",
+        "Node name for S&R": "ConditioningKrea2Rebalance",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "multiplier": true,
+            "per_layer_weights": true
+          },
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        },
+        "aux_id": "nova452/ComfyUI-ConditioningKrea2Rebalance"
+      },
+      "widgets_values": [
+        4,
+        "1.0,1.0,1.0,1.0,1.0,1.0,1.0,2.5,5.0,1.1,4.0,1.0"
+      ]
+    },
+    {
+      "id": 5330,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        2456.073257723604,
+        929.978637643917
+      ],
+      "size": [
+        300.67328467569087,
+        94.17337584323377
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 347063
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            347096,
+            347199
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.23.0",
+        "Node name for S&R": "ConditioningZeroOut",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.2",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 5365,
+      "type": "easy cleanGpuUsed",
+      "pos": [
+        2400.409365300724,
+        697.2981634333761
+      ],
+      "size": [
+        140,
+        26
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "anything",
+          "type": "*",
+          "link": 347207
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "*",
+          "links": [
+            347200
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-easy-use",
+        "ver": "1.3.6",
+        "Node name for S&R": "easy cleanGpuUsed",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 5425,
+      "type": "VAEDecode",
+      "pos": [
+        4843.288557391071,
+        674.6651756649904
+      ],
+      "size": [
+        270,
+        50
+      ],
+      "flags": {},
+      "order": 54,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 347192
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 347214
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            347167
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.68",
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.2",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 5364,
+      "type": "PreviewImage",
+      "pos": [
+        -373.272485818721,
+        958.433095411562
+      ],
+      "size": [
+        529.9803273094993,
+        1074.7083566179879
+      ],
+      "flags": {},
+      "order": 58,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 347202
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.27.0",
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 5366,
+      "type": "RTXVideoSuperResolution",
+      "pos": [
+        2889.560684773082,
+        764.0388736796298
+      ],
+      "size": [
+        285.81015625,
+        106
+      ],
+      "flags": {},
+      "order": 48,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 347080
+        },
+        {
+          "name": "resize_type.scale",
+          "type": "FLOAT",
+          "widget": {
+            "name": "resize_type.scale"
+          },
+          "link": 347138
+        }
+      ],
+      "outputs": [
+        {
+          "name": "upscaled_images",
+          "type": "IMAGE",
+          "links": [
+            347193,
+            347195,
+            347201
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_nvidia_rtx_nodes",
+        "ver": "0.1.3",
+        "Node name for S&R": "RTXVideoSuperResolution",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.3"
+        }
+      },
+      "widgets_values": [
+        "scale by multiplier",
+        1.5,
+        "ULTRA"
+      ]
+    },
+    {
+      "id": 5430,
+      "type": "Image Comparer (rgthree)",
+      "pos": [
+        5167.203365405827,
+        938.452862611991
+      ],
+      "size": [
+        685.5097809031158,
+        760.2573128293125
+      ],
+      "flags": {},
+      "order": 57,
+      "mode": 0,
+      "inputs": [
+        {
+          "dir": 3,
+          "label": "图像_A",
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 347195
+        },
+        {
+          "dir": 3,
+          "label": "图像_B",
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 347194
+        }
+      ],
+      "outputs": [
+        {
+          "dir": 4,
+          "name": "images",
+          "shape": 3,
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "rgthree-comfy",
+        "ver": "1.0.2512112053",
+        "comparer_mode": "Slide",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.3"
+        }
+      },
+      "widgets_values": [
+        [
+          {
+            "name": "A",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_ipaju_00027_.png&type=temp&subfolder=&rand=0.03598301211263266"
+          },
+          {
+            "name": "B",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_ipaju_00028_.png&type=temp&subfolder=&rand=0.24747448681796258"
+          }
+        ]
+      ]
+    },
+    {
+      "id": 5424,
+      "type": "TTP_Tile_image_size",
+      "pos": [
+        3252.1298423189432,
+        736.2190389731471
+      ],
+      "size": [
+        257.0339050292969,
+        126
+      ],
+      "flags": {},
+      "order": 49,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 347193
+        }
+      ],
+      "outputs": [
+        {
+          "name": "tile_width",
+          "type": "INT",
+          "slot_index": 0,
+          "links": [
+            347178
+          ]
+        },
+        {
+          "name": "tile_height",
+          "type": "INT",
+          "slot_index": 1,
+          "links": [
+            347179
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_ttp_toolset",
+        "ver": "08fb8b9808b844a0137399b6fd34eec1e13e62d3",
+        "Node name for S&R": "TTP_Tile_image_size",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.2",
+          "input_ue_unconnectable": {}
+        },
+        "aux_id": "TTPlanetPig/Comfyui_TTP_Toolset"
+      },
+      "widgets_values": [
+        2,
+        2,
+        0.1
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 5429,
+      "type": "KSamplerAdvanced",
+      "pos": [
+        4549.757043633711,
+        982.9433435873177
+      ],
+      "size": [
+        400,
+        760
+      ],
+      "flags": {},
+      "order": 53,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 347200
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 347198
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 347199
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 347191
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            347192
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.26.0",
+        "Node name for S&R": "KSamplerAdvanced",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.3"
+        }
+      },
+      "widgets_values": [
+        "enable",
+        1013898832190686,
+        "randomize",
+        8,
+        1,
+        "euler_ancestral",
+        "kl_optimal",
+        4,
+        10000,
+        "disable"
+      ]
+    },
+    {
+      "id": 5418,
+      "type": "TTP_Image_Assy",
+      "pos": [
+        5504.573922567093,
+        644.500605377549
+      ],
+      "size": [
+        280,
+        130
+      ],
+      "flags": {},
+      "order": 56,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "tiles",
+          "type": "IMAGE",
+          "link": 347168
+        },
+        {
+          "name": "positions",
+          "type": "LIST",
+          "link": 347169
+        },
+        {
+          "name": "original_size",
+          "type": "TUPLE",
+          "link": 347170
+        },
+        {
+          "name": "grid_size",
+          "type": "TUPLE",
+          "link": 347171
+        }
+      ],
+      "outputs": [
+        {
+          "name": "RECONSTRUCTED_IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            347194,
+            347202
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_ttp_toolset",
+        "ver": "08fb8b9808b844a0137399b6fd34eec1e13e62d3",
+        "Node name for S&R": "TTP_Image_Assy",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.2",
+          "input_ue_unconnectable": {}
+        },
+        "aux_id": "TTPlanetPig/Comfyui_TTP_Toolset"
+      },
+      "widgets_values": [
+        128
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 5402,
+      "type": "ResolutionMasterSimplify",
+      "pos": [
+        -797.6605424520295,
+        434.81063678872476
+      ],
+      "size": [
+        341.7955078125,
+        320
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "INT",
+          "links": [
+            347136
+          ]
+        },
+        {
+          "name": "",
+          "type": "INT",
+          "links": [
+            347137
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Aaalice233/ComfyUI-Danbooru-Gallery",
+        "ver": "3ed07b589f6dc8cce35f9ecb1e54cd354adebf2c",
+        "Node name for S&R": "ResolutionMasterSimplify",
+        "width": 1024,
+        "height": 832,
+        "canvas_min_x": 64,
+        "canvas_max_x": 2048,
+        "canvas_step_x": 64,
+        "canvas_min_y": 64,
+        "canvas_max_y": 2048,
+        "canvas_step_y": 64,
+        "selectedPreset": "自定义 (Custom)",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        1024,
+        832
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
     },
     {
       "id": 5394,
@@ -3761,7 +3367,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 13,
+      "order": 11,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -3787,12 +3393,395 @@
         }
       },
       "widgets_values": [
-        "1.5"
+        "3"
       ]
     },
     {
+      "id": 5404,
+      "type": "TriggerWord Toggle (LoraManager)",
+      "pos": [
+        -3776.132674293883,
+        602.3643640059788
+      ],
+      "size": [
+        404.75144527148404,
+        301.4044367579122
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "组模式",
+          "name": "group_mode",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "group_mode"
+          },
+          "link": null
+        },
+        {
+          "label": "默认激活",
+          "name": "default_active",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "default_active"
+          },
+          "link": null
+        },
+        {
+          "label": "触发词",
+          "name": "trigger_words",
+          "shape": 7,
+          "type": "string",
+          "link": 347135
+        }
+      ],
+      "outputs": [
+        {
+          "label": "过滤触发词",
+          "name": "filtered_trigger_words",
+          "type": "STRING",
+          "links": [
+            347112
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-lora-manager",
+        "ver": "6d0d9600a7c50fa6f4f0ec4b2d4662fbdaf10ee5",
+        "Node name for S&R": "TriggerWord Toggle (LoraManager)",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.6.2"
+        }
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        [],
+        ""
+      ]
+    },
+    {
+      "id": 5382,
+      "type": "easy loraStackApply",
+      "pos": [
+        -3743.781230952097,
+        448.058166132297
+      ],
+      "size": [
+        310,
+        70
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "lora_stack",
+          "type": "LORA_STACK",
+          "link": 347118
+        },
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 347204
+        },
+        {
+          "name": "optional_clip",
+          "shape": 7,
+          "type": "CLIP",
+          "link": 347205
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            347119
+          ]
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "links": [
+            347150,
+            347152,
+            347156
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-easy-use",
+        "ver": "625efbfa2fc20c31797dfffcbb41a26b6d91ab7b",
+        "Node name for S&R": "easy loraStackApply",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.2",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 5406,
+      "type": "WeiLinPromptUIWithoutLora",
+      "pos": [
+        -1002.5435371831943,
+        834.3094254192467
+      ],
+      "size": [
+        575.6803891665453,
+        439.4253164270451
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "opt_text",
+          "name": "opt_text",
+          "shape": 7,
+          "type": "*",
+          "link": null
+        },
+        {
+          "label": "opt_clip",
+          "name": "opt_clip",
+          "shape": 7,
+          "type": "CLIP",
+          "link": 347152
+        },
+        {
+          "label": "positive",
+          "name": "positive",
+          "type": "STRING",
+          "widget": {
+            "name": "positive"
+          },
+          "link": null
+        },
+        {
+          "label": "auto_random",
+          "name": "auto_random",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "auto_random"
+          },
+          "link": null
+        },
+        {
+          "label": "temp_str",
+          "name": "temp_str",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "temp_str"
+          },
+          "link": null
+        },
+        {
+          "label": "random_template",
+          "name": "random_template",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "random_template"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "label": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            347113
+          ]
+        },
+        {
+          "label": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": []
+        },
+        {
+          "label": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "weilin-comfyui-tools",
+        "ver": "77a7c4fd85ff545d7e63f1860cd4900ec49e8e8f",
+        "Node name for S&R": "WeiLinPromptUIWithoutLora",
+        "ue_properties": {
+          "version": "7.0.1",
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "@konya karasue, @wanke, @asteroid ill,@sakiika0513 ,\n1boy,\noriginal, bag, bicycle, bicycle basket, building, closed mouth, cloud, cloudy sky, day, doorway, food, grey pants, hands up, holding, holding food, industrial pipe, leaf, mirror, ocean, outdoors, plant,  potted plant, power lines, pushing bicycle, railing, scenery, school bag,  short sleeves, sign, sitting, sky, smile, standing, stool, summer, traffic mirror, wide shot\n\nmasterpiece, best quality, amazing quality, very, aesthetic",
+        false,
+        "[{\"id\":\"token_2_1778339272764\",\"text\":\"@huangji\",\"translate\":\"@huangji\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_3_1778339272764\",\"text\":\"@wansui\",\"translate\":\"@wansui\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_4_1778339272764\",\"text\":\"golden eyes\",\"translate\":\"golden 眼睛\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_5_1778339272764\",\"text\":\"red streaked hair\",\"translate\":\"红色 挑染\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_6_1778339272764\",\"text\":\"jacket\",\"translate\":\"夹克衫\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_7_1778339272764\",\"text\":\"white hair\",\"translate\":\"白色头发\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_8_1778339272764\",\"text\":\"fangs\",\"translate\":\"尖牙\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_9_1778339272764\",\"text\":\"young\",\"translate\":\"young\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_31_1778260353729\",\"text\":\"black fur\",\"translate\":\"黑色 毛皮\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_10_1778339272764\",\"text\":\"two tone fur\",\"translate\":\"two tone 毛皮\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_11_1778339272764\",\"text\":\"wolf boy\",\"translate\":\"狼 男孩\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_12_1778339272764\",\"text\":\"(null-ghost:0.5)\",\"translate\":\"(null-ghost\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_13_1778339272764\",\"text\":\"(sowon:0.5)\",\"translate\":\"(sowon\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_14_1778339272764\",\"text\":\"(maccha (mochancc):0.5)\",\"translate\":\"(maccha (mochancc)\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_15_1778339272764\",\"text\":\"(reoen:0.5)\",\"translate\":\"(reoen\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_16_1778339272764\",\"text\":\"male\",\"translate\":\"男性\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_17_1778339272764\",\"text\":\"kemono\",\"translate\":\"kemono\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_58_1778325139333\",\"text\":\"masterpiece\",\"translate\":\"masterpiece\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_59_1778325139333\",\"text\":\"best quality\",\"translate\":\"best quality\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_19_1778339272764\",\"text\":\"highres\",\"translate\":\"高分辨率\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_20_1778339272764\",\"text\":\"4k\",\"translate\":\"4k\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_21_1778339272764\",\"text\":\"Clear and distinct lines\",\"translate\":\"Clear and distinct lines\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_22_1778339272764\",\"text\":\"Crisp and clear images\",\"translate\":\"Crisp and clear images\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_23_1778339272764\",\"text\":\"5 fingers only\",\"translate\":\"5 fingers only\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_25_1778339272765\",\"text\":\"fur detail\",\"translate\":\"毛皮 detail\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_26_1778339272765\",\"text\":\"anatomically correct\",\"translate\":\"anatomically correct\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_28_1778339272765\",\"text\":\"highres\",\"translate\":\"高分辨率\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_29_1778339272765\",\"text\":\"high details\",\"translate\":\"high details\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_30_1778339272765\",\"text\":\"masterpiece\",\"translate\":\"masterpiece\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_33_1778339272765\",\"text\":\"Refreshing and bright style\",\"translate\":\"Refreshing and bright style\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_13_1778260353729\",\"text\":\"solo\",\"translate\":\"单人\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(255, 123, 2, .4)\",\"isLoraTag\":false},{\"id\":\"token_34_1778339272765\",\"text\":\"(sideways:1.3)\",\"translate\":\"(sideways\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_35_1778339272765\",\"text\":\"standing posture\",\"translate\":\"站立 posture\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(241, 229, 140, .4)\",\"isLoraTag\":false},{\"id\":\"token_40_1778339272765\",\"text\":\"best illustration\",\"translate\":\"best 插画\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_41_1778339272765\",\"text\":\"illustration\",\"translate\":\"插画\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_42_1778339272765\",\"text\":\"game cg\",\"translate\":\"游戏CG\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(0, 255, 255, .4)\",\"isLoraTag\":false},{\"id\":\"token_43_1778339272765\",\"text\":\"Structurally correct human body\",\"translate\":\"Structurally correct human body\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_44_1778339272765\",\"text\":\"from side\",\"translate\":\"from side\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_45_1778339272765\",\"text\":\"dramatic angle\",\"translate\":\"dramatic angle\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_46_1778339272765\",\"text\":\"dynamic angle\",\"translate\":\"dynamic angle\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_48_1778339272765\",\"text\":\"clerk clothing\",\"translate\":\"clerk clothing\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_50_1778339272765\",\"text\":\"Topless\",\"translate\":\"Topless\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_51_1778339272765\",\"text\":\"mane\",\"translate\":\"mane\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_52_1778339272765\",\"text\":\"from above\",\"translate\":\"from above\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_53_1778339272765\",\"text\":\"looking up\",\"translate\":\"looking up\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_54_1778339272765\",\"text\":\"very close to viewers\",\"translate\":\"very close to viewers\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false},{\"id\":\"token_55_1778339272765\",\"text\":\"sunglasses\",\"translate\":\"太阳镜\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(230, 84, 128, .4)\",\"isLoraTag\":false},{\"id\":\"token_1_1778339660546\",\"text\":\"wolf tail\",\"translate\":\"狼 尾巴\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":\"rgba(189, 182, 107, .4)\",\"isLoraTag\":false},{\"id\":\"token_2_1778339660546\",\"text\":\"coat on shoulders\",\"translate\":\"外套 on shoulders\",\"isPunctuation\":false,\"isEditing\":false,\"isHidden\":false,\"color\":null,\"isLoraTag\":false}]",
+        "",
+        ""
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 5405,
+      "type": "Lora Stacker (LoraManager)",
+      "pos": [
+        -4269.729191211486,
+        447.39330922265117
+      ],
+      "size": [
+        463.0260994037749,
+        653.7798952769658
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "text",
+          "name": "text",
+          "type": "AUTOCOMPLETE_TEXT_LORAS",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        },
+        {
+          "label": "lora堆栈",
+          "name": "lora_stack",
+          "shape": 7,
+          "type": "LORA_STACK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "label": "lora堆栈",
+          "name": "LORA_STACK",
+          "type": "LORA_STACK",
+          "links": [
+            347118
+          ]
+        },
+        {
+          "label": "触发词",
+          "name": "trigger_words",
+          "type": "STRING",
+          "links": [
+            347135
+          ]
+        },
+        {
+          "label": "活动loras",
+          "name": "active_loras",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "title": "Lora加载器",
+      "properties": {
+        "cnr_id": "comfyui-lora-manager",
+        "ver": "0.8.26",
+        "Node name for S&R": "Lora Stacker (LoraManager)",
+        "ue_properties": {
+          "version": "7.0.1",
+          "widget_ue_connectable": {
+            "text": true
+          },
+          "input_ue_unconnectable": {}
+        },
+        "aux_id": "willmiao/ComfyUI-Lora-Manager",
+        "__lm_widget_ids": [
+          "__lm_autocomplete_meta_text",
+          "text",
+          "loras"
+        ]
+      },
+      "widgets_values": [
+        {
+          "version": 1,
+          "textWidgetName": "text",
+          "lastAccepted": {
+            "start": 85,
+            "end": 100,
+            "insertedText": "<lora:Rella:1>,",
+            "textSnapshot": "<lora:AddMicroDetails_NoobAI_v4:0.50><lora:momowaaai (19):0.60><lora:frypraiILL:0.80><lora:Rella:1>,"
+          }
+        },
+        "",
+        []
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
       "id": 5431,
-      "type": "9b22ef21-7725-4cbb-8045-539e2c941e16",
+      "type": "3411702a-37c8-4be4-b8bc-fd7448df79b2",
+      "pos": [
+        -4585.209548829673,
+        632.3265135302961
+      ],
+      "size": [
+        140,
+        66
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            347204
+          ]
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            347205
+          ]
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            347206
+          ]
+        }
+      ],
+      "title": "anima",
+      "properties": {
+        "proxyWidgets": [],
+        "cnr_id": "comfy-core",
+        "ver": "0.27.0"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 5432,
+      "type": "0b96808b-365b-4d68-95fa-8fd4ee68c91e",
       "pos": [
         1981.2036881958034,
         881.4409078029998
@@ -3810,76 +3799,30 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            347204,
-            347205
-          ]
-        },
-        {
-          "name": "CLIP",
-          "type": "CLIP",
-          "links": [
-            347206,
             347207,
             347208
           ]
         },
         {
-          "name": "VAE",
-          "type": "VAE",
+          "name": "CLIP",
+          "type": "CLIP",
           "links": [
             347209,
             347210,
             347211
           ]
-        }
-      ],
-      "title": "krea2",
-      "properties": {
-        "proxyWidgets": [],
-        "cnr_id": "comfy-core",
-        "ver": "0.27.0"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 5432,
-      "type": "ff8e446e-d90a-47e1-a3d6-cda0d9e28786",
-      "pos": [
-        -4585.209548829673,
-        632.3265135302961
-      ],
-      "size": [
-        140,
-        66
-      ],
-      "flags": {},
-      "order": 15,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            347212
-          ]
-        },
-        {
-          "name": "CLIP",
-          "type": "CLIP",
-          "links": [
-            347213
-          ]
         },
         {
           "name": "VAE",
           "type": "VAE",
           "links": [
+            347212,
+            347213,
             347214
           ]
         }
       ],
-      "title": "anima",
+      "title": "krea2",
       "properties": {
         "proxyWidgets": [],
         "cnr_id": "comfy-core",
@@ -4421,88 +4364,88 @@
       347204,
       5431,
       0,
-      5365,
-      0,
+      5382,
+      1,
       "MODEL"
     ],
     [
       347205,
       5431,
+      1,
+      5382,
+      2,
+      "CLIP"
+    ],
+    [
+      347206,
+      5431,
+      2,
+      67,
+      5,
+      "VAE"
+    ],
+    [
+      347207,
+      5432,
+      0,
+      5365,
+      0,
+      "MODEL"
+    ],
+    [
+      347208,
+      5432,
       0,
       5373,
       1,
       "MODEL"
     ],
     [
-      347206,
-      5431,
+      347209,
+      5432,
       1,
       5373,
       2,
       "CLIP"
     ],
     [
-      347207,
-      5431,
+      347210,
+      5432,
       1,
       5360,
       0,
       "CLIP"
     ],
     [
-      347208,
-      5431,
+      347211,
+      5432,
       1,
       5361,
       0,
       "CLIP"
     ],
     [
-      347209,
-      5431,
+      347212,
+      5432,
       2,
       5373,
       3,
       "VAE"
     ],
     [
-      347210,
-      5431,
+      347213,
+      5432,
       2,
       5426,
       1,
       "VAE"
     ],
     [
-      347211,
-      5431,
-      2,
-      5425,
-      1,
-      "VAE"
-    ],
-    [
-      347212,
-      5432,
-      0,
-      5382,
-      1,
-      "MODEL"
-    ],
-    [
-      347213,
-      5432,
-      1,
-      5382,
-      2,
-      "CLIP"
-    ],
-    [
       347214,
       5432,
       2,
-      67,
-      5,
+      5425,
+      1,
       "VAE"
     ]
   ],
@@ -4951,245 +4894,7 @@
         }
       },
       {
-        "id": "9b22ef21-7725-4cbb-8045-539e2c941e16",
-        "version": 1,
-        "state": {
-          "lastGroupId": 187,
-          "lastNodeId": 5432,
-          "lastLinkId": 347214,
-          "lastRerouteId": 0
-        },
-        "revision": 0,
-        "config": {},
-        "name": "krea2",
-        "inputNode": {
-          "id": -10,
-          "bounding": [
-            1725.805633180776,
-            875.4409078029998,
-            128,
-            48
-          ]
-        },
-        "outputNode": {
-          "id": -20,
-          "bounding": [
-            2248.6017432108306,
-            845.4409078029998,
-            128,
-            108
-          ]
-        },
-        "inputs": [],
-        "outputs": [
-          {
-            "id": "3b97597b-33d1-49e9-afac-cce7a17183e6",
-            "name": "MODEL",
-            "type": "MODEL",
-            "linkIds": [
-              347073,
-              347073
-            ],
-            "localized_name": "模型",
-            "pos": [
-              24,
-              24
-            ]
-          },
-          {
-            "id": "f268bc27-6caf-46cb-97e0-9024d8a7915b",
-            "name": "CLIP",
-            "type": "CLIP",
-            "linkIds": [
-              347097,
-              347097,
-              347097
-            ],
-            "localized_name": "CLIP",
-            "pos": [
-              24,
-              44
-            ]
-          },
-          {
-            "id": "54aa17fc-44f0-411d-a8a2-466d28b17c9c",
-            "name": "VAE",
-            "type": "VAE",
-            "linkIds": [
-              347098,
-              347098,
-              347098
-            ],
-            "localized_name": "VAE",
-            "pos": [
-              24,
-              64
-            ]
-          }
-        ],
-        "widgets": [],
-        "nodes": [
-          {
-            "id": 5352,
-            "type": "UNETLoader",
-            "pos": [
-              1913.805633180776,
-              729.9655828310775
-            ],
-            "size": [
-              270,
-              82
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "inputs": [],
-            "outputs": [
-              {
-                "localized_name": "模型",
-                "name": "MODEL",
-                "type": "MODEL",
-                "links": [
-                  347073
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.25.0",
-              "Node name for S&R": "UNETLoader",
-              "ue_properties": {
-                "widget_ue_connectable": {
-                  "unet_name": true,
-                  "weight_dtype": true
-                },
-                "version": "7.8",
-                "input_ue_unconnectable": {}
-              }
-            },
-            "widgets_values": [
-              "krea2_raw_fp8_scaled.safetensors",
-              "default"
-            ]
-          },
-          {
-            "id": 5351,
-            "type": "CLIPLoader",
-            "pos": [
-              1918.6017432108306,
-              881.109089759815
-            ],
-            "size": [
-              270,
-              110
-            ],
-            "flags": {
-              "collapsed": false
-            },
-            "order": 1,
-            "mode": 0,
-            "inputs": [],
-            "outputs": [
-              {
-                "localized_name": "CLIP",
-                "name": "CLIP",
-                "type": "CLIP",
-                "links": [
-                  347097
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.23.0",
-              "Node name for S&R": "CLIPLoader",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.5.2",
-                "input_ue_unconnectable": {}
-              }
-            },
-            "widgets_values": [
-              "qwen3vl_4b_fp8_scaled.safetensors",
-              "krea2",
-              "cpu"
-            ],
-            "color": "#223",
-            "bgcolor": "#335"
-          },
-          {
-            "id": 5348,
-            "type": "VAELoader",
-            "pos": [
-              1921.0591435000201,
-              1033.5663634963094
-            ],
-            "size": [
-              265.8979431181292,
-              65.34986927861269
-            ],
-            "flags": {},
-            "order": 2,
-            "mode": 0,
-            "inputs": [],
-            "outputs": [
-              {
-                "localized_name": "VAE",
-                "name": "VAE",
-                "type": "VAE",
-                "links": [
-                  347098
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.23.0",
-              "Node name for S&R": "VAELoader",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.5.2",
-                "input_ue_unconnectable": {}
-              }
-            },
-            "widgets_values": [
-              "qwen_image_vae.safetensors"
-            ],
-            "color": "#223",
-            "bgcolor": "#335"
-          }
-        ],
-        "groups": [],
-        "links": [
-          {
-            "id": 347073,
-            "origin_id": 5352,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 0,
-            "type": "MODEL"
-          },
-          {
-            "id": 347097,
-            "origin_id": 5351,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 1,
-            "type": "CLIP"
-          },
-          {
-            "id": 347098,
-            "origin_id": 5348,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 2,
-            "type": "VAE"
-          }
-        ],
-        "extra": {}
-      },
-      {
-        "id": "ff8e446e-d90a-47e1-a3d6-cda0d9e28786",
+        "id": "3411702a-37c8-4be4-b8bc-fd7448df79b2",
         "version": 1,
         "state": {
           "lastGroupId": 187,
@@ -5221,7 +4926,7 @@
         "inputs": [],
         "outputs": [
           {
-            "id": "704f98d3-7bcd-4403-a376-18b57f691e9b",
+            "id": "6232336f-efd3-4867-a989-c6ad242e49a8",
             "name": "MODEL",
             "type": "MODEL",
             "linkIds": [
@@ -5234,7 +4939,7 @@
             ]
           },
           {
-            "id": "ea0a5882-1a25-4679-ada2-a38261edc9ce",
+            "id": "a1930473-2a2c-4375-9363-dc444b05bdaa",
             "name": "CLIP",
             "type": "CLIP",
             "linkIds": [
@@ -5247,7 +4952,7 @@
             ]
           },
           {
-            "id": "eb7f4dfc-dcaa-46bc-b97b-f2ffac2ed2ae",
+            "id": "25760d04-be99-4d7b-a08f-bd379661f754",
             "name": "VAE",
             "type": "VAE",
             "linkIds": [
@@ -5411,16 +5116,254 @@
           }
         ],
         "extra": {}
+      },
+      {
+        "id": "0b96808b-365b-4d68-95fa-8fd4ee68c91e",
+        "version": 1,
+        "state": {
+          "lastGroupId": 187,
+          "lastNodeId": 5432,
+          "lastLinkId": 347214,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "krea2",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            1725.805633180776,
+            875.4409078029998,
+            128,
+            48
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            2248.6017432108306,
+            845.4409078029998,
+            128,
+            108
+          ]
+        },
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "3176ee12-e125-43c5-92f9-483fb4f39ce0",
+            "name": "MODEL",
+            "type": "MODEL",
+            "linkIds": [
+              347073,
+              347073
+            ],
+            "localized_name": "模型",
+            "pos": [
+              24,
+              24
+            ]
+          },
+          {
+            "id": "e337421f-b715-4cdd-84e4-7d0443a60198",
+            "name": "CLIP",
+            "type": "CLIP",
+            "linkIds": [
+              347097,
+              347097,
+              347097
+            ],
+            "localized_name": "CLIP",
+            "pos": [
+              24,
+              44
+            ]
+          },
+          {
+            "id": "84cd15ea-36f9-4abf-90a7-7e58e78aa599",
+            "name": "VAE",
+            "type": "VAE",
+            "linkIds": [
+              347098,
+              347098,
+              347098
+            ],
+            "localized_name": "VAE",
+            "pos": [
+              24,
+              64
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 5352,
+            "type": "UNETLoader",
+            "pos": [
+              1913.805633180776,
+              729.9655828310775
+            ],
+            "size": [
+              270,
+              82
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "localized_name": "模型",
+                "name": "MODEL",
+                "type": "MODEL",
+                "links": [
+                  347073
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.25.0",
+              "Node name for S&R": "UNETLoader",
+              "ue_properties": {
+                "widget_ue_connectable": {
+                  "unet_name": true,
+                  "weight_dtype": true
+                },
+                "version": "7.8",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "krea2_raw_bf16.safetensors",
+              "default"
+            ]
+          },
+          {
+            "id": 5351,
+            "type": "CLIPLoader",
+            "pos": [
+              1918.6017432108306,
+              881.109089759815
+            ],
+            "size": [
+              270,
+              110
+            ],
+            "flags": {
+              "collapsed": false
+            },
+            "order": 1,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "localized_name": "CLIP",
+                "name": "CLIP",
+                "type": "CLIP",
+                "links": [
+                  347097
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.23.0",
+              "Node name for S&R": "CLIPLoader",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.5.2",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "qwen3vl_4b_bf16.safetensors",
+              "krea2",
+              "cpu"
+            ],
+            "color": "#223",
+            "bgcolor": "#335"
+          },
+          {
+            "id": 5348,
+            "type": "VAELoader",
+            "pos": [
+              1921.0591435000201,
+              1033.5663634963094
+            ],
+            "size": [
+              265.8979431181292,
+              65.34986927861269
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "localized_name": "VAE",
+                "name": "VAE",
+                "type": "VAE",
+                "links": [
+                  347098
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.23.0",
+              "Node name for S&R": "VAELoader",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.5.2",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "qwen_image_vae.safetensors"
+            ],
+            "color": "#223",
+            "bgcolor": "#335"
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 347073,
+            "origin_id": 5352,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "MODEL"
+          },
+          {
+            "id": 347097,
+            "origin_id": 5351,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 1,
+            "type": "CLIP"
+          },
+          {
+            "id": 347098,
+            "origin_id": 5348,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 2,
+            "type": "VAE"
+          }
+        ],
+        "extra": {}
       }
     ]
   },
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.5209868481924957,
+      "scale": 0.2143588810000001,
       "offset": [
-        3400.5164475491347,
-        -150.4921042439392
+        1742.3410325795023,
+        1136.232166081132
       ]
     },
     "workflowRendererVersion": "LG",
