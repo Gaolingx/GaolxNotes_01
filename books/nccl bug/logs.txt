@@ -1,0 +1,535 @@
+(venv1) kxqandccx@jk01:~/workspace/gaogaolu/Github/open-r1$ python lightning_grpo/scripts/train_sft.py --config lightning_grpo/config/training/sft_lora_fsdp_copy.yaml --resume_from_checkpoint last
+Seed set to 42
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+Resuming from latest checkpoint: outputs/lightning_sft_demo_1/checkpoints/last.ckpt
+Initializing distributed: GLOBAL_RANK: 0, MEMBER: 1/4
+[rank: 3] Seed set to 42
+[rank: 2] Seed set to 42
+[rank: 1] Seed set to 42
+Resuming from latest checkpoint: outputs/lightning_sft_demo_1/checkpoints/last.ckpt
+Resuming from latest checkpoint: outputs/lightning_sft_demo_1/checkpoints/last.ckpt
+Resuming from latest checkpoint: outputs/lightning_sft_demo_1/checkpoints/last.ckpt
+Initializing distributed: GLOBAL_RANK: 3, MEMBER: 4/4
+Initializing distributed: GLOBAL_RANK: 1, MEMBER: 2/4
+Initializing distributed: GLOBAL_RANK: 2, MEMBER: 3/4
+jk01:58590:58590 [0] NCCL INFO Bootstrap: Using ens110f0np0:172.23.255.114<0>
+jk01:58590:58590 [0] NCCL INFO cudaDriverVersion 12080
+jk01:58590:58590 [0] NCCL INFO NCCL version 2.27.5+cuda12.9
+jk01:58590:58590 [0] NCCL INFO Comm config Blocking set to 1
+jk01:59095:59095 [2] NCCL INFO cudaDriverVersion 12080
+jk01:59095:59095 [2] NCCL INFO Bootstrap: Using ens110f0np0:172.23.255.114<0>
+jk01:59095:59095 [2] NCCL INFO NCCL version 2.27.5+cuda12.9
+jk01:59095:59095 [2] NCCL INFO Comm config Blocking set to 1
+jk01:59096:59096 [3] NCCL INFO cudaDriverVersion 12080
+jk01:59094:59094 [1] NCCL INFO cudaDriverVersion 12080
+jk01:59096:59096 [3] NCCL INFO Bootstrap: Using ens110f0np0:172.23.255.114<0>
+jk01:59094:59094 [1] NCCL INFO Bootstrap: Using ens110f0np0:172.23.255.114<0>
+jk01:59096:59096 [3] NCCL INFO NCCL version 2.27.5+cuda12.9
+jk01:59094:59094 [1] NCCL INFO NCCL version 2.27.5+cuda12.9
+jk01:59096:59096 [3] NCCL INFO Comm config Blocking set to 1
+jk01:59094:59094 [1] NCCL INFO Comm config Blocking set to 1
+jk01:58590:59843 [0] NCCL INFO NET/Plugin: Could not find: libnccl-net.so. 
+jk01:58590:59843 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/RoCE [RO]; OOB ens110f0np0:172.23.255.114<0>
+jk01:58590:59843 [0] NCCL INFO Initialized NET plugin IB
+jk01:58590:59843 [0] NCCL INFO Assigned NET plugin IB to comm
+jk01:58590:59843 [0] NCCL INFO Using network IB
+jk01:58590:59843 [0] NCCL INFO DMA-BUF is available on GPU device 0
+jk01:58590:59843 [0] NCCL INFO ncclCommInitRankConfig comm 0x639a76ab98a0 rank 0 nranks 4 cudaDev 0 nvmlDev 0 busId 34000 commId 0x59218d366c2db02 - Init START
+jk01:59095:59844 [2] NCCL INFO NET/Plugin: Could not find: libnccl-net.so. 
+jk01:59095:59844 [2] NCCL INFO NET/IB : Using [0]mlx5_0:1/RoCE [RO]; OOB ens110f0np0:172.23.255.114<0>
+jk01:59095:59844 [2] NCCL INFO Initialized NET plugin IB
+jk01:59095:59844 [2] NCCL INFO Assigned NET plugin IB to comm
+jk01:59095:59844 [2] NCCL INFO Using network IB
+jk01:59095:59844 [2] NCCL INFO DMA-BUF is available on GPU device 2
+jk01:59095:59844 [2] NCCL INFO ncclCommInitRankConfig comm 0x5b0ec2ec6fc0 rank 2 nranks 4 cudaDev 2 nvmlDev 2 busId 36000 commId 0x59218d366c2db02 - Init START
+jk01:59096:59845 [3] NCCL INFO NET/Plugin: Could not find: libnccl-net.so. 
+jk01:59094:59846 [1] NCCL INFO NET/Plugin: Could not find: libnccl-net.so. 
+jk01:59096:59845 [3] NCCL INFO NET/IB : Using [0]mlx5_0:1/RoCE [RO]; OOB ens110f0np0:172.23.255.114<0>
+jk01:59096:59845 [3] NCCL INFO Initialized NET plugin IB
+jk01:59096:59845 [3] NCCL INFO Assigned NET plugin IB to comm
+jk01:59096:59845 [3] NCCL INFO Using network IB
+jk01:59096:59845 [3] NCCL INFO DMA-BUF is available on GPU device 3
+jk01:59096:59845 [3] NCCL INFO ncclCommInitRankConfig comm 0x57dcb6b516e0 rank 3 nranks 4 cudaDev 3 nvmlDev 3 busId 37000 commId 0x59218d366c2db02 - Init START
+jk01:59096:59845 [3] NCCL INFO RAS client listening socket at 127.0.0.1<28028>
+jk01:59094:59846 [1] NCCL INFO NET/IB : Using [0]mlx5_0:1/RoCE [RO]; OOB ens110f0np0:172.23.255.114<0>
+jk01:59094:59846 [1] NCCL INFO Initialized NET plugin IB
+jk01:59094:59846 [1] NCCL INFO Assigned NET plugin IB to comm
+jk01:59094:59846 [1] NCCL INFO Using network IB
+jk01:59094:59846 [1] NCCL INFO DMA-BUF is available on GPU device 1
+jk01:59094:59846 [1] NCCL INFO ncclCommInitRankConfig comm 0x5d537b9fc3b0 rank 1 nranks 4 cudaDev 1 nvmlDev 1 busId 35000 commId 0x59218d366c2db02 - Init START
+jk01:58590:59843 [0] NCCL INFO RAS client listening socket at 127.0.0.1<28028>
+jk01:59094:59846 [1] NCCL INFO RAS client listening socket at 127.0.0.1<28028>
+jk01:59095:59844 [2] NCCL INFO RAS client listening socket at 127.0.0.1<28028>
+jk01:59094:59846 [1] NCCL INFO Bootstrap timings total 0.000474 (create 0.000021, send 0.000093, recv 0.000106, ring 0.000043, delay 0.000000)
+jk01:59095:59844 [2] NCCL INFO Bootstrap timings total 0.021699 (create 0.000032, send 0.000110, recv 0.016498, ring 0.000042, delay 0.000000)
+jk01:58590:59843 [0] NCCL INFO Bootstrap timings total 0.039014 (create 0.000030, send 0.000133, recv 0.038556, ring 0.000078, delay 0.000000)
+jk01:59096:59845 [3] NCCL INFO Bootstrap timings total 0.005294 (create 0.000022, send 0.000097, recv 0.000140, ring 0.004804, delay 0.000000)
+jk01:59094:59846 [1] NCCL INFO Setting affinity for GPU 1 to 0-37,76-113
+jk01:59096:59845 [3] NCCL INFO Setting affinity for GPU 3 to 0-37,76-113
+jk01:59094:59846 [1] NCCL INFO NVLS multicast support is not available on dev 1 (NVLS_NCHANNELS 0)
+jk01:58590:59843 [0] NCCL INFO Setting affinity for GPU 0 to 0-37,76-113
+jk01:59095:59844 [2] NCCL INFO Setting affinity for GPU 2 to 0-37,76-113
+jk01:59096:59845 [3] NCCL INFO NVLS multicast support is not available on dev 3 (NVLS_NCHANNELS 0)
+jk01:59095:59844 [2] NCCL INFO NVLS multicast support is not available on dev 2 (NVLS_NCHANNELS 0)
+jk01:58590:59843 [0] NCCL INFO NVLS multicast support is not available on dev 0 (NVLS_NCHANNELS 0)
+jk01:59096:59845 [3] NCCL INFO comm 0x57dcb6b516e0 rank 3 nRanks 4 nNodes 1 localRanks 4 localRank 3 MNNVL 0
+jk01:59096:59845 [3] NCCL INFO Trees [0] -1/-1/-1->3->2 [1] -1/-1/-1->3->2 [2] -1/-1/-1->3->2 [3] -1/-1/-1->3->2
+jk01:59096:59845 [3] NCCL INFO P2P Chunksize set to 131072
+jk01:59096:59845 [3] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so. 
+jk01:59096:59865 [3] NCCL INFO [Proxy Service] Device 3 CPU core 3
+jk01:59096:59866 [3] NCCL INFO [Proxy Service UDS] Device 3 CPU core 81
+jk01:59095:59844 [2] NCCL INFO comm 0x5b0ec2ec6fc0 rank 2 nRanks 4 nNodes 1 localRanks 4 localRank 2 MNNVL 0
+jk01:59094:59846 [1] NCCL INFO comm 0x5d537b9fc3b0 rank 1 nRanks 4 nNodes 1 localRanks 4 localRank 1 MNNVL 0
+jk01:59095:59844 [2] NCCL INFO Trees [0] 3/-1/-1->2->1 [1] 3/-1/-1->2->1 [2] 3/-1/-1->2->1 [3] 3/-1/-1->2->1
+jk01:59095:59844 [2] NCCL INFO P2P Chunksize set to 131072
+jk01:59094:59846 [1] NCCL INFO Trees [0] 2/-1/-1->1->0 [1] 2/-1/-1->1->0 [2] 2/-1/-1->1->0 [3] 2/-1/-1->1->0
+jk01:59094:59846 [1] NCCL INFO P2P Chunksize set to 131072
+jk01:58590:59843 [0] NCCL INFO comm 0x639a76ab98a0 rank 0 nRanks 4 nNodes 1 localRanks 4 localRank 0 MNNVL 0
+jk01:58590:59843 [0] NCCL INFO Channel 00/04 : 0 1 2 3
+jk01:58590:59843 [0] NCCL INFO Channel 01/04 : 0 1 2 3
+jk01:58590:59843 [0] NCCL INFO Channel 02/04 : 0 1 2 3
+jk01:59094:59846 [1] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so. 
+jk01:58590:59843 [0] NCCL INFO Channel 03/04 : 0 1 2 3
+jk01:58590:59843 [0] NCCL INFO Trees [0] 1/-1/-1->0->-1 [1] 1/-1/-1->0->-1 [2] 1/-1/-1->0->-1 [3] 1/-1/-1->0->-1
+jk01:58590:59843 [0] NCCL INFO P2P Chunksize set to 131072
+jk01:59095:59844 [2] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so. 
+jk01:59094:59867 [1] NCCL INFO [Proxy Service] Device 1 CPU core 93
+jk01:59094:59868 [1] NCCL INFO [Proxy Service UDS] Device 1 CPU core 18
+jk01:58590:59843 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so. 
+jk01:58590:59843 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0
+jk01:59095:59870 [2] NCCL INFO [Proxy Service UDS] Device 2 CPU core 19
+jk01:59095:59869 [2] NCCL INFO [Proxy Service] Device 2 CPU core 9
+jk01:58590:59871 [0] NCCL INFO [Proxy Service] Device 0 CPU core 96
+jk01:58590:59872 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 97
+jk01:59096:59845 [3] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+jk01:59096:59845 [3] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer
+jk01:59094:59846 [1] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+jk01:59094:59846 [1] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer
+jk01:58590:59843 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+jk01:58590:59843 [0] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer
+jk01:59095:59844 [2] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+jk01:59095:59844 [2] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer
+jk01:58590:59843 [0] NCCL INFO CC Off, workFifoBytes 1048576
+jk01:59094:59846 [1] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so. Using internal tuner plugin.
+jk01:59094:59846 [1] NCCL INFO ncclCommInitRankConfig comm 0x5d537b9fc3b0 rank 1 nranks 4 cudaDev 1 nvmlDev 1 busId 35000 commId 0x59218d366c2db02 - Init COMPLETE
+jk01:59094:59846 [1] NCCL INFO Init timings - ncclCommInitRankConfig: rank 1 nranks 4 total 0.17 (kernels 0.13, alloc 0.01, bootstrap 0.00, allgathers 0.01, topo 0.01, graphs 0.00, connections 0.00, rest 0.00)
+jk01:58590:59843 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so. Using internal tuner plugin.
+jk01:58590:59843 [0] NCCL INFO ncclCommInitRankConfig comm 0x639a76ab98a0 rank 0 nranks 4 cudaDev 0 nvmlDev 0 busId 34000 commId 0x59218d366c2db02 - Init COMPLETE
+jk01:58590:59843 [0] NCCL INFO Init timings - ncclCommInitRankConfig: rank 0 nranks 4 total 0.20 (kernels 0.12, alloc 0.01, bootstrap 0.04, allgathers 0.01, topo 0.01, graphs 0.00, connections 0.00, rest 0.01)
+jk01:59095:59844 [2] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so. Using internal tuner plugin.
+jk01:59096:59845 [3] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so. Using internal tuner plugin.
+jk01:59095:59844 [2] NCCL INFO ncclCommInitRankConfig comm 0x5b0ec2ec6fc0 rank 2 nranks 4 cudaDev 2 nvmlDev 2 busId 36000 commId 0x59218d366c2db02 - Init COMPLETE
+jk01:59096:59845 [3] NCCL INFO ncclCommInitRankConfig comm 0x57dcb6b516e0 rank 3 nranks 4 cudaDev 3 nvmlDev 3 busId 37000 commId 0x59218d366c2db02 - Init COMPLETE
+jk01:59095:59844 [2] NCCL INFO Init timings - ncclCommInitRankConfig: rank 2 nranks 4 total 0.18 (kernels 0.12, alloc 0.01, bootstrap 0.02, allgathers 0.01, topo 0.01, graphs 0.00, connections 0.00, rest 0.00)
+jk01:59096:59845 [3] NCCL INFO Init timings - ncclCommInitRankConfig: rank 3 nranks 4 total 0.17 (kernels 0.12, alloc 0.01, bootstrap 0.01, allgathers 0.01, topo 0.01, graphs 0.00, connections 0.00, rest 0.01)
+----------------------------------------------------------------------------------------------------
+distributed_backend=nccl
+All distributed processes registered. Starting with 4 processes
+----------------------------------------------------------------------------------------------------
+
+jk01:58590:58590 [0] NCCL INFO Comm config Blocking set to 1
+jk01:59094:59094 [1] NCCL INFO Comm config Blocking set to 1
+jk01:59096:59096 [3] NCCL INFO Comm config Blocking set to 1
+jk01:59095:59095 [2] NCCL INFO Comm config Blocking set to 1
+jk01:59094:59882 [1] NCCL INFO Assigned NET plugin IB to comm
+jk01:59094:59882 [1] NCCL INFO Using network IB
+jk01:58590:59875 [0] NCCL INFO Assigned NET plugin IB to comm
+jk01:59096:59883 [3] NCCL INFO Assigned NET plugin IB to comm
+jk01:58590:59875 [0] NCCL INFO Using network IB
+jk01:59096:59883 [3] NCCL INFO Using network IB
+jk01:59094:59882 [1] NCCL INFO DMA-BUF is available on GPU device 1
+jk01:59096:59883 [3] NCCL INFO DMA-BUF is available on GPU device 3
+jk01:58590:59875 [0] NCCL INFO DMA-BUF is available on GPU device 0
+jk01:59095:59884 [2] NCCL INFO Assigned NET plugin IB to comm
+jk01:59095:59884 [2] NCCL INFO Using network IB
+jk01:59095:59884 [2] NCCL INFO DMA-BUF is available on GPU device 2
+jk01:59096:59883 [3] NCCL INFO ncclCommSplit comm 0x57dcb6d4e400 rank 0 nranks 1 cudaDev 3 nvmlDev 3 busId 37000 parent 0x57dcb6b516e0 splitCount 1 color 506952125 key 0- Init START
+jk01:59094:59882 [1] NCCL INFO ncclCommSplit comm 0x5d537c665ab0 rank 0 nranks 1 cudaDev 1 nvmlDev 1 busId 35000 parent 0x5d537b9fc3b0 splitCount 1 color 506952123 key 0- Init START
+jk01:58590:59875 [0] NCCL INFO ncclCommSplit comm 0x639a784ba9b0 rank 0 nranks 1 cudaDev 0 nvmlDev 0 busId 34000 parent 0x639a76ab98a0 splitCount 1 color 506952122 key 0- Init START
+jk01:59095:59884 [2] NCCL INFO ncclCommSplit comm 0x5b0ec52339b0 rank 0 nranks 1 cudaDev 2 nvmlDev 2 busId 36000 parent 0x5b0ec2ec6fc0 splitCount 1 color 506952124 key 0- Init START
+jk01:59096:59883 [3] NCCL INFO Setting affinity for GPU 3 to 0-37,76-113
+jk01:59094:59882 [1] NCCL INFO Setting affinity for GPU 1 to 0-37,76-113
+jk01:58590:59875 [0] NCCL INFO Setting affinity for GPU 0 to 0-37,76-113
+jk01:59094:59882 [1] NCCL INFO comm 0x5d537c665ab0 rank 0 nRanks 1 nNodes 1 localRanks 1 localRank 0 MNNVL 0
+jk01:59094:59882 [1] NCCL INFO Channel 00/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 01/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 02/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 03/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 04/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 05/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 06/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 07/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 08/64 : 0
+jk01:59096:59883 [3] NCCL INFO comm 0x57dcb6d4e400 rank 0 nRanks 1 nNodes 1 localRanks 1 localRank 0 MNNVL 0
+jk01:59094:59882 [1] NCCL INFO Channel 09/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 10/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 11/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 12/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 00/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 13/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 14/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 01/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 15/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 16/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 02/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 17/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 03/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 18/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 19/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 04/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 20/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 05/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 21/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 06/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 22/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 07/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 23/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 08/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 24/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 25/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 09/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 26/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 10/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 27/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 28/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 11/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 29/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 30/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 12/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 31/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 13/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 32/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 33/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 14/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 34/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 35/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 15/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 36/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 37/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 16/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 38/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 39/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 17/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 40/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 41/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 18/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 42/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 43/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 19/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 44/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 45/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 20/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 46/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 47/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 21/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 48/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 49/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 22/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 50/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 51/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 23/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 52/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 53/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 24/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 54/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 25/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 55/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 26/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 56/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 57/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 27/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 58/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 28/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 59/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 60/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 29/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 61/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 30/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 62/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 31/64 : 0
+jk01:59094:59882 [1] NCCL INFO Channel 63/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 32/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 33/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 34/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 35/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 36/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 37/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 38/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 39/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 40/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 41/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 42/64 : 0
+jk01:59094:59882 [1] NCCL INFO Trees [0] -1/-1/-1->0->-1 [1] -1/-1/-1->0->-1 [2] -1/-1/-1->0->-1 [3] -1/-1/-1->0->-1 [4] -1/-1/-1->0->-1 [5] -1/-1/-1->0->-1 [6] -1/-1/-1->0->-1 [7] -1/-1/-1->0->-1 [8] -1/-1/-1->0->-1 [9] -1/-1/-1->0->-1 [10] -1/-1/-1->0->-1 [11] -1/-1/-1->0->-1 [12] -1/-1/-1->0->-1 [13] -1/-1/-1->0->-1 [14] -1/-1/-1->0->-1 [15] -1/-1/-1->0->-1 [16] -1/-1/-1->0->-1 [17] -1/-1/-1->0->-1 [18] -1/-1/-1->0->-1 [19] -1/-1/-1->0->-1 [20] -1/-1/-1->0->-1 [21] -1/-1/-1->0->-1 [22] -1/-1/-1->0->-1 [23] -1/-1/-1->0->-1 [24] -1/-1/-1->0->-1 [25] -1/-1/-1->0->-1 [26] -1/-1/-1->0->-1 [27] -1/-1/-1->0->-1 [28] -1/-1/-1->0->-1 [29] -1/-1/-1->0->-1 [30] -1/-1/-1->0->-1 [31] -1/-1/-1->0->-1 [32] -1/-1/-1->0->-1 [33] -1/-1/-1->0->-1 [34] -1/-1/-1->0->-1 [35] -1/-1/-1->0->-1 [36] -1/-1/-1->0->-1 [37] -1/-1/-1->0->-1 [38] -1/-1/-1->0->-1 [39] -1/-1/-1->0->-1 [40] -1/-1/-1->0->-1 [41] -1/-1/-1->0->-1 [42] -1/-1/-1->0->-1 [43] -1/-1/-1->0->-1 [44] -1/-1/-1->0->-1 [45] -1/-1/-1->0->-1 [46] -1/-1/-1->0->-1 [47] -1/-
+jk01:59096:59883 [3] NCCL INFO Channel 43/64 : 0
+jk01:59094:59882 [1] NCCL INFO P2P Chunksize set to 524288
+jk01:59096:59883 [3] NCCL INFO Channel 44/64 : 0
+jk01:59094:59882 [1] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 0
+jk01:59096:59883 [3] NCCL INFO Channel 45/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 46/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 47/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 48/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 49/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 50/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 51/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 52/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 53/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 54/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 55/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 56/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 57/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 58/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 59/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 60/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 61/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 62/64 : 0
+jk01:59096:59883 [3] NCCL INFO Channel 63/64 : 0
+jk01:59096:59883 [3] NCCL INFO Trees [0] -1/-1/-1->0->-1 [1] -1/-1/-1->0->-1 [2] -1/-1/-1->0->-1 [3] -1/-1/-1->0->-1 [4] -1/-1/-1->0->-1 [5] -1/-1/-1->0->-1 [6] -1/-1/-1->0->-1 [7] -1/-1/-1->0->-1 [8] -1/-1/-1->0->-1 [9] -1/-1/-1->0->-1 [10] -1/-1/-1->0->-1 [11] -1/-1/-1->0->-1 [12] -1/-1/-1->0->-1 [13] -1/-1/-1->0->-1 [14] -1/-1/-1->0->-1 [15] -1/-1/-1->0->-1 [16] -1/-1/-1->0->-1 [17] -1/-1/-1->0->-1 [18] -1/-1/-1->0->-1 [19] -1/-1/-1->0->-1 [20] -1/-1/-1->0->-1 [21] -1/-1/-1->0->-1 [22] -1/-1/-1->0->-1 [23] -1/-1/-1->0->-1 [24] -1/-1/-1->0->-1 [25] -1/-1/-1->0->-1 [26] -1/-1/-1->0->-1 [27] -1/-1/-1->0->-1 [28] -1/-1/-1->0->-1 [29] -1/-1/-1->0->-1 [30] -1/-1/-1->0->-1 [31] -1/-1/-1->0->-1 [32] -1/-1/-1->0->-1 [33] -1/-1/-1->0->-1 [34] -1/-1/-1->0->-1 [35] -1/-1/-1->0->-1 [36] -1/-1/-1->0->-1 [37] -1/-1/-1->0->-1 [38] -1/-1/-1->0->-1 [39] -1/-1/-1->0->-1 [40] -1/-1/-1->0->-1 [41] -1/-1/-1->0->-1 [42] -1/-1/-1->0->-1 [43] -1/-1/-1->0->-1 [44] -1/-1/-1->0->-1 [45] -1/-1/-1->0->-1 [46] -1/-1/-1->0->-1 [47] -1/-
+jk01:59096:59883 [3] NCCL INFO P2P Chunksize set to 524288
+jk01:59096:59883 [3] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 0
+jk01:59094:59886 [1] NCCL INFO [Proxy Service UDS] Device 1 CPU core 98
+jk01:59094:59885 [1] NCCL INFO [Proxy Service] Device 1 CPU core 4
+jk01:59096:59887 [3] NCCL INFO [Proxy Service] Device 3 CPU core 100
+jk01:59095:59884 [2] NCCL INFO Setting affinity for GPU 2 to 0-37,76-113
+jk01:59096:59888 [3] NCCL INFO [Proxy Service UDS] Device 3 CPU core 103
+jk01:58590:59875 [0] NCCL INFO comm 0x639a784ba9b0 rank 0 nRanks 1 nNodes 1 localRanks 1 localRank 0 MNNVL 0
+jk01:58590:59875 [0] NCCL INFO Channel 00/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 01/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 02/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 03/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 04/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 05/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 06/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 07/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 08/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 09/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 10/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 11/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 12/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 13/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 14/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 15/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 16/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 17/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 18/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 19/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 20/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 21/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 22/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 23/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 24/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 25/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 26/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 27/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 28/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 29/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 30/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 31/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 32/64 : 0
+jk01:59095:59884 [2] NCCL INFO comm 0x5b0ec52339b0 rank 0 nRanks 1 nNodes 1 localRanks 1 localRank 0 MNNVL 0
+jk01:58590:59875 [0] NCCL INFO Channel 33/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 00/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 34/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 01/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 02/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 03/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 35/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 04/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 36/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 05/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 06/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 37/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 07/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 08/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 38/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 09/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 10/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 39/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 11/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 12/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 13/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 40/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 14/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 15/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 16/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 41/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 17/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 18/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 42/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 19/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 20/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 21/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 43/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 22/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 23/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 44/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 24/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 25/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 26/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 27/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 45/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 28/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 29/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 46/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 30/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 31/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 47/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 32/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 33/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 34/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 35/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 48/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 36/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 37/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 49/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 38/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 39/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 40/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 50/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 41/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 42/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 51/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 43/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 44/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 52/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 45/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 46/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 53/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 47/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 48/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 54/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 49/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 50/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 55/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 51/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 52/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 56/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 53/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 54/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 55/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 57/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 56/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 57/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 58/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 58/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 59/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 60/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 61/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 59/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 62/64 : 0
+jk01:59095:59884 [2] NCCL INFO Channel 63/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 60/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 61/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 62/64 : 0
+jk01:58590:59875 [0] NCCL INFO Channel 63/64 : 0
+jk01:59095:59884 [2] NCCL INFO Trees [0] -1/-1/-1->0->-1 [1] -1/-1/-1->0->-1 [2] -1/-1/-1->0->-1 [3] -1/-1/-1->0->-1 [4] -1/-1/-1->0->-1 [5] -1/-1/-1->0->-1 [6] -1/-1/-1->0->-1 [7] -1/-1/-1->0->-1 [8] -1/-1/-1->0->-1 [9] -1/-1/-1->0->-1 [10] -1/-1/-1->0->-1 [11] -1/-1/-1->0->-1 [12] -1/-1/-1->0->-1 [13] -1/-1/-1->0->-1 [14] -1/-1/-1->0->-1 [15] -1/-1/-1->0->-1 [16] -1/-1/-1->0->-1 [17] -1/-1/-1->0->-1 [18] -1/-1/-1->0->-1 [19] -1/-1/-1->0->-1 [20] -1/-1/-1->0->-1 [21] -1/-1/-1->0->-1 [22] -1/-1/-1->0->-1 [23] -1/-1/-1->0->-1 [24] -1/-1/-1->0->-1 [25] -1/-1/-1->0->-1 [26] -1/-1/-1->0->-1 [27] -1/-1/-1->0->-1 [28] -1/-1/-1->0->-1 [29] -1/-1/-1->0->-1 [30] -1/-1/-1->0->-1 [31] -1/-1/-1->0->-1 [32] -1/-1/-1->0->-1 [33] -1/-1/-1->0->-1 [34] -1/-1/-1->0->-1 [35] -1/-1/-1->0->-1 [36] -1/-1/-1->0->-1 [37] -1/-1/-1->0->-1 [38] -1/-1/-1->0->-1 [39] -1/-1/-1->0->-1 [40] -1/-1/-1->0->-1 [41] -1/-1/-1->0->-1 [42] -1/-1/-1->0->-1 [43] -1/-1/-1->0->-1 [44] -1/-1/-1->0->-1 [45] -1/-1/-1->0->-1 [46] -1/-1/-1->0->-1 [47] -1/-
+jk01:59095:59884 [2] NCCL INFO P2P Chunksize set to 524288
+jk01:59095:59884 [2] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 0
+jk01:58590:59875 [0] NCCL INFO Trees [0] -1/-1/-1->0->-1 [1] -1/-1/-1->0->-1 [2] -1/-1/-1->0->-1 [3] -1/-1/-1->0->-1 [4] -1/-1/-1->0->-1 [5] -1/-1/-1->0->-1 [6] -1/-1/-1->0->-1 [7] -1/-1/-1->0->-1 [8] -1/-1/-1->0->-1 [9] -1/-1/-1->0->-1 [10] -1/-1/-1->0->-1 [11] -1/-1/-1->0->-1 [12] -1/-1/-1->0->-1 [13] -1/-1/-1->0->-1 [14] -1/-1/-1->0->-1 [15] -1/-1/-1->0->-1 [16] -1/-1/-1->0->-1 [17] -1/-1/-1->0->-1 [18] -1/-1/-1->0->-1 [19] -1/-1/-1->0->-1 [20] -1/-1/-1->0->-1 [21] -1/-1/-1->0->-1 [22] -1/-1/-1->0->-1 [23] -1/-1/-1->0->-1 [24] -1/-1/-1->0->-1 [25] -1/-1/-1->0->-1 [26] -1/-1/-1->0->-1 [27] -1/-1/-1->0->-1 [28] -1/-1/-1->0->-1 [29] -1/-1/-1->0->-1 [30] -1/-1/-1->0->-1 [31] -1/-1/-1->0->-1 [32] -1/-1/-1->0->-1 [33] -1/-1/-1->0->-1 [34] -1/-1/-1->0->-1 [35] -1/-1/-1->0->-1 [36] -1/-1/-1->0->-1 [37] -1/-1/-1->0->-1 [38] -1/-1/-1->0->-1 [39] -1/-1/-1->0->-1 [40] -1/-1/-1->0->-1 [41] -1/-1/-1->0->-1 [42] -1/-1/-1->0->-1 [43] -1/-1/-1->0->-1 [44] -1/-1/-1->0->-1 [45] -1/-1/-1->0->-1 [46] -1/-1/-1->0->-1 [47] -1/-
+jk01:58590:59875 [0] NCCL INFO P2P Chunksize set to 524288
+jk01:58590:59875 [0] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 0
+jk01:59095:59890 [2] NCCL INFO [Proxy Service UDS] Device 2 CPU core 105
+jk01:59095:59889 [2] NCCL INFO [Proxy Service] Device 2 CPU core 104
+jk01:58590:59891 [0] NCCL INFO [Proxy Service] Device 0 CPU core 106
+jk01:58590:59892 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 107
+jk01:58590:59875 [0] NCCL INFO 64 coll channels, 64 collnet channels, 0 nvls channels, 64 p2p channels, 64 p2p channels per peer
+jk01:59095:59884 [2] NCCL INFO 64 coll channels, 64 collnet channels, 0 nvls channels, 64 p2p channels, 64 p2p channels per peer
+jk01:58590:59875 [0] NCCL INFO CC Off, workFifoBytes 1048576
+jk01:59095:59884 [2] NCCL INFO CC Off, workFifoBytes 1048576
+jk01:59096:59883 [3] NCCL INFO 64 coll channels, 64 collnet channels, 0 nvls channels, 64 p2p channels, 64 p2p channels per peer
+jk01:58590:59875 [0] NCCL INFO ncclCommSplit comm 0x639a784ba9b0 rank 0 nranks 1 cudaDev 0 nvmlDev 0 busId 34000 parent 0x639a76ab98a0 splitCount 1 color 506952122 key 0 - Init COMPLETE
+jk01:58590:59875 [0] NCCL INFO Init timings - ncclCommSplit: rank 0 nranks 1 total 0.07 (kernels 0.00, alloc 0.00, bootstrap 0.00, allgathers 0.00, topo 0.00, graphs 0.00, connections 0.05, rest 0.01)
+jk01:59096:59883 [3] NCCL INFO CC Off, workFifoBytes 1048576
+jk01:59095:59884 [2] NCCL INFO ncclCommSplit comm 0x5b0ec52339b0 rank 0 nranks 1 cudaDev 2 nvmlDev 2 busId 36000 parent 0x5b0ec2ec6fc0 splitCount 1 color 506952124 key 0 - Init COMPLETE
+jk01:59095:59884 [2] NCCL INFO Init timings - ncclCommSplit: rank 0 nranks 1 total 0.06 (kernels 0.00, alloc 0.00, bootstrap 0.00, allgathers 0.00, topo 0.00, graphs 0.00, connections 0.06, rest 0.00)
+jk01:59094:59882 [1] NCCL INFO 64 coll channels, 64 collnet channels, 0 nvls channels, 64 p2p channels, 64 p2p channels per peer
+jk01:59094:59882 [1] NCCL INFO CC Off, workFifoBytes 1048576
+jk01:59094:59882 [1] NCCL INFO ncclCommSplit comm 0x5d537c665ab0 rank 0 nranks 1 cudaDev 1 nvmlDev 1 busId 35000 parent 0x5d537b9fc3b0 splitCount 1 color 506952123 key 0 - Init COMPLETE
+jk01:59094:59882 [1] NCCL INFO Init timings - ncclCommSplit: rank 0 nranks 1 total 0.06 (kernels 0.00, alloc 0.00, bootstrap 0.00, allgathers 0.00, topo 0.00, graphs 0.00, connections 0.06, rest 0.00)
+jk01:59096:59883 [3] NCCL INFO ncclCommSplit comm 0x57dcb6d4e400 rank 0 nranks 1 cudaDev 3 nvmlDev 3 busId 37000 parent 0x57dcb6b516e0 splitCount 1 color 506952125 key 0 - Init COMPLETE
+jk01:59096:59883 [3] NCCL INFO Init timings - ncclCommSplit: rank 0 nranks 1 total 0.06 (kernels 0.00, alloc 0.00, bootstrap 0.00, allgathers 0.00, topo 0.00, graphs 0.00, connections 0.06, rest 0.00)
+jk01:58590:59897 [0] NCCL INFO Channel 00/0 : 0[0] -> 1[1] via P2P/CUMEM
+jk01:58590:59897 [0] NCCL INFO Channel 01/0 : 0[0] -> 1[1] via P2P/CUMEM
+jk01:58590:59897 [0] NCCL INFO Channel 02/0 : 0[0] -> 1[1] via P2P/CUMEM
+jk01:58590:59897 [0] NCCL INFO Channel 03/0 : 0[0] -> 1[1] via P2P/CUMEM
+jk01:59095:59898 [2] NCCL INFO Channel 00/0 : 2[2] -> 3[3] via P2P/CUMEM
+jk01:59095:59898 [2] NCCL INFO Channel 01/0 : 2[2] -> 3[3] via P2P/CUMEM
+jk01:59096:59899 [3] NCCL INFO Channel 00/0 : 3[3] -> 0[0] via P2P/CUMEM
+jk01:59096:59899 [3] NCCL INFO Channel 01/0 : 3[3] -> 0[0] via P2P/CUMEM
+jk01:59094:59900 [1] NCCL INFO Channel 00/0 : 1[1] -> 2[2] via P2P/CUMEM
+jk01:59095:59898 [2] NCCL INFO Channel 02/0 : 2[2] -> 3[3] via P2P/CUMEM
+jk01:59096:59899 [3] NCCL INFO Channel 02/0 : 3[3] -> 0[0] via P2P/CUMEM
+jk01:59094:59900 [1] NCCL INFO Channel 01/0 : 1[1] -> 2[2] via P2P/CUMEM
+jk01:59096:59899 [3] NCCL INFO Channel 03/0 : 3[3] -> 0[0] via P2P/CUMEM
+jk01:59095:59898 [2] NCCL INFO Channel 03/0 : 2[2] -> 3[3] via P2P/CUMEM
+jk01:59094:59900 [1] NCCL INFO Channel 02/0 : 1[1] -> 2[2] via P2P/CUMEM
+jk01:59094:59900 [1] NCCL INFO Channel 03/0 : 1[1] -> 2[2] via P2P/CUMEM
+jk01:59096:59899 [3] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+jk01:59095:59898 [2] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+jk01:59094:59900 [1] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+jk01:58590:59897 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+wandb: WARNING The anonymous setting has no effect and will be removed in a future version.
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/kxqandccx/.netrc.
+wandb: Currently logged in as: gaolingxiang123 (gaolingxiang123-test) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.28.0
+wandb: Run data is saved locally in outputs/lightning_sft_demo_1/wandb/run-20260710_012804-pqc1ajjd
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run sft-demo
+wandb: ⭐️ View project at https://wandb.ai/gaolingxiang123-test/open-r1-lightning
+wandb: 🚀 View run at https://wandb.ai/gaolingxiang123-test/open-r1-lightning/runs/pqc1ajjd
+Resolving data files: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████| 855/855 [00:00<00:00, 614694.88it/s]
+Resolving data files: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████| 855/855 [00:00<00:00, 440502.39it/s]
+Resolving data files: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████| 855/855 [00:00<00:00, 481812.43it/s]
+Resolving data files: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████| 855/855 [00:00<00:00, 423792.24it/s]
+Loading dataset shards: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████| 102/102 [00:00<00:00, 1908.07it/s]
+Loading dataset shards: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████| 102/102 [00:00<00:00, 1865.33it/s]
+Loading dataset shards: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████| 102/102 [00:00<00:00, 2182.89it/s]
+Loading dataset shards: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████| 102/102 [00:00<00:00, 1872.62it/s]
+LOCAL_RANK: 3 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 1 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 2 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1,2,3,4,5,6,7]
+Loading `train_dataloader` to estimate number of stepping batches.
+/home/kxqandccx/miniconda3/envs/venv1/lib/python3.13/site-packages/lightning/pytorch/utilities/_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/home/kxqandccx/miniconda3/envs/venv1/lib/python3.13/site-packages/lightning/pytorch/utilities/_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/home/kxqandccx/miniconda3/envs/venv1/lib/python3.13/site-packages/lightning/pytorch/utilities/_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/home/kxqandccx/miniconda3/envs/venv1/lib/python3.13/site-packages/lightning/pytorch/utilities/_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+┏━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━━┓
+┃   ┃ Name  ┃ Type                       ┃ Params ┃ Mode  ┃ FLOPs ┃
+┡━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━╇━━━━━━━┩
+│ 0 │ model │ FSDPNekoMindMoeForCausalLM │  1.5 B │ train │     0 │
+└───┴───────┴────────────────────────────┴────────┴───────┴───────┘
+Trainable params: 1.5 B                                                                                                                                             
+Non-trainable params: 0                                                                                                                                             
+Total params: 1.5 B                                                                                                                                                 
+Total estimated model params size (MB): 6,066.561                                                                                                                   
+Modules in train mode: 397                                                                                                                                          
+Modules in eval mode: 0                                                                                                                                             
+Total FLOPs: 0                                                                                                                                                      
+Restoring states from the checkpoint path at outputs/lightning_sft_demo_1/checkpoints/last.ckpt
+jk01:59096:60824 [3] NCCL INFO Channel 01/1 : 3[3] -> 0[0] via P2P/CUMEM
+jk01:59095:60827 [2] NCCL INFO Channel 01/1 : 2[2] -> 0[0] via P2P/CUMEM
+jk01:59096:60824 [3] NCCL INFO Channel 03/1 : 3[3] -> 0[0] via P2P/CUMEM
+jk01:59095:60827 [2] NCCL INFO Channel 03/1 : 2[2] -> 0[0] via P2P/CUMEM
+jk01:59094:60825 [1] NCCL INFO Channel 00/1 : 1[1] -> 0[0] via P2P/CUMEM
+jk01:59094:60825 [1] NCCL INFO Channel 02/1 : 1[1] -> 0[0] via P2P/CUMEM
+jk01:58590:60831 [0] NCCL INFO Channel 01/1 : 0[0] -> 1[1] via P2P/CUMEM
+jk01:58590:60831 [0] NCCL INFO Channel 03/1 : 0[0] -> 1[1] via P2P/CUMEM
+jk01:58590:60831 [0] NCCL INFO Channel 01/1 : 0[0] -> 2[2] via P2P/CUMEM
+jk01:58590:60831 [0] NCCL INFO Channel 03/1 : 0[0] -> 2[2] via P2P/CUMEM
+jk01:58590:60831 [0] NCCL INFO Channel 00/1 : 0[0] -> 3[3] via P2P/CUMEM
+jk01:58590:60831 [0] NCCL INFO Channel 02/1 : 0[0] -> 3[3] via P2P/CUMEM
+Restored all states from the checkpoint at outputs/lightning_sft_demo_1/checkpoints/last.ckpt
+/home/kxqandccx/miniconda3/envs/venv1/lib/python3.13/site-packages/lightning/pytorch/loops/training_epoch_loop.py:224: You're resuming from a checkpoint that ended 
+before the epoch ended and your dataloader is not resumable. This can cause unreliable results if further training is done. Consider using an end-of-epoch checkpoint 
+or make your dataloader resumable by implementing the `state_dict` / `load_state_dict` interface.
+[transformers] `use_return_dict` is deprecated! Use `return_dict` instead!
+[transformers] `use_return_dict` is deprecated! Use `return_dict` instead!
+[transformers] `use_return_dict` is deprecated! Use `return_dict` instead!
+[transformers] `use_return_dict` is deprecated! Use `return_dict` instead!
+[rank1]:W0710 01:30:49.183000 59094 site-packages/torch/distributed/fsdp/_fully_shard/_fsdp_state.py:335] 1 of the 3 modules passed to fully_shard did not run forward before backward, which is error-prone since FSDP post-forward/pre-backward logic will not run for these modules. We recommend passing only modules that run forward together. Modules that did not run forward: [FSDPLinear(in_features=1024, out_features=32006, bias=False)]
+[rank3]:W0710 01:30:49.183000 59096 site-packages/torch/distributed/fsdp/_fully_shard/_fsdp_state.py:335] 1 of the 3 modules passed to fully_shard did not run forward before backward, which is error-prone since FSDP post-forward/pre-backward logic will not run for these modules. We recommend passing only modules that run forward together. Modules that did not run forward: [FSDPLinear(in_features=1024, out_features=32006, bias=False)]
+[rank2]:W0710 01:30:49.198000 59095 site-packages/torch/distributed/fsdp/_fully_shard/_fsdp_state.py:335] 1 of the 3 modules passed to fully_shard did not run forward before backward, which is error-prone since FSDP post-forward/pre-backward logic will not run for these modules. We recommend passing only modules that run forward together. Modules that did not run forward: [FSDPLinear(in_features=1024, out_features=32006, bias=False)]
+[rank0]:W0710 01:30:49.240000 58590 site-packages/torch/distributed/fsdp/_fully_shard/_fsdp_state.py:335] 1 of the 3 modules passed to fully_shard did not run forward before backward, which is error-prone since FSDP post-forward/pre-backward logic will not run for these modules. We recommend passing only modules that run forward together. Modules that did not run forward: [FSDPLinear(in_features=1024, out_features=32006, bias=False)]
+Epoch 0/0  ━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 97108/711034 0:04:01 • 13 days, 12:48:20 0.53it/s v_num: ajjd train/loss_step: 1.884
