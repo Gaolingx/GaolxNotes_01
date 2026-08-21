@@ -169,84 +169,138 @@ __device__ void mma_f64f64f64_8_8_4_(double *data)
 
 ### 🧑‍💻 User
 
-在ampere/hopper等架构上，合法的fp64 mma指令有哪些？
+查询网页，在SM80（A100）/SM90（H100/H200）/SM100–SM110（B200/B300）等架构上，合法的fp64 mma指令有哪些（m8n8k4 m16n8k4 m16n8k8 m16n8k16）？
 
 ---
 
 ### 🤖 Assistant
 
-**直接回答：在 Ampere（`sm_80`）和 Hopper（`sm_90`）上，FP64 的 MMA 指令只有一种 shape——`m8n8k4`，加上 A/B 两种 layout 的组合，一共 4 条。**
+已查询 NVIDIA 官方 PTX ISA 文档（v9.3），结论如下。
 
-### 1. 合法的 PTX 指令（全部 4 条）
+## 合法 FP64 `mma.sync` 指令与架构支持
 
-| PTX 指令 | A 布局 | B 布局 |
-|---|---|---|
-| `mma.sync.aligned.m8n8k4.row.row.f64.f64.f64.f64` | row | row |
-| `mma.sync.aligned.m8n8k4.row.col.f64.f64.f64.f64` | row | col |
-| `mma.sync.aligned.m8n8k4.col.row.f64.f64.f64.f64` | col | row |
-| `mma.sync.aligned.m8n8k4.col.col.f64.f64.f64.f64` | col | col |
+| shape | PTX 语法形态 | 最小架构要求 | SM80 A100 | SM90 H100/H200 | SM100–SM110 B200/B300 |
+|---|---|---|---|---|---|
+| `.m8n8k4` | `mma.sync.aligned.m8n8k4.row.col.f64.f64.f64.f64` | **sm_80+** | ✅ | ✅ | ✅ |
+| `.m16n8k4` | `mma.sync.aligned.m16n8k4.row.col.f64.f64.f64.f64` | **sm_90+** | ❌ | ✅ | ✅ |
+| `.m16n8k8` | `mma.sync.aligned.m16n8k8.row.col.f64.f64.f64.f64` | **sm_90+** | ❌ | ✅ | ✅ |
+| `.m16n8k16` | `mma.sync.aligned.m16n8k16.row.col.f64.f64.f64.f64` | **sm_90+** | ❌ | ✅ | ✅ |
 
-- **`m8n8k4` 是唯一合法的 shape**（M=8, N=8, K=4）。没有 `m16n8k8.f64`、`m8n8k4` 之外的任何 FP64 变体。
-- 类型全部是 `.f64.f64.f64.f64`（A、B、C、D 都是 double）。
-- 只有 `.aligned` 一种形式，没有 FP64 的 `.and` 或其他特殊变体。
-- 实践中最常用的是 `.row.col`（对应 GEMM 里 A 行主序 × B 列主序的常见约定）。
+来源（PTX ISA 9.3，§9.7.15.5.14 `mma` 的 Target ISA Notes）：
+- `m8n8k4`：**PTX 7.0 引入**，要求 `sm_80` 或更高。
+- `m16n8k4` / `m16n8k8` / `m16n8k16`：**PTX 7.8 引入**，要求 `sm_90` 或更高。
 
-### 2. 操作数数量（这里要纠正我上一次的错误）
+> ⚠️ 所以 A100 上只有 `m8n8k4` 合法；`m16n8k4/8/16` 在 A100 上会非法（编译报错或运行时 illegal instruction）。
 
-我上一条回复说 “A 需要 2 个 double、B 需要 1 个” 是**错的**。按 $8\times8\times4$ 的矩阵大小算：
+## 各 shape 的寄存器 fragment 数量
 
-- **A**：$8\times4 = 32$ 个元素 → 每个线程 **1 个 `f64`**
-- **B**：$4\times8 = 32$ 个元素 → 每个线程 **1 个 `f64`**
-- **C / D**：$8\times8 = 64$ 个元素 → 每个线程 **2 个 `f64`**
+| shape | A（f64） | B（f64） | C/D（f64） |
+|---|---|---|---|
+| `m8n8k4` | 1 个寄存器 | 1 个寄存器 | 2 个寄存器 |
+| `m16n8k4` | 2 个寄存器 | 1 个寄存器 | 4 个寄存器 |
+| `m16n8k8` | 4 个寄存器 | 2 个寄存器 | 4 个寄存器 |
+| `m16n8k16` | 8 个寄存器 | 4 个寄存器 | 4 个寄存器 |
 
-也就是说，**你原始代码里的操作数排列（A=1、B=1、C=2、D=2）本来就是对的**，唯一的问题只是把 shape 写成了 `m16n8k32`（那是 INT8 的形状）。把 shape 改成 `m8n8k4` 后，操作数不用改。
+示例（官方文档写法）：
 
-### 3. 修正后的完整代码
-
-```cuda
-#if __CUDA_ARCH__ >= 800
-__device__ void mma_f64f64f64_8_8_4_(double *data)
-{
-    double d0 = 0.0;
-    double d1 = 0.0;
-    double a  = 0.0;
-    double b  = 0.0;
-
-    for (unsigned k = 0; k < N_LOOP_INTERNAL; k++)
-    {
-        asm volatile(
-            "mma.sync.aligned.m8n8k4.row.col.f64.f64.f64.f64 "
-            "{%0, %1}, {%2}, {%3}, {%0, %1};\n"
-            : "+d"(d0), "+d"(d1)      // D 和 C 都用 {d0, d1}，原地累加
-            : "d"(a), "d"(b));        // A = {a}, B = {b}
-        // __syncwarp();  // mma.sync 本身是 warp 同步指令，一般不需要
-    }
-
-    double *ptr = &data[threadIdx.y * 8 * 8];
-    ptr[threadIdx.x * 2 + 0] = d0;
-    ptr[threadIdx.x * 2 + 1] = d1;
-}
-#endif
+```ptx
+// m16n8k8
+mma.sync.aligned.m16n8k8.row.col.f64.f64.f64.f64.rn
+  {%Rd0, %Rd1, %Rd2, %Rd3},
+  {%Ra0, %Ra1, %Ra2, %Ra3},
+  {%Rb0, %Rb1},
+  {%Rc0, %Rc1, %Rc2, %Rc3};
 ```
 
-几个关键点：
+## 关键注意点
 
-- **用 `"+d"(d0), "+d"(d1)` 而不是分别写 `"=d"` 和 `"d"`**：你原来的写法里 `d0/d1` 同时出现在输出和输入约束里，编译器**不保证**它们映射到同一个物理寄存器，可能导致累加结果不对。`+d` 保证读写同一个寄存器（即 D=C，原地累加）。
-- **`{%0,%1}` 同时作为 D 和 C**：这样就是标准 accumulate 语义。
-- `__syncwarp()` 可以去掉，`mma.sync` 本身是 warp 级同步指令。
+1. **layout 固定为 `row.col`**：FP64 的 `mma` 只支持 `row.col`（A row-major、B col-major），没有 `.col.row` 等其它组合（对比 f16 才有多种 layout）。
 
-### 4. Hopper 的补充说明
+2. **舍入修饰符**：FP64 `mma` 支持 `.rn`（默认）、`.rz`、`.rm`、`.rp`。
 
-- Hopper（`sm_90`）引入的 `wgmma`（warp-group MMA）**不支持 FP64**（只支持 f16/bf16/tf32/fp8/int8/b1）。
-- 所以即使在 H100 上，FP64 矩阵乘仍然走 **warp 级 `mma.sync.aligned.m8n8k4.f64...`**，shape 不变。
-- SASS 层面对应的指令是 **`DMMA.884`**（Double MMA，8×8×4）。可以用 `cuobjdump -sass` 验证。
+3. **寄存器上限要求**：文档明确说明，使用 `.m16n8k4/8/16` 的 FP64 `mma` 程序**编译时至少需要 64 个寄存器**（否则编译/性能可能有问题）。
 
-### 5. 仍要注意的点
+4. **`mma.sp`（稀疏）不支持 f64**：稀疏 MMA 只有 f16/bf16/tf32/int8/int4/fp8 等，**没有 FP64 稀疏变体**。
 
-| 事项 | 说明 |
-|---|---|
-| **架构要求** | `sm_80+`；真正有实用 FP64 Tensor Core 吞吐的是 A100/H100 这类数据中心卡，消费级 Ampere（sm_86）的 FP64 被大幅削减 |
-| **fragment 布局** | A/B 的寄存器到矩阵元素的映射**必须**按 PTX ISA 文档的 fragment 表来填，`.row`/`.col` 不同则映射不同，否则结果错乱 |
-| **编译选项** | 必须 `-arch=sm_80` 或更高，且运行在对应 GPU 上 |
+5. **`wgmma`（Hopper warpgroup MMA）不支持 f64**：`wgmma.mma_async` 只支持 f16/bf16/tf32/fp8/int8/int4/b1，FP64 仍需用 warp 级 `mma.sync`。
 
-**总结**：合法的 FP64 MMA 只有 `mma.sync.aligned.m8n8k4.{row.row|row.col|col.row|col.col}.f64.f64.f64.f64` 这 4 条，操作数是 **A=1、B=1、C=2、D=2** 个 `f64`。你原来报非法指令，就是因为 shape 写成了不存在的 `m16n8k32`。
+6. **Blackwell 的 `tcgen05.mma`（第5代 TensorCore）也不暴露 f64**：其 `.kind` 只有 f16/tf32/f8f6f4/i8/mxf8f6f4/mxf4/mxf4nvf4。所以在 SM100/SM110 上做 FP64 Tensor Core GEMM，实际走的还是 `mma.sync`（m8n8k4 / m16n8k4 / m16n8k8 / m16n8k16）。
+
+7. **另有 `wmma` 级别 API**：`wmma.mma.sync.aligned.m8n8k4...f64`（fragment 布局由硬件抽象，无需手动 layout），同样要求 `sm_80+`，但它只有 `m8n8k4` 一个 shape，且是高层封装，底层仍是 `mma.sync`/`DMMA`。
+
+**一句话总结**：SM80 只有 `m8n8k4`；SM90 及以后（含 SM100–SM110）四种 `m8n8k4 / m16n8k4 / m16n8k8 / m16n8k16` 全部合法。
+
+---
+
+### 🧑‍💻 User
+
+SM86/87, SM89 (Ada), SM120+ (consumer Blackwell)全部不支持fp64 mma吗？
+
+---
+
+### 🤖 Assistant
+
+已核实（来源：NVIDIA PTX ISA 9.3 官方文档、NVIDIA 各代架构白皮书、Blackwell 消费/数据中心对照 wiki、TechPowerUp 等）。结论：
+
+**是的，SM86/87、SM89（Ada）、SM120/121（消费级 Blackwell）都不支持原生 FP64 MMA（FP64 Tensor Core）。**
+
+## 核心结论表
+
+| 架构 | CC | 代表芯片 | 原生 FP64 Tensor Core MMA |
+|---|---|---|---|
+| Ampere 数据中心 | **sm_80** | A100 / A800（GA100） | ✅ 仅 `m8n8k4` |
+| Ampere 消费/嵌入式 | **sm_86 / sm_87** | RTX 30 系（GA102）、Jetson Orin（GA10B） | ❌ |
+| Ada 消费 | **sm_89** | RTX 40 系（AD102 等） | ❌ |
+| Hopper 数据中心 | **sm_90** | H100 / H200 / GH200（GH100） | ✅ `m8n8k4` + `m16n8k4/8/16` |
+| Blackwell 数据中心 | **sm_100 / sm_103 / sm_110** | B100 / B200 / B300（GB100/200/300） | ✅ `m8n8k4` + `m16n8k4/8/16` |
+| Blackwell 消费/工作站 | **sm_120 / sm_121** | RTX 5090 / 5080 / 5070（GB202/203） | ❌ |
+
+## 为什么容易误判（关键陷阱）
+
+PTX ISA 9.3 的 Target ISA Notes 原文是这样写的：
+
+> `.f64 floating point type mma operation with .m8n8k4 shape requires sm_80 or higher.`
+> `.f64 floating point type mma operation with .m16n8k4, .m16n8k8, and .m16n8k16 shapes require sm_90 or higher.`
+
+这里的 **"sm_80 or higher" / "sm_90 or higher" 是「最低编译目标」的表述，不是「所有更高 CC 都有这块硬件」**。
+
+- 数值上 sm_86、sm_89、sm_120 都 ≥ sm_80，所以 **ptxas 编译期不会报错**，你之前代码里的 `#if __CUDA_ARCH__ >= 800` 也会通过。
+- 但**运行时硬件里根本没有 FP64 Tensor Core 数据通路**，于是落到消费卡上就变成非法指令（illegal instruction / trap）。
+
+这正是你上一个问题里「为什么报非法指令」的更深层原因之一：即使 shape 写对（`m8n8k4`），只要跑在 sm_86/sm_89/sm_120 上，也一样会炸。
+
+## 为什么消费卡没有 FP64 Tensor Core
+
+这是 NVIDIA 一贯的**产品线切割**，跟 FP32/FP16 不同：
+
+- **FP64 Tensor Core 是数据中心专属硅特性**，只为 HPC/科学计算市场保留：
+  - Ampere：只有 GA100（A100）有；GA102（RTX 3090）没有。
+  - Hopper/Ada 一代：只有 GH100（H100）有；AD102（RTX 4090）没有。
+  - Blackwell 一代：只有 GB100/GB200/GB300（B200/B300）有；GB202（RTX 5090）没有。
+- 消费级 Tensor Core 的精度路线是 **FP4/FP6/FP8/INT8/BF16/FP16/TF32**（低精度 AI），从不包含 FP64。
+- 消费卡上 FP64 只能走 **CUDA Core 的 `FFMA`**，且被限制在 **1/64 吞吐**（例如 RTX 5090 每 SM 只有 2 个原生 FP64 单元，~1.6 TFLOPS）。
+
+## 一个补充事实（Blackwell 特别）
+
+- **Blackwell 数据中心**（sm_100+）：FP64 GEMM 走的是**老一代的 `mma.sync`/`DMMA` 路径**；新一代 `tcgen05.mma` 的 `.kind` 里**同样没有 f64**。
+- **Blackwell 消费级**（sm_120/121）：连 `tcgen05`、TMEM 都没有，只剩 warp 级 `mma.sync`，且只有低精度格式。详情见 [Blackwell GPU Wiki: SM100 vs SM120](https://0xsero.github.io/blackwell-gpu-wiki/blackwell/sm100-vs-sm120/)。
+
+## 正确写法建议
+
+不要只用 `#if __CUDA_ARCH__ >= 800` 这种粗粒度判断，应**运行时检测真实 CC**：
+
+```cuda
+int major = 0, minor = 0;
+cudaDeviceGetAttribute(&major, cudaDevAttrComputeCapabilityMajor, dev);
+cudaDeviceGetAttribute(&minor, cudaDevAttrComputeCapabilityMinor, dev);
+int cc = major * 10 + minor;
+
+// 真正有 FP64 Tensor Core 的 CC 白名单
+bool has_fp64_tc = (cc == 80 || cc == 90 ||
+                    cc == 100 || cc == 103 || cc == 110);
+if (!has_fp64_tc) {
+    // 回退到 FP64 CUDA-core GEMM，或 FP32/TF32 tensor core 模拟（Ozaki 方案）
+}
+```
+
+**一句话总结**：FP64 MMA 只在 `sm_80 / sm_90 / sm_100(103/110)` 这些数据中心芯片上存在；`sm_86/87、sm_89、sm_120/121` 全都不支持，别被 PTX 文档里 "sm_80 or higher" 的宽松措辞骗了。
