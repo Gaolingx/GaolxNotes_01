@@ -1913,3 +1913,227 @@ hinge + anneal 只是让压迫**滞后**，不改变终点。**建议 target 改
 > **机制 = 找到了（而且是双向的：cancellation 逃逸 + Adam 的 $lr$ 上界），原型 = 搭好了（两个 term 的设计都很干净：per-writer 治 cancellation、detached 分母治 dilution、fixed $r_0$ 治“长大别人”、threshold 治“全模型缩小”，四条 dodge 都堵得很准），解决方案 = 还差三步：对照臂、有害性证据、真机跑一遍 `write`。**
 > 另外两个必须在真机跑之前改掉的东西：**topk 要按 token 算**（否则第四个 dodge 是逐 token 换通道，而它恰好就是 per-token 增益的形态），**target 要 per-block**（block 0 是 0.99，统一 0.5 会硬伤它）。
 > 至于回答你的问题：**“验证 → 原型”走完了，“原型 → 解决方案”还差 G1/G2/G3 三个洞，其中 G1（无 penalty 的对照 run）是唯一一个会让现有全部结论可能被重写的洞。**
+
+---
+## 🧑‍💻 User
+
+e84c3fffc320f0a30b1290c717478951.png 
+我们在其他ViT上的复现结果也表明
+Final norm是导致residual stream不稳定的罪魁祸首
+
+final norm确实会造成free scale
+把final norm干掉再把free scale干掉 剩下就是not free scale (the model should learn what scale it need)
+
+没有final norm的时候如果把head给zero init也会导致飞升
+因为weight成长慢但residual stream成长快 residual stream会飞速成长来让输出达到目标scale
+而residual stream飞速成长之后会导致head的gradient特别大但是head又想要保持在小的权重
+最后就爆炸
+
+如何继续补充证据论证我们的idea
+
+![e84c3fffc320f0a30b1290c717478951.png](assets/img-79124b80-86a4-4f5e-b427-bdf8ca3c225e.png)
+
+---
+## 😀 默认助手 (7)
+
+# 0. 你的主张需要改一个字，否则逻辑上有个洞
+
+你说 "final norm 是元凶"。更准确、也更难被驳倒的说法是：
+
+> **任何在输出路径上留下一个乘法自由度、而该自由度不被 loss 约束的结构，都会产生 free scale。final norm 是造成 free scale 最常见的一种，但不是唯一的一种。**
+
+理由是三臂的计数问题：
+
+| 配置 | 输出路径 | 自由尺度在哪 | 谁提供回拉力 |
+|---|---|---|---|
+| stock（final norm + 自由 head） | $W\cdot\mathrm{norm}(x_L)$ | **$\|x_L\|$**（head 的尺度由输出要求单独定） | **没有**。WD 只碰权重，激活侧的 gauge 无人管 |
+| 无 final norm + **自由** head | $W x_L$ | **$W$ 与 $x_L$ 的尺度分摊**（$W\to W/c,\ x_L\to c x_L$ 输出不变） | 只有 head 上的 WD，**而它把 gauge 推向最坏的一端** |
+| 无 final norm + **固定范数** head | $c\,x_L$ | **不存在** | loss 直接约束 $\|x_L\|$ |
+
+所以：
+
+- **去掉 final norm 本身并不消除 free scale，只是把它从 $\|x_L\|$ 搬运到 $W$x 的分摊上。**
+- **真正消除它的是“固定 head 范数”** —— 这时 $\|y\|\propto\|x_L\|$，loss 直接约束 $\|x_L\|$，gauge 消失。
+- 这正好解释了你观察到的 zero-init 现象：head zero-init + head 上有 WD ⟹ **WD 一直在把 $W$ 往小推 ⟹ $x_L$ 必须涨来补 ⟹ 推到 “stream 大、head 小” 那个角**。所谓 “head 想保持小权重” 不是 head 的意愿，是 WD 在选 gauge 的那个端点。而 “head gradient 特别大” 是因为 $\partial L/\partial W=\delta h^\top$，$h$ 已经飞了。
+
+**⇒ 所以你的图里最关键的缺失对照臂不是别的，是 `无 final norm + 自由 head`。** 如果它不飞，你的“free scale”理论就被自己的实验证伪（说明起作用的是别的东西，比如 final norm 的 Jacobian，而不是 gauge）；如果它飞，你就完整证明了上面的三段论。**这一臂是整套论证的枢纽，现在没有。**
+
+---
+
+# 1. 用修正后的主张重读你的图
+
+图里成立的部分（很扎实）：
+
+- **`arch + final norm` 在 1300 处飞，`arch` 在 22 处平** —— 同一个 arch，只差 final norm，这是干净的因果，也排除了“arch 改动”这个混淆。✓
+- **loss 0.412 vs 0.425 vs 0.419** —— 无 final norm 不但不亏，还略好。✓（但见 §5 的统计警告）
+- 左图（depth profile）显示的是 $\|x_L\|\sim e^{\sum g_l}$ 型的前向放大，和前面几轮的机制一致。✓
+
+图里**不成立/看不出**的部分：
+
+1. **“peak” 是 max，是极值**，噪声大且不可复现；右图 stock 到 step 2000 还在爬（1800 且未见饱和）。**必须补 RMS 随训练曲线，并跑更长**（见 B2）。
+2. **没有 σ 分层**。diffusion 的尺度需求是 $t$ 的函数，你全在 σ 上平均了 —— 这恰好是你最该拿来做正面证据的地方（见 A4）。
+3. **没有展示“危害”**。1800 在 fp16 里不会溢出（上限 65504）。**审稿人一定会问 "so what"**。
+4. **`arch, no final norm, input norms` 那一条（0.792@1250）悬空着**。这不是小事（见 §5）。
+
+---
+
+# 2. 证据包 A：直接演示 gauge（最便宜，最有力）
+
+## A1. Gauge sweep —— 一件事、两行代码、一张神图
+
+对每个 checkpoint：
+$$
+x_L \to \rho\, x_L,\qquad \rho\in\{0.1,0.3,1,3,10\}
+$$
+测 held-out velocity loss。
+
+- **final norm 模型**：曲线**完全平**（$\mathrm{norm}(\rho x_L)=\mathrm{norm}(x_L)$，精确不变）。
+- **无 final norm + 固定范数 head**：曲线是 **U 形，最小值在 $\rho=1$**。
+
+**两条曲线放一张图，"free vs not free + 它学到了正确的尺度" 一次说完。** 这是整篇最该有的图，成本是几次 forward。它同时是 A3 和“the model learns the scale it needs”的操作化定义。
+
+## A2. 任意性（不需要任何干预，只需要 seeds）
+
+同配置 3–5 个 seed，画收敛时的 $\|x_L\|$ 与 loss：
+
+- **final norm 模型**：$\|x_L\|$ 在 seed 间**散布很大**（比如 300–3000），loss 几乎相同 ⟹ **这个数不被目标决定 ⟹ 它是 gauge**。
+- **固定范数 head 模型**：$\|x_L\|$ 在 seed 间**紧**（±10%），loss 相同 ⟹ 它是被学出来的。
+
+**“seed 间的方差”是 gauge 的最干净判据**，而且它顺便回答“drift 还是学习”。优先级最高。
+
+## A3. 恢复力
+
+量 $\partial\mathcal L/\partial\log\|x_L\|$（backward + 逐层 hook）：
+- final norm：**$\equiv 0$**（数值上 $<10^{-6}$）
+- 固定范数 head：$\ne0$，且在 A1 的 $\rho=1$ 处变号（U 形的最小值）
+
+这一条把“free”定义成可测量的东西，也直接支撑你的 "the model should learn what scale it needs"。
+
+## A4. 学到的尺度应该是 σ 的函数（正面证据，不是防御）
+
+把 A1 的 $\arg\min_\rho$ 对 σ 画出来，或者直接画收敛后的 $\|x_L\|(\sigma)$：
+- 无 final norm：应是**平滑、单调、可解释**的曲线（扩散的最优输出尺度随 $t$ 变化）；
+- final norm：应是**噪声/漂移**，不成函数。
+
+**如果前者成立，你就从“我们删掉了一个 bug”升级成“尺度变成了一个有意义的、可解释的量”。这是把工作从工程修复抬到机制研究的唯一途径。** 而且它接上了你 MOSS 文档里那个 open point（“how the modulation acts on C at each σ, not measured yet”）。
+
+---
+
+# 3. 证据包 B：因果与 “so what”
+
+## B1. 把尺度钉住 —— 回答"增长是不是有害的"
+
+对 final-norm 模型，**训练时**把 $\|x_L\|$ 硬投影到固定值（或加 rms 正则，你在 MOSS 上做过）。如果：
+- **loss 不变或更好** ⟹ 增长纯属 drift，你的诊断闭合，且你拿到免改架构的解；
+- **loss 变差** ⟹ 增长是有功能的，你的“free scale”仍然对，但要改写结论措辞。
+
+**这是唯一能证明“飞升是有害/无害”的实验**，也是把 JiT 图和 MOSS 图连起来的桥。
+
+## B2. 跑长，展示真实失效模式
+
+stock 到 2000 步还在爬。跑到 10k–20k，展示：
+- 是**饱和**（那就只是难看的统计量，危害要另找，比如 B3）；
+- 还是**fp16 溢出 / NaN**（那就是硬危害，"so what" 一句话解决）。
+
+顺手做 fp32 对照：**如果 fp32 也飞，说明是优化问题不是精度问题**——这是区分你和“只是精度”的反对意见的关键。
+
+## B3. final norm 的真实危害：head 梯度被 $1/\sigma$ 静音
+
+$\partial\mathcal L/\partial W_{\rm head}\propto 1/\sigma_L$。画 $\|\nabla_{W_{\rm head}}\mathcal L\|$ 随训练：
+- final norm：应按 $1/\sigma_L$ **单调衰减**（head 被逐渐冻结，而且冻结得很隐蔽）；
+- 固定范数 head：应稳定。
+
+**这是一条具体的、可量化的危害**，而且它直接解释了你观察到的 zero-init 追击现象（head 学不动，所以 residual 只能自己涨）。比“统计量不好看”有力得多。
+
+## B4. Adam vs SGD —— 证明“scale-free 优化器 × free scale = drift”
+
+**最强的一条机制证据**：free scale 方向上 loss 梯度精确为 0。
+- **SGD**：更新 $\propto g$ ⟹ 该方向**精确不动**；
+- **Adam/Muon**：更新模长恒为 $\eta$ ⟹ 该方向**随机游走/漂移**。
+
+所以：**同一模型、同 lr（配平后），SGD 的 $\|x_L\|$ 应该平，Adam 应该飞。** 一个 5 分钟的小模型实验，直接把因果链补完，而且和前面几轮推的“scale-free 更新无刹车”完全一致。**我强烈建议做这个——它能把整篇从“经验规律”变成“有机制的理论”。**
+
+## B5. lr 标定
+
+若 drift $\propto\eta t$，则**同一步数下 peak ∝ lr**。半 lr 应该给半 peak（在 log 图上平移）。这是对机制的定量检验，也让你的结论对 lr 超参的解释力上一档。
+
+---
+
+# 4. 证据包 C：zero-init / 自由 head 的机制
+
+你现在的 narrative 是对的，但缺三条曲线：
+
+1. **追击图**：同一张图放 $\|W_{\rm head}\|$、$1/\|x_L\|$（需要的值）、$x_L$ 的 RMS，三条 vs step。预测：$W$ 追不上 $1/x_L$，缺口持续扩大。
+2. **匹配初始化**：head 初值设成 $\|W\|_0\|x_0\|=g$（即输出一开始就接近目标 scale），而不是 0。预测：**不飞**。这是因果证明 + 现成解法。
+3. **init scale 扫描**：head init 从 0 到 matched 扫 5 点，画 “peak / 是否爆炸” vs init scale。预测：**相变**，0 附近最差。一张图把 “zero-init 是有害的，不是无害的” 说死。
+
+（这条也对 Fixup/同类工作有话说：**Fixup 的 zero-init last layer 在 no-norm ResNet 上成立，是因为分类任务的 softmax 对 logits 尺度不敏感，且他们有 $\alpha=1/\sqrt L$ 的支路缩放；对固定的回归/去噪目标，zero-init head 是恰恰最危险的那个初值。** 值得写进去，因为审稿人可能会提 Fixup。）
+
+---
+
+# 5. 两条悬空的证据，必须收掉
+
+## (a) `arch, no final norm, input norms`, loss 0.792 @ step 1250
+
+这条现在是整张图里的“反例”。三种可能，结论完全不同：
+
+| 解释 | 对论点的意义 | 怎么分辨 |
+|---|---|---|
+| 额外 norm 引入了**新的 gauge**（每个 norm 的 pre-norm 张量都是 free scale） | **支持你的理论**（更多 free scale ⟹ 更糟） | 数一下该 arch 的 gauge 自由度数量 |
+| 加了参数/改了增益，lr 未重扫 | 混淆，必须修 | lr sweep 3 点 |
+| arch 破坏了残差路径 | 只是 bug | 检查输出/初始化 |
+
+**不管是哪种，都要么修好（重扫 lr）、要么写成“更多的自由尺度会累积恶化”。留在 0.792@1250 会被当成“你们的 arch 本身不稳”。** 另外注意它“step 1250”而别人是 2000 —— 这不是同一预算的对比，本身就该说明。
+
+## (b) `无 final norm + 自由 head`（§0 的枢纽臂）
+
+必须加。它同时是你的理论的**证伪测试**。
+
+---
+
+# 6. 把两份文档合成一条链（这是最该补的一张总图）
+
+你现在有两套看起来独立的故事（JiT：final norm / MOSS：RMSNorm 分母 / shared modulation）。它们其实是**一条链上的三个环节**，画成一条链，每个环节配一个干预，整篇就从“两个 trick”变成“一个理论 + 三个推论”：
+
+| 环节 | 机制 | 对应干预 |
+|---|---|---|
+| ① 输出路径乘法自由度且不被 loss 约束 | final norm / 自由 head | **删 final norm + 固定 head 范数** |
+| ② scale-free 优化器在零梯度方向上仍以恒幅更新 | Adam/Muon 的归一化步长 | 无解，只能消①（或 SGD 对照） |
+| ③ 尺度/增益需求被实现到最便宜的可操纵量上 | RMSNorm 分母 outlier、shared modulation 的 $\gamma,\beta$ | `write` 项按 writer 计价、`OUTLIER_DECAY`、τ 的 hinge/anneal |
+| ④ 局部最优逃逸 | writer 之间互相抵消、逐 token 换通道 | per-writer 计量、detached 分母、**per-token topk** |
+| ⑤ 不可持续（会遗传） | outlier 留在权重里 | `OUTLIER_DECAY` |
+
+**这张表就是你的 paper 的骨架。** 目前两份文档各自很强，但读者会问“这两件事是同一个现象吗”。这张表回答它。
+
+---
+
+# 7. 优先级
+
+| # | 实验 | 成本 | 作用 |
+|---|---|---|---|
+| **1** | **`无 final norm + 自由 head`** | 1 小 run | 自证真伪的枢纽臂 |
+| **2** | **A1 gauge sweep（两条曲线）** | 分钟 | free vs not free + 学到正确尺度，一张图 |
+| **3** | **A2 seed 间 $\|x_L\|$ 方差** | 3 seeds | gauge 的最干净判据 |
+| **4** | **B4 SGD vs Adam** | 1 小 run | 机制因果链补完 |
+| **5** | **B1 钉住尺度后 loss 变不变** | 1 run | "so what" |
+| **6** | **B2 跑长到溢出/饱和** | 1 run | 危害展示 |
+| **7** | **C 的 matched-init + init sweep** | 1–2 run | zero-init 机制 + 现成解法 |
+| **8** | 收掉 `input norms` 反例（lr sweep） | 1 run | 补漏 |
+| **9** | A4 $\|x_L\|(\sigma)$ | 零成本 | 从“修 bug”升级到“学到的量有意义” |
+| **10** | B3 head 梯度 $1/\sigma$ | 零成本（hook） | 具体危害 |
+
+**1–4 全是小模型，两天能全做完，而且做完这一篇的因果链就闭合了。**
+
+---
+
+# 8. 两个措辞上的自我保护
+
+- **别把 0.412 < 0.419 < 0.425 当结论。** 1 seed、小数据集、0.007 的差，很可能是噪声。正确的说法是 **“removing the final norm does not cost loss, and removes the pathology”**，配 CI。写 “better” 会被人抓。
+- **别写 “final norm is the culprit”，写 “the free scale is the culprit; the final norm is the most common way to create it, and freezing the head’s scale is the way to remove it”。** 这个措辞 ① 逻辑闭合（见 §0）② 涵盖你自己的 zero-init 反例 ③ 涵盖 `input norms` 那个失败臂。
+
+---
+
+# 一句话
+
+> 你的机制是对的，但现在的证据只证明了 **“final norm 和病相关”** 和 **“去掉它不掉 loss”**。要变成因果论证，缺三样：**(i) `无 final norm + 自由 head` 这一臂（它证明/证伪你“free scale”而非“Jacobian”是主因）；(ii) gauge sweep 的两条曲线（把 free 定义成可测量，并把“学到的尺度有意义”一次说完）；(iii) 把尺度钉住后 loss 不变（回答 so what）。**
+> 而 zero-init 那段不是旁注，是**你理论的最佳证据**——它说明“去掉 final norm 不等于去掉 gauge，只是把 gauge 搬到了 head×stream 的分摊上，而 WD 会把分摊推向最坏的一端”。把它写成正式的一节，比再多一个 ViT 复现更有价值。
